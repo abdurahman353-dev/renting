@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Plus, MapPin, Home } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 // Mock data for display purposes
 const properties = [
@@ -36,6 +36,8 @@ const properties = [
 ]
 
 export default function PropertiesPage() {
+    const router = useRouter()
+
     return (
         <div className="p-8 space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -61,7 +63,11 @@ export default function PropertiesPage() {
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {properties.map((property) => (
-                    <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200">
+                    <Card
+                        key={property.id}
+                        onClick={() => router.push(`/properties/${property.name}`)}
+                        className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200"
+                    >
                         <div className="h-48 overflow-hidden relative">
                             <img
                                 src={property.image}
