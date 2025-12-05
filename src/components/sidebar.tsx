@@ -10,11 +10,9 @@ import {
   CreditCard,
   FileText,
   Settings,
-  LogOut,
-  Menu,
-  X
+  LogOut
 } from "lucide-react"
-import { useState } from "react"
+
 
 const routes = [
   {
@@ -54,22 +52,16 @@ const routes = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
+}
+
+export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
-      {/* Mobile Trigger */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 bg-slate-900 text-white rounded-md"
-        >
-          {isOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
       {/* Sidebar */}
       <div
         className={cn(
@@ -80,11 +72,11 @@ export function Sidebar() {
         <div className="px-3 py-2 flex-1">
           <Link href="/" className="flex items-center pl-3 mb-14">
             <div className="relative w-8 h-8 mr-4">
-               {/* Logo placeholder */}
-               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg opacity-75 blur-sm animate-pulse"></div>
-               <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
-                 <span className="text-xl font-bold">R</span>
-               </div>
+              {/* Logo placeholder */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg opacity-75 blur-sm animate-pulse"></div>
+              <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
+                <span className="text-xl font-bold">R</span>
+              </div>
             </div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
               RentSys
@@ -109,18 +101,18 @@ export function Sidebar() {
           </div>
         </div>
         <div className="px-3 py-2">
-            <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                <p className="text-xs text-slate-400 mb-1">Logged in as</p>
-                <p className="text-sm font-medium text-white">Admin User</p>
-            </div>
+          <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+            <p className="text-xs text-slate-400 mb-1">Logged in as</p>
+            <p className="text-sm font-medium text-white">Admin User</p>
+          </div>
         </div>
       </div>
-      
+
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden"
-            onClick={() => setIsOpen(false)}
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
         />
       )}
     </>
