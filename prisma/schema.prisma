@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Property {
+  id          String   @id @default(uuid())
+  name        String
+  location    String
+  totalUnits  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  units       Unit[]
+  expenses    Expense[]
+}
+
+model Unit {
+  id          String   @id @default(uuid())
+  number      String
+  price       Float
+  status      String   @default("VACANT") // VACANT, OCCUPIED, MAINTENANCE
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  
+  // Current active lease/tenant
+  leases      Lease[]
+  invoices    Invoice[]
+  maintenance MaintenanceRequest[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String
+  idNumber    String   @unique
+  phone       String
+  email       String?
+  balance     Float    @default(0) // Positive = Credit, Negative = Arrears
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
+
+  leases      Lease[]
+  invoices    Invoice[]
+  payments    Payment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lease {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  unitId        String
+  unit          Unit     @relation(fields: [unitId], references: [id])
+  startDate     DateTime
+  endDate       DateTime?
+  depositAmount Float
+  status        String   @default("ACTIVE") // ACTIVE, TERMINATED
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  
+  month       Int
+  year        Int
+  amount      Float
+  paidAmount  Float    @default(0)
+  status      String   @default("PENDING") // PENDING, PARTIAL, PAID
+
+  payments    Payment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  invoiceId   String?
+  invoice     Invoice? @relation(fields: [invoiceId], references: [id])
+
+  amount      Float
+  date        DateTime @default(now())
+  method      String   // CASH, MPESA, BANK
+  reference   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  category    String   // REPAIR, UTILITY, TAX, OTHER
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MaintenanceRequest {
+  id          String   @id @default(uuid())
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id])
+
+  description String
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED
+  reportedDate DateTime @default(now())
+  resolvedDate DateTime?
+  cost        Float?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
