@@ -150,7 +150,7 @@ export default function LoginPage() {
                         <div className="text-center text-sm">
                             <span className="text-gray-500 dark:text-gray-400">Don't have an account? </span>
                             <a href="#" className="font-medium text-blue-600 hover:underline dark:text-blue-400" onClick={(e) => { e.preventDefault(); alert('Please contact the system administrator to request access.'); }}>
-                                Contact Admin
+                                Contact Super Admin
                             </a>
                         </div>
                     </form>

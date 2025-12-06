@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 
 
-const routes = [
+const defaultRoutes = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
@@ -52,12 +52,20 @@ const routes = [
   },
 ]
 
+interface SidebarRoute {
+  label: string;
+  icon: any;
+  href: string;
+  color?: string;
+}
+
 interface SidebarProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
+  routes?: SidebarRoute[]
 }
 
-export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarProps) {
   const pathname = usePathname()
 
   return (
