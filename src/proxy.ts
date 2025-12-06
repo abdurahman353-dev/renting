@@ -6,9 +6,11 @@ export function proxy(request: NextRequest) {
     const isLoginPage = request.nextUrl.pathname === '/login';
 
     // If trying to access dashboard without token, redirect to login
+    // If trying to access dashboard without token, redirect to login
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
         if (!token) {
-            return NextResponse.redirect(new URL('/login', request.url));
+            // TEMPORARY: Allow access without token for viewing
+            // return NextResponse.redirect(new URL('/login', request.url));
         }
     }
 
