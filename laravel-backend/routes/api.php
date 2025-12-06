@@ -10,6 +10,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicListingController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\CommunicationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,7 +105,31 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     
-    // 6. Super Admin Features (Requires higher privilege check in controller/middleware)
+    // 6. Maintenance & Repairs
+    Route::prefix('maintenance')->group(function () {
+        Route::get('/', [MaintenanceController::class, 'index']);
+        Route::post('/', [MaintenanceController::class, 'store']); // Report issue
+        Route::get('/{id}', [MaintenanceController::class, 'show']);
+        Route::put('/{id}', [MaintenanceController::class, 'update']); // Update status (Pending -> In Progress -> Resolved)
+        Route::delete('/{id}', [MaintenanceController::class, 'destroy']);
+    });
+
+    // 7. Expenses (Operational Costs)
+    Route::prefix('expenses')->group(function () {
+        Route::get('/', [ExpenseController::class, 'index']);
+        Route::post('/', [ExpenseController::class, 'store']);
+        Route::get('/{id}', [ExpenseController::class, 'show']);
+        Route::put('/{id}', [ExpenseController::class, 'update']);
+        Route::delete('/{id}', [ExpenseController::class, 'destroy']);
+    });
+
+    // 8. Communications (SMS/WhatsApp)
+    Route::prefix('communications')->group(function () {
+        Route::get('/logs', [CommunicationController::class, 'index']); // History of sent messages
+        Route::post('/send', [CommunicationController::class, 'send']); // Manual send endpoint
+    });
+
+    // 9. Super Admin Features (Requires higher privilege check in controller/middleware)
     Route::prefix('super-admin')->group(function () {
         // Admin Management
         Route::get('/admins', [AdminController::class, 'index']);
