@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Table,
     TableBody,
@@ -175,97 +176,108 @@ export default function PropertyViewPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column - Details */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Description */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>About this Property</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-slate-600 leading-relaxed">
-                                {property.description}
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Tabs defaultValue="overview" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-8">
+                            <TabsTrigger value="overview">Overview</TabsTrigger>
+                            <TabsTrigger value="units">Units</TabsTrigger>
+                        </TabsList>
 
-                    {/* Amenities */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Amenities</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {property.amenities.map((amenity, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-100"
-                                    >
-                                        <amenity.icon className="w-5 h-5 text-primary mr-3" />
-                                        <span className="text-slate-700 font-medium">
-                                            {amenity.label}
-                                        </span>
+                        <TabsContent value="overview" className="space-y-8">
+                            {/* Description */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>About this Property</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-slate-600 leading-relaxed">
+                                        {property.description}
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            {/* Amenities */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Amenities</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {property.amenities.map((amenity, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-100"
+                                            >
+                                                <amenity.icon className="w-5 h-5 text-primary mr-3" />
+                                                <span className="text-slate-700 font-medium">
+                                                    {amenity.label}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
 
-                    {/* Units List */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Units</CardTitle>
-                            <Button variant="outline" size="sm">
-                                Add Unit
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Unit</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead>Details</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {property.units.map((unit) => (
-                                        <TableRow key={unit.id}>
-                                            <TableCell className="font-medium">
-                                                {unit.number}
-                                            </TableCell>
-                                            <TableCell>{unit.type}</TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={
-                                                        unit.status === "Available"
-                                                            ? "bg-green-50 text-green-700 border-green-200"
-                                                            : unit.status === "Occupied"
-                                                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                                                : "bg-slate-100 text-slate-700"
-                                                    }
-                                                >
-                                                    {unit.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>{unit.price}</TableCell>
-                                            <TableCell className="text-slate-500 text-sm">
-                                                {unit.bedrooms} Bed • {unit.bathrooms} Bath •{" "}
-                                                {unit.sqft} sqft
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm">
-                                                    View
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
+                        <TabsContent value="units">
+                            {/* Units List */}
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardTitle>Units</CardTitle>
+                                    <Button variant="outline" size="sm">
+                                        Add Unit
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Unit</TableHead>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Price</TableHead>
+                                                <TableHead>Details</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {property.units.map((unit) => (
+                                                <TableRow key={unit.id}>
+                                                    <TableCell className="font-medium">
+                                                        {unit.number}
+                                                    </TableCell>
+                                                    <TableCell>{unit.type}</TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={
+                                                                unit.status === "Available"
+                                                                    ? "bg-green-50 text-green-700 border-green-200"
+                                                                    : unit.status === "Occupied"
+                                                                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                                        : "bg-slate-100 text-slate-700"
+                                                            }
+                                                        >
+                                                            {unit.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>{unit.price}</TableCell>
+                                                    <TableCell className="text-slate-500 text-sm">
+                                                        {unit.bedrooms} Bed • {unit.bathrooms} Bath •{" "}
+                                                        {unit.sqft} sqft
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="sm">
+                                                            View
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
                 </div>
 
                 {/* Right Column - Quick Info */}

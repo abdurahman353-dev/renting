@@ -10,8 +10,10 @@ import {
   CreditCard,
   FileText,
   Settings,
-  LogOut
+  ChevronDown,
+  ChevronRight
 } from "lucide-react"
+import { useState } from "react"
 
 
 const defaultRoutes = [
@@ -44,6 +46,16 @@ const defaultRoutes = [
     icon: FileText,
     href: "/reports",
     color: "text-emerald-500",
+    children: [
+      {
+        label: "Units Reports",
+        href: "/reports/units",
+      },
+      {
+        label: "Tenants Reports",
+        href: "/reports/tenants",
+      },
+    ]
   },
   {
     label: "Settings",
@@ -57,6 +69,10 @@ interface SidebarRoute {
   icon: any;
   href: string;
   color?: string;
+  children?: {
+    label: string;
+    href: string;
+  }[];
 }
 
 interface SidebarProps {
@@ -67,6 +83,15 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarProps) {
   const pathname = usePathname()
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
+
+  const toggleMenu = (href: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(href)
+        ? prev.filter(item => item !== href)
+        : [...prev, href]
+    )
+  }
 
   return (
     <>
@@ -77,7 +102,7 @@ export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarPr
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="px-3 py-2 flex-1">
+        <div className="px-3 py-2 flex-1 overflow-y-auto">
           <Link href="/" className="flex items-center pl-3 mb-14">
             <div className="relative w-8 h-8 mr-4">
               {/* Logo placeholder */}
@@ -92,19 +117,58 @@ export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarPr
           </Link>
           <div className="space-y-1">
             {routes.map((route) => (
-              <Link
-                key={route.href}
-                href={route.href}
-                className={cn(
-                  "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
-                  pathname === route.href ? "text-white bg-white/10" : "text-zinc-400"
+              <div key={route.href}>
+                {route.children ? (
+                  <>
+                    <button
+                      onClick={() => toggleMenu(route.href)}
+                      className={cn(
+                        "text-sm group flex p-3 w-full justify-between items-center font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                        pathname.startsWith(route.href) ? "text-white" : "text-zinc-400"
+                      )}
+                    >
+                      <div className="flex items-center flex-1">
+                        <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
+                        {route.label}
+                      </div>
+                      {expandedMenus.includes(route.href) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
+                    {expandedMenus.includes(route.href) && (
+                      <div className="ml-9 mt-1 space-y-1">
+                        {route.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={cn(
+                              "text-sm group flex p-2 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                              pathname === child.href ? "text-white bg-white/10" : "text-zinc-400"
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={route.href}
+                    className={cn(
+                      "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                      pathname === route.href ? "text-white bg-white/10" : "text-zinc-400"
+                    )}
+                  >
+                    <div className="flex items-center flex-1">
+                      <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
+                      {route.label}
+                    </div>
+                  </Link>
                 )}
-              >
-                <div className="flex items-center flex-1">
-                  <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
-                  {route.label}
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

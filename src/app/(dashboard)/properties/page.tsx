@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Plus, MapPin, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { formatTextType } from "@/lib/utils"
 
 // Mock data for display purposes
 const properties = [
     {
         id: 1,
-        name: "Sunrise Apartments",
+        name: "Sunrise_apartments",
         location: "Westlands, Nairobi",
         units: 12,
         occupied: 10,
@@ -19,7 +20,7 @@ const properties = [
     },
     {
         id: 2,
-        name: "Green Valley Estate",
+        name: "Green_valley_estate",
         location: "Kileleshwa, Nairobi",
         units: 8,
         occupied: 8,
@@ -27,7 +28,7 @@ const properties = [
     },
     {
         id: 3,
-        name: "Ocean View Residency",
+        name: "Ocean_view_residency",
         location: "Nyali, Mombasa",
         units: 24,
         occupied: 15,
@@ -82,7 +83,7 @@ export default function PropertiesPage() {
                         </div>
                         <CardHeader>
                             <CardTitle className="flex justify-between items-start">
-                                <span>{property.name}</span>
+                                <span>{formatTextType(property.name)}</span>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
