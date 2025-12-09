@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,68 +33,88 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, MoreHorizontal, Plus, Shield, ShieldAlert, Trash2, Edit } from "lucide-react";
 
-// Mock data type
 type Admin = {
-    id: string;
+    id: number;
     name: string;
     email: string;
-    role: 'Admin' | 'Property Manager' | 'Finance Manager';
+    role: string;
     status: 'Active' | 'Suspended';
-    lastLogin: string;
+    last_login_at?: string;
 };
 
-const initialAdmins: Admin[] = [
-    { id: '1', name: "Alice Smith", email: "alice@rentsys.com", role: "Admin", status: "Active", lastLogin: "2 hours ago" },
-    { id: '2', name: "Bob Jones", email: "bob@rentsys.com", role: "Property Manager", status: "Active", lastLogin: "5 hours ago" },
-    { id: '3', name: "Charlie Day", email: "charlie@rentsys.com", role: "Finance Manager", status: "Suspended", lastLogin: "3 days ago" },
-];
-
 export default function AdminManagementPage() {
-    const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
+    const [admins, setAdmins] = useState<Admin[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // New Admin Form State
     const [newAdminName, setNewAdminName] = useState('');
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminRole, setNewAdminRole] = useState('Admin');
+    const [newAdminPassword, setNewAdminPassword] = useState('');
 
-    const handleAddAdmin = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newAdmin: Admin = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: newAdminName,
-            email: newAdminEmail,
-            role: newAdminRole as any,
-            status: 'Active',
-            lastLogin: 'Never',
-        };
-        setAdmins([...admins, newAdmin]);
-        setIsAddDialogOpen(false);
-        // Reset form
-        setNewAdminName('');
-        setNewAdminEmail('');
-    };
-
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this admin?')) {
-            setAdmins(admins.filter(a => a.id !== id));
+    const fetchAdmins = async () => {
+        try {
+            const response = await api.get('/super-admin/admins');
+            setAdmins(response.data);
+        } catch (error) {
+            console.error('Failed to fetch admins:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleToggleStatus = (id: string) => {
-        setAdmins(admins.map(a => {
-            if (a.id === id) {
-                return { ...a, status: a.status === 'Active' ? 'Suspended' : 'Active' };
+    useEffect(() => {
+        fetchAdmins();
+    }, []);
+
+    const handleAddAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.post('/super-admin/admins', {
+                name: newAdminName,
+                email: newAdminEmail,
+                role: newAdminRole,
+                password: newAdminPassword
+            });
+            fetchAdmins();
+            setIsAddDialogOpen(false);
+            setNewAdminName('');
+            setNewAdminEmail('');
+            setNewAdminPassword('');
+        } catch (error) {
+            alert('Failed to create admin');
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (confirm('Are you sure you want to delete this admin?')) {
+            try {
+                await api.delete(`/super-admin/admins/${id}`);
+                setAdmins(admins.filter(a => a.id !== id));
+            } catch (error) {
+                alert('Failed to delete admin');
             }
-            return a;
-        }));
+        }
+    };
+
+    const handleToggleStatus = async (admin: Admin) => {
+        const action = admin.status === 'Active' ? 'suspend' : 'activate';
+        try {
+            await api.post(`/super-admin/admins/${admin.id}/${action}`);
+            fetchAdmins();
+        } catch (error) {
+            alert(`Failed to ${action} admin`);
+        }
     };
 
     const filteredAdmins = admins.filter(admin =>
         admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         admin.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (isLoading) return <div className="p-8">Loading admins...</div>;
 
     return (
         <div className="p-8 space-y-8">
@@ -112,7 +133,7 @@ export default function AdminManagementPage() {
                         <DialogHeader>
                             <DialogTitle>Add New Admin</DialogTitle>
                             <DialogDescription>
-                                Create a new administrator account. They will receive an email to set their password.
+                                Create a new administrator account.
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleAddAdmin} className="space-y-4 py-4">
@@ -120,7 +141,6 @@ export default function AdminManagementPage() {
                                 <Label htmlFor="name">Full Name</Label>
                                 <Input
                                     id="name"
-                                    placeholder="John Doe"
                                     value={newAdminName}
                                     onChange={(e) => setNewAdminName(e.target.value)}
                                     required
@@ -131,9 +151,18 @@ export default function AdminManagementPage() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="john@rentsys.com"
                                     value={newAdminEmail}
                                     onChange={(e) => setNewAdminEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={newAdminPassword}
+                                    onChange={(e) => setNewAdminPassword(e.target.value)}
                                     required
                                 />
                             </div>
@@ -141,7 +170,7 @@ export default function AdminManagementPage() {
                                 <Label htmlFor="role">Role</Label>
                                 <select
                                     id="role"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={newAdminRole}
                                     onChange={(e) => setNewAdminRole(e.target.value)}
                                 >
@@ -182,7 +211,13 @@ export default function AdminManagementPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredAdmins.map((admin) => (
+                        {filteredAdmins.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                    No admins found
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredAdmins.map((admin) => (
                             <TableRow key={admin.id}>
                                 <TableCell>
                                     <div className="flex flex-col">
@@ -204,7 +239,9 @@ export default function AdminManagementPage() {
                                         {admin.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">{admin.lastLogin}</TableCell>
+                                <TableCell className="text-muted-foreground">
+                                    {admin.last_login_at || 'Never'}
+                                </TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -215,10 +252,7 @@ export default function AdminManagementPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem onClick={() => alert('Edit functionality to be implemented')}>
-                                                <Edit className="mr-2 h-4 w-4" /> Edit Details
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleToggleStatus(admin.id)}>
+                                            <DropdownMenuItem onClick={() => handleToggleStatus(admin)}>
                                                 <ShieldAlert className="mr-2 h-4 w-4" />
                                                 {admin.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
                                             </DropdownMenuItem>

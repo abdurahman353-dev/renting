@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
 
 export const authAPI = {
     login: async (email, password) => {
-        const response = await apiClient.post('/api/auth/login', { email, password });
+        const response = await apiClient.post('/auth/login', { email, password });
         const { token, user } = response.data;
 
         // Store token and user data
