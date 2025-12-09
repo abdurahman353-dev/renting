@@ -30,6 +30,12 @@ const defaultRoutes = [
     color: "text-violet-500",
   },
   {
+    label: "Units",
+    icon: Building2,
+    href: "/units",
+    color: "text-violet-500",
+  },
+  {
     label: "Tenants",
     icon: Users,
     href: "/tenants",
@@ -56,12 +62,12 @@ const defaultRoutes = [
         href: "/reports/tenants",
       },
     ]
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
+  }
+  // {
+  //   label: "Settings",
+  //   icon: Settings,
+  //   href: "/settings",
+  // },
 ]
 
 interface SidebarRoute {

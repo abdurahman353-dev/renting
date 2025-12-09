@@ -2,13 +2,18 @@
 
 import { Bell, Menu, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface TopNavProps {
     onSidebarToggle: () => void
 }
 
 export function TopNav({ onSidebarToggle }: TopNavProps) {
+    const { logout, user } = useAuth();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
     return (
         <div className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
             {/* Left */}
@@ -29,29 +34,39 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                     <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
                 </button>
 
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer group relative">
-                    <span className="text-sm font-semibold text-primary-foreground">JD</span>
+                <div
+                    className="relative"
+                    onMouseEnter={() => setIsDropdownOpen(true)}
+                    onMouseLeave={() => setIsDropdownOpen(false)}
+                >
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer">
+                        <span className="text-sm font-semibold text-primary-foreground">
+                            {user ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                        </span>
+                    </div>
 
                     {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-12 w-48 bg-card border border-border rounded-lg shadow-lg hidden group-hover:block z-50">
-                        <div className="p-2">
-                            <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
-                                <User className="w-4 h-4" />
-                                Profile
-                            </button>
-                            <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
-                                <Settings className="w-4 h-4" />
-                                Settings
-                            </button>
-                            <Link
-                                href="/login"
-                                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Logout
-                            </Link>
+                    {isDropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
+                            <div className="p-2">
+                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
+                                    <User className="w-4 h-4" />
+                                    Profile
+                                </button>
+                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
+                                    <Settings className="w-4 h-4" />
+                                    Settings
+                                </button>
+                                <button
+                                    onClick={logout}
+                                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Logout
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

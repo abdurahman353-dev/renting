@@ -1,38 +1,64 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import * as z from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Eye, EyeOff, Loader2, Building2, ShieldCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+// Zod schema for login form validation
+const loginSchema = z.object({
+    email: z.string()
+        .min(1, 'Email is required')
+        .email('Please enter a valid email address'),
+    password: z.string()
+        .min(1, 'Password is required')
+        .min(6, 'Password must be at least 6 characters'),
+});
 
 export default function LoginPage() {
-    const router = useRouter();
+    const { login, loading } = useAuth();
     const [email, setEmail] = useState('');
+    const router = useRouter();
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setLoading(true);
+        setFieldErrors({});
 
         try {
-            if (!email || !password) {
-                throw new Error('Please fill in all fields');
-            }
+            // Validate form data with Zod
+            const validatedData = loginSchema.parse({ email, password });
 
-            await auth.login(email, password);
+            // Attempt login with validated data
+            await login(validatedData.email, validatedData.password);
             router.push('/dashboard');
-        } catch (err: any) {
-            setError(err.message || 'An error occurred during login');
-        } finally {
-            setLoading(false);
+
+        } catch (err) {
+            // Handle Zod validation errors
+            if (err instanceof z.ZodError) {
+                const errors: { email?: string; password?: string } = {};
+                err.issues.forEach((issue) => {
+                    if (issue.path[0] === 'email') {
+                        errors.email = issue.message;
+                    } else if (issue.path[0] === 'password') {
+                        errors.password = issue.message;
+                    }
+                });
+                setFieldErrors(errors);
+            } else {
+                // Handle login errors
+                const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+                setError(errorMessage);
+            }
         }
     };
 
@@ -97,11 +123,23 @@ export default function LoginPage() {
                                     type="email"
                                     placeholder="admin@example.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        // Clear field error on change
+                                        if (fieldErrors.email) {
+                                            setFieldErrors(prev => ({ ...prev, email: undefined }));
+                                        }
+                                    }}
                                     disabled={loading}
-                                    required
-                                    className="h-11 bg-white dark:bg-zinc-800"
+                                    className={`h-11 bg-white dark:bg-zinc-800 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                        }`}
                                 />
+                                {fieldErrors.email && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {fieldErrors.email}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -114,10 +152,16 @@ export default function LoginPage() {
                                         type={showPassword ? 'text' : 'password'}
                                         placeholder="••••••••"
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value);
+                                            // Clear field error on change
+                                            if (fieldErrors.password) {
+                                                setFieldErrors(prev => ({ ...prev, password: undefined }));
+                                            }
+                                        }}
                                         disabled={loading}
-                                        required
-                                        className="h-11 pr-10 bg-white dark:bg-zinc-800"
+                                        className={`h-11 pr-10 bg-white dark:bg-zinc-800 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                            }`}
                                     />
                                     <button
                                         type="button"
@@ -131,6 +175,12 @@ export default function LoginPage() {
                                         )}
                                     </button>
                                 </div>
+                                {fieldErrors.password && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {fieldErrors.password}
+                                    </p>
+                                )}
                             </div>
                         </div>
 

@@ -2,9 +2,13 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { usePreventBack } from "@/hooks/usePreventBack";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Prevent back button navigation
+    usePreventBack();
 
     return (
         <div className="h-full relative">
