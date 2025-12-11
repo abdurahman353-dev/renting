@@ -76,7 +76,10 @@ export default function UnitsPage() {
                         Manage all residential units across properties.
                     </p>
                 </div>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Button
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => router.push("/units/new")}
+                >
                     <Plus className="mr-2 h-4 w-4" /> Add Unit
                 </Button>
             </div>

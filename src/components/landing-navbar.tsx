@@ -27,7 +27,7 @@ export function LandingNavbar() {
                 <div className="flex items-center gap-4">
                     <Link href="/login">
                         <Button variant="ghost" className="font-medium hover:bg-blue-50 hover:text-blue-600">
-                            Admin Login
+                            Login
                         </Button>
                     </Link>
                     <Link href="#contact">

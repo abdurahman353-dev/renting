@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { X, Upload, Trash2, Star, Check } from "lucide-react";
+import { uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import api from "@/lib/api";
+import apiClient, { propertyAPI } from "@/data/apis";
 
 interface ImageFile {
     file: File;
@@ -82,6 +84,7 @@ const FURNISHING_OPTIONS = [
 export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode = false, propertyData }: AddPropertyModalProps) {
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [images, setImages] = useState<ImageFile[]>([]);
 
     // Form data
@@ -157,7 +160,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 parking_spaces: propertyData.parking_spaces?.toString() || "",
                 pet_policy: propertyData.pet_policy || "",
                 description: propertyData.description || "",
-                amenities: propertyData.amenities ? propertyData.amenities.map((a: any) => a.amenity_name) : [],
+                amenities: propertyData.amenities ? propertyData.amenities.map((a: any) => a.name) : [],
                 custom_amenity: "",
                 min_rent: propertyData.min_rent?.toString() || "",
                 max_rent: propertyData.max_rent?.toString() || "",
@@ -226,45 +229,101 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
 
     const handleSubmit = async () => {
         setLoading(true);
+        setUploadProgress(0);
+
         try {
-            const submitData = new FormData();
+            // Step 1: Upload images to Cloudinary
+            let uploadedImageUrls: string[] = [];
+            let featuredImageUrl = '';
 
-            // Add all text fields
-            Object.entries(formData).forEach(([key, value]) => {
-                if (key === 'amenities' || key === 'payment_frequency_options' || key === 'utilities_included') {
-                    (value as string[]).forEach((item, index) => {
-                        submitData.append(`${key}[${index}]`, item);
-                    });
-                } else if (key !== 'custom_amenity' && value !== '') {
-                    submitData.append(key, value as string);
+            if (images.length > 0) {
+                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+                if (!cloudName || !uploadPreset) {
+                    throw new Error('Cloudinary configuration missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in your environment variables.');
                 }
-            });
 
-            // Add images (only for new uploads)
-            images.forEach((img, index) => {
-                submitData.append(`images[${index}]`, img.file);
-            });
+                // Upload all images
+                const uploadedImages = await uploadMultipleToCloudinary(
+                    images.map(img => img.file),
+                    cloudName,
+                    uploadPreset,
+                    (progress) => setUploadProgress(progress)
+                );
 
-            // Add featured image index
-            const featuredIndex = images.findIndex(img => img.isFeatured);
-            if (featuredIndex !== -1) {
-                submitData.append('featured_image_index', featuredIndex.toString());
+                uploadedImageUrls = uploadedImages.map(img => img.secure_url);
+
+                // Get featured image URL
+                const featuredIndex = images.findIndex(img => img.isFeatured);
+                featuredImageUrl = featuredIndex !== -1
+                    ? uploadedImages[featuredIndex].secure_url
+                    : uploadedImages[0]?.secure_url || '';
             }
 
-            // Use PUT for edit, POST for create
+            // Step 2: Prepare property data with Cloudinary URLs
+            const propertyDataPayload = {
+                // Basic Information
+                name: formData.name,
+                location: formData.location,
+                total_units: parseInt(formData.total_units),
+
+                // Address Details
+                full_address: formData.full_address,
+                city: formData.city,
+                state: formData.state,
+                postal_code: formData.postal_code,
+
+                // Property Details
+                property_type: formData.property_type,
+                year_built: formData.year_built ? parseInt(formData.year_built) : null,
+                floors: formData.floors ? parseInt(formData.floors) : null,
+                parking_spaces: formData.parking_spaces ? parseInt(formData.parking_spaces) : null,
+                pet_policy: formData.pet_policy,
+
+                // Financial
+                min_rent: formData.min_rent ? parseFloat(formData.min_rent) : null,
+                max_rent: formData.max_rent ? parseFloat(formData.max_rent) : null,
+                security_deposit: formData.security_deposit ? parseFloat(formData.security_deposit) : null,
+                service_charge: formData.service_charge ? parseFloat(formData.service_charge) : null,
+                base_price: formData.base_price ? parseFloat(formData.base_price) : null,
+
+                // Description
+                description: formData.description,
+
+                // Management
+                property_manager: formData.property_manager,
+                status: formData.status,
+
+                // Lease Terms
+                min_lease_period: formData.min_lease_period,
+                payment_frequency_options: formData.payment_frequency_options,
+                utilities_included: formData.utilities_included,
+                furnishing_options: formData.furnishing_options,
+
+                // Owner Information
+                owner_name: formData.owner_name,
+                owner_contact: formData.owner_contact,
+                owner_email: formData.owner_email,
+                owner_id: formData.owner_id,
+
+                // Additional
+                notes: formData.notes,
+
+                // Amenities
+                amenities: formData.amenities,
+
+                // Images from Cloudinary
+                images: uploadedImageUrls,
+                featured_image_url: featuredImageUrl,
+            };
+
+            // Step 3: Submit to your backend
             if (editMode && propertyData) {
-                submitData.append('_method', 'PUT'); // Laravel method spoofing
-                await api.post(`/properties/${propertyData.id}`, submitData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                await propertyAPI.update(propertyData.id, propertyDataPayload);
+
             } else {
-                await api.post('/properties', submitData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                await propertyAPI.create(propertyDataPayload);
             }
 
             onSuccess();
@@ -274,9 +333,10 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
             }
         } catch (error) {
             console.error(`Error ${editMode ? 'updating' : 'creating'} property:`, error);
-            alert(`Failed to ${editMode ? 'update' : 'create'} property. Please try again.`);
+            alert(`Failed to ${editMode ? 'update' : 'create'} property. ${error instanceof Error ? error.message : 'Please try again.'}`);
         } finally {
             setLoading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -346,7 +406,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-90 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">

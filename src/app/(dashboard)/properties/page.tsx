@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Plus, MapPin, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AddPropertyModal from "@/components/AddPropertyModal"
+import { propertyAPI } from "@/data/apis"
 
 interface Property {
     id: number;
@@ -18,6 +19,8 @@ interface Property {
     occupied_units: number;
     image?: string;
     featured_image_url?: string;
+    images?: string;
+    path?: string
 }
 
 export default function PropertiesPage() {
@@ -32,8 +35,9 @@ export default function PropertiesPage() {
 
     const fetchProperties = async () => {
         try {
-            const response = await api.get('/properties');
-            setProperties(response.data);
+            // const response = await api.get('/properties');
+            const response = await propertyAPI.getAll();
+            setProperties(response || response.data);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
         } finally {
@@ -85,7 +89,7 @@ export default function PropertiesPage() {
                     >
                         <div className="h-48 overflow-hidden relative">
                             <img
-                                src={property.featured_image_url || property.image || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
+                                src={property.featured_image_url || property.images || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
                                 alt={property.name}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />

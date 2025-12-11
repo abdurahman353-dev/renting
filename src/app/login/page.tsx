@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Eye, EyeOff, Loader2, Building2, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { toast } from 'sonner';
 
 // Zod schema for login form validation
 const loginSchema = z.object({
@@ -40,6 +42,7 @@ export default function LoginPage() {
 
             // Attempt login with validated data
             await login(validatedData.email, validatedData.password);
+            toast.success("login successfull. redirecting to dashboard")
             router.push('/dashboard');
 
         } catch (err) {
@@ -69,9 +72,9 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 text-2xl font-bold">
-                        <div className="p-2 bg-blue-600 rounded-lg">
+                        <Link href="/" className="p-2 bg-blue-600 rounded-lg">
                             <Building2 className="h-6 w-6" />
-                        </div>
+                        </Link>
                         RentSys
                     </div>
                 </div>

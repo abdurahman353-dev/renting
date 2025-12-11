@@ -237,8 +237,8 @@ export default function PropertyViewPage() {
                         <div className="flex items-center gap-3">
                             <Badge
                                 className={`text-base px-6 py-2 font-semibold shadow-lg ${property.status === "active"
-                                        ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
-                                        : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0"
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
+                                    : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0"
                                     }`}
                             >
                                 {property.status || "Active"}
@@ -247,7 +247,7 @@ export default function PropertyViewPage() {
                                 onClick={() => setEditModalOpen(true)}
                                 className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white shadow-xl px-8 py-6 text-base font-semibold"
                             >
-                                ✨ Edit Property
+                                Edit Property
                             </Button>
                         </div>
                     </div>
@@ -350,7 +350,7 @@ export default function PropertyViewPage() {
                                                         >
                                                             <IconComponent className={`w-6 h-6 ${amenityConfig.color} group-hover:scale-110 transition-transform duration-300`} />
                                                             <span className="text-slate-800 font-semibold text-sm">
-                                                                {amenity.amenity_name}
+                                                                {amenity.amenities}
                                                             </span>
                                                         </div>
                                                     );
@@ -394,10 +394,10 @@ export default function PropertyViewPage() {
                                                                 <TableCell>
                                                                     <Badge
                                                                         className={`font-semibold ${unit.status === "vacant"
-                                                                                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0"
-                                                                                : unit.status === "occupied"
-                                                                                    ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0"
-                                                                                    : "bg-gradient-to-r from-slate-400 to-slate-500 text-white border-0"
+                                                                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0"
+                                                                            : unit.status === "occupied"
+                                                                                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0"
+                                                                                : "bg-gradient-to-r from-slate-400 to-slate-500 text-white border-0"
                                                                             }`}
                                                                     >
                                                                         {unit.status}

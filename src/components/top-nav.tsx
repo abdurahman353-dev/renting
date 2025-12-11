@@ -62,10 +62,10 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                     {isDropdownOpen && (
                         <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
                             <div className="p-2">
-                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
+                                <Link href="/profile" className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
                                     <User className="w-4 h-4" />
                                     Profile
-                                </button>
+                                </Link>
                                 <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors">
                                     <Settings className="w-4 h-4" />
                                     Settings
