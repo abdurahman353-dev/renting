@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
+import { propertyAPI } from "@/data/apis";
 import AddPropertyModal from "@/components/AddPropertyModal";
 
 // Enhanced icon mapping with vibrant colors
@@ -86,8 +86,8 @@ export default function PropertyViewPage() {
 
     const fetchProperty = async () => {
         try {
-            const response = await api.get(`/properties/${params.id}`);
-            setProperty(response.data);
+            const data = await propertyAPI.getById(params.id);
+            setProperty(data);
         } catch (error) {
             console.error("Failed to fetch property:", error);
         } finally {
