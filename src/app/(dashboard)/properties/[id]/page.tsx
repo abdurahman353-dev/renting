@@ -34,17 +34,18 @@ import { propertyAPI } from "@/data/apis";
 import AddPropertyModal from "@/components/AddPropertyModal";
 
 // Enhanced icon mapping with vibrant colors
+// Simplified professional icon mapping
 const AMENITY_ICONS: Record<string, { icon: any; color: string; bgColor: string }> = {
-    "High-Speed WiFi": { icon: Wifi, color: "text-blue-600", bgColor: "bg-blue-50" },
-    "Covered Parking": { icon: Car, color: "text-purple-600", bgColor: "bg-purple-50" },
-    "Fitness Center": { icon: Dumbbell, color: "text-red-600", bgColor: "bg-red-50" },
-    "Modern Kitchen": { icon: Utensils, color: "text-orange-600", bgColor: "bg-orange-50" },
-    "Pet Friendly": { icon: Home, color: "text-green-600", bgColor: "bg-green-50" },
-    "Generator/Backup Power": { icon: Zap, color: "text-yellow-600", bgColor: "bg-yellow-50" },
-    "Air Conditioning": { icon: Wind, color: "text-cyan-600", bgColor: "bg-cyan-50" },
-    "Security": { icon: Shield, color: "text-indigo-600", bgColor: "bg-indigo-50" },
-    "24/7 Concierge Service": { icon: Users, color: "text-pink-600", bgColor: "bg-pink-50" },
-    "Rooftop Pool": { icon: Droplets, color: "text-teal-600", bgColor: "bg-teal-50" },
+    "High-Speed WiFi": { icon: Wifi, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Covered Parking": { icon: Car, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Fitness Center": { icon: Dumbbell, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Modern Kitchen": { icon: Utensils, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Pet Friendly": { icon: Home, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Generator/Backup Power": { icon: Zap, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Air Conditioning": { icon: Wind, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Security": { icon: Shield, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "24/7 Concierge Service": { icon: Users, color: "text-slate-600", bgColor: "bg-slate-100" },
+    "Rooftop Pool": { icon: Droplets, color: "text-slate-600", bgColor: "bg-slate-100" },
 };
 
 interface Property {
@@ -108,7 +109,7 @@ export default function PropertyViewPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-slate-600 font-medium">Loading property details...</p>
@@ -119,7 +120,7 @@ export default function PropertyViewPage() {
 
     if (!property) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
                     <Building2 className="w-20 h-20 text-slate-300 mx-auto mb-4" />
                     <p className="text-slate-600 text-xl font-semibold">Property not found</p>
@@ -152,7 +153,7 @@ export default function PropertyViewPage() {
         : 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <div className="min-h-screen bg-slate-50">
             <div className="max-w-7xl mx-auto p-6 space-y-6">
                 {/* Premium Hero Section with Gradient Overlay */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl">
@@ -222,30 +223,30 @@ export default function PropertyViewPage() {
                     </div>
                 </div>
 
-                {/* Header with Glassmorphism */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-white/20">
+                {/* Header */}
+                <div className="bg-white rounded-2xl shadow-sm p-8 border border-slate-200">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex-1">
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 bg-clip-text text-transparent mb-3">
+                            <h1 className="text-3xl font-bold text-slate-900 mb-3">
                                 {property.name}
                             </h1>
                             <div className="flex items-center text-slate-600 gap-2">
-                                <MapPin className="w-5 h-5 text-blue-600" />
+                                <MapPin className="w-5 h-5 text-slate-500" />
                                 <span className="text-lg">{fullAddress}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <Badge
-                                className={`text-base px-6 py-2 font-semibold shadow-lg ${property.status === "active"
-                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
-                                    : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0"
+                                className={`text-base px-6 py-2 font-semibold shadow-sm ${property.status === "active"
+                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0"
+                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-0"
                                     }`}
                             >
                                 {property.status || "Active"}
                             </Badge>
                             <Button
                                 onClick={() => setEditModalOpen(true)}
-                                className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white shadow-xl px-8 py-6 text-base font-semibold"
+                                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold"
                             >
                                 Edit Property
                             </Button>
@@ -257,16 +258,16 @@ export default function PropertyViewPage() {
                     {/* Left Column - Main Content */}
                     <div className="lg:col-span-2 space-y-6">
                         <Tabs defaultValue="overview" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 bg-white/80 backdrop-blur-xl p-2 rounded-xl shadow-lg border border-white/20">
+                            <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl">
                                 <TabsTrigger
                                     value="overview"
-                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg font-semibold"
+                                    className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-lg font-medium"
                                 >
                                     Overview
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="units"
-                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg font-semibold"
+                                    className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-lg font-medium"
                                 >
                                     Units
                                 </TabsTrigger>
@@ -275,64 +276,64 @@ export default function PropertyViewPage() {
                             <TabsContent value="overview" className="space-y-6 mt-6">
                                 {/* Description with Premium Card */}
                                 {property.description && (
-                                    <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
-                                        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
-                                            <CardTitle className="text-2xl font-bold text-slate-800">About this Property</CardTitle>
+                                    <Card className="bg-white shadow-sm border border-slate-200">
+                                        <CardHeader className="bg-slate-50 border-b border-slate-100">
+                                            <CardTitle className="text-xl font-bold text-slate-800">About this Property</CardTitle>
                                         </CardHeader>
                                         <CardContent className="pt-6">
-                                            <p className="text-slate-700 leading-relaxed text-lg">
+                                            <p className="text-slate-600 leading-relaxed text-base">
                                                 {property.description}
                                             </p>
                                         </CardContent>
                                     </Card>
                                 )}
 
-                                {/* Property Details with Gradient Accents */}
-                                <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
-                                    <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b">
-                                        <CardTitle className="text-2xl font-bold text-slate-800">Property Details</CardTitle>
+                                {/* Property Details */}
+                                <Card className="bg-white shadow-sm border border-slate-200">
+                                    <CardHeader className="bg-slate-50 border-b border-slate-100">
+                                        <CardTitle className="text-xl font-bold text-slate-800">Property Details</CardTitle>
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         <div className="grid grid-cols-2 gap-6">
                                             {property.property_type && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl">
+                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                                     <span className="text-slate-600 font-medium">Type</span>
-                                                    <span className="font-bold text-slate-900">{property.property_type}</span>
+                                                    <span className="font-semibold text-slate-900">{property.property_type}</span>
                                                 </div>
                                             )}
                                             {property.year_built && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
+                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                                     <span className="text-slate-600 font-medium">Year Built</span>
-                                                    <span className="font-bold text-slate-900">{property.year_built}</span>
+                                                    <span className="font-semibold text-slate-900">{property.year_built}</span>
                                                 </div>
                                             )}
                                             {property.floors && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
+                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                                     <span className="text-slate-600 font-medium">Floors</span>
-                                                    <span className="font-bold text-slate-900">{property.floors}</span>
+                                                    <span className="font-semibold text-slate-900">{property.floors}</span>
                                                 </div>
                                             )}
                                             {property.parking_spaces && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl">
+                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                                     <span className="text-slate-600 font-medium">Parking Spaces</span>
-                                                    <span className="font-bold text-slate-900">{property.parking_spaces}</span>
+                                                    <span className="font-semibold text-slate-900">{property.parking_spaces}</span>
                                                 </div>
                                             )}
                                             {property.pet_policy && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl col-span-2">
+                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg col-span-2">
                                                     <span className="text-slate-600 font-medium">Pet Policy</span>
-                                                    <span className="font-bold text-slate-900">{property.pet_policy}</span>
+                                                    <span className="font-semibold text-slate-900">{property.pet_policy}</span>
                                                 </div>
                                             )}
                                         </div>
                                     </CardContent>
                                 </Card>
 
-                                {/* Vibrant Amenities */}
+                                {/* Amenities */}
                                 {property.amenities && property.amenities.length > 0 && (
-                                    <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
-                                        <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b">
-                                            <CardTitle className="text-2xl font-bold text-slate-800">Premium Amenities</CardTitle>
+                                    <Card className="bg-white shadow-sm border border-slate-200">
+                                        <CardHeader className="bg-slate-50 border-b border-slate-100">
+                                            <CardTitle className="text-xl font-bold text-slate-800">Amenities</CardTitle>
                                         </CardHeader>
                                         <CardContent className="pt-6">
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -340,16 +341,16 @@ export default function PropertyViewPage() {
                                                     const amenityConfig = AMENITY_ICONS[amenity.amenity_name] || {
                                                         icon: Home,
                                                         color: "text-slate-600",
-                                                        bgColor: "bg-slate-50"
+                                                        bgColor: "bg-slate-100"
                                                     };
                                                     const IconComponent = amenityConfig.icon;
                                                     return (
                                                         <div
                                                             key={index}
-                                                            className={`flex items-center gap-3 p-4 ${amenityConfig.bgColor} rounded-xl border-2 border-transparent hover:border-current hover:shadow-lg transition-all duration-300 group cursor-pointer`}
+                                                            className={`flex items-center gap-3 p-4 ${amenityConfig.bgColor} rounded-lg border border-slate-100 transition-all duration-300 group`}
                                                         >
-                                                            <IconComponent className={`w-6 h-6 ${amenityConfig.color} group-hover:scale-110 transition-transform duration-300`} />
-                                                            <span className="text-slate-800 font-semibold text-sm">
+                                                            <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
+                                                            <span className="text-slate-700 font-medium text-sm">
                                                                 {amenity.amenities}
                                                             </span>
                                                         </div>
@@ -362,13 +363,13 @@ export default function PropertyViewPage() {
                             </TabsContent>
 
                             <TabsContent value="units" className="mt-6">
-                                <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0">
-                                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex flex-row items-center justify-between">
-                                        <CardTitle className="text-2xl font-bold text-slate-800">Units</CardTitle>
+                                <Card className="bg-white shadow-sm border border-slate-200">
+                                    <CardHeader className="bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between pb-4">
+                                        <CardTitle className="text-xl font-bold text-slate-800">Units</CardTitle>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 hover:from-blue-700 hover:to-purple-700"
+                                            className="bg-blue-600 text-white border-0 hover:bg-blue-700"
                                         >
                                             + Add Unit
                                         </Button>
@@ -378,11 +379,11 @@ export default function PropertyViewPage() {
                                             <div className="overflow-x-auto">
                                                 <Table>
                                                     <TableHeader>
-                                                        <TableRow className="bg-gradient-to-r from-slate-50 to-blue-50">
-                                                            <TableHead className="font-bold text-slate-700">Unit</TableHead>
-                                                            <TableHead className="font-bold text-slate-700">Status</TableHead>
-                                                            <TableHead className="font-bold text-slate-700">Price</TableHead>
-                                                            <TableHead className="text-right font-bold text-slate-700">Actions</TableHead>
+                                                        <TableRow className="bg-slate-50">
+                                                            <TableHead className="font-semibold text-slate-700">Unit</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Price</TableHead>
+                                                            <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -394,10 +395,10 @@ export default function PropertyViewPage() {
                                                                 <TableCell>
                                                                     <Badge
                                                                         className={`font-semibold ${unit.status === "vacant"
-                                                                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0"
+                                                                            ? "bg-emerald-100 text-emerald-700 border-0"
                                                                             : unit.status === "occupied"
-                                                                                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0"
-                                                                                : "bg-gradient-to-r from-slate-400 to-slate-500 text-white border-0"
+                                                                                ? "bg-blue-100 text-blue-700 border-0"
+                                                                                : "bg-slate-100 text-slate-700 border-0"
                                                                             }`}
                                                                     >
                                                                         {unit.status}
@@ -429,42 +430,42 @@ export default function PropertyViewPage() {
                         </Tabs>
                     </div>
 
-                    {/* Right Column - Premium Sidebar */}
+                    {/* Right Column - Sidebar */}
                     <div className="space-y-6">
-                        {/* Property Summary with Gradient */}
-                        <Card className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white shadow-2xl border-0 hover:shadow-3xl transition-all duration-300">
-                            <CardHeader>
-                                <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                                    <TrendingUp className="w-6 h-6" />
+                        {/* Property Summary */}
+                        <Card className="bg-white shadow-sm border border-slate-200">
+                            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
+                                <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                                    <TrendingUp className="w-5 h-5 text-slate-500" />
                                     Property Summary
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex justify-between items-center py-3 border-b border-white/20">
-                                    <span className="text-blue-100 font-medium">Price Range</span>
-                                    <span className="font-bold text-xl">{priceRange}</span>
+                            <CardContent className="space-y-4 pt-6">
+                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                                    <span className="text-slate-600 font-medium">Price Range</span>
+                                    <span className="font-bold text-slate-900 text-lg">{priceRange}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-3 border-b border-white/20">
-                                    <span className="text-blue-100 font-medium">Total Units</span>
-                                    <span className="font-bold text-xl">{property.total_units}</span>
+                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                                    <span className="text-slate-600 font-medium">Total Units</span>
+                                    <span className="font-bold text-slate-900 text-lg">{property.total_units}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-3 border-b border-white/20">
-                                    <span className="text-blue-100 font-medium">Occupancy</span>
-                                    <span className="font-bold text-xl">{occupancyRate}%</span>
+                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                                    <span className="text-slate-600 font-medium">Occupancy</span>
+                                    <span className="font-bold text-slate-900 text-lg">{occupancyRate}%</span>
                                 </div>
                                 {property.security_deposit && (
-                                    <div className="flex justify-between items-center py-3 border-b border-white/20">
-                                        <span className="text-blue-100 font-medium">Security Deposit</span>
-                                        <span className="font-bold text-xl">KES {property.security_deposit.toLocaleString()}</span>
+                                    <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                                        <span className="text-slate-600 font-medium">Security Deposit</span>
+                                        <span className="font-bold text-slate-900 text-lg">KES {property.security_deposit.toLocaleString()}</span>
                                     </div>
                                 )}
                                 <div className="pt-4 space-y-3">
-                                    <Button className="w-full bg-white text-blue-600 hover:bg-blue-50 font-bold py-6 text-base shadow-lg">
+                                    <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
                                         Manage Tenants
                                     </Button>
                                     <Button
                                         variant="outline"
-                                        className="w-full border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold py-6 text-base"
+                                        className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2"
                                     >
                                         Financial Report
                                     </Button>
@@ -472,18 +473,18 @@ export default function PropertyViewPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Contact Card with Glassmorphism */}
+                        {/* Contact Card */}
                         {(property.property_manager || property.owner_name) && (
-                            <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
-                                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                            <Card className="bg-white shadow-sm border border-slate-200">
+                                <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
                                     <CardTitle className="text-xl font-bold text-slate-800">
                                         {property.property_manager ? 'Property Manager' : 'Owner'}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="pt-6">
                                     <div className="flex items-center gap-4 mb-6">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                                            <User className="w-8 h-8 text-white" />
+                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+                                            <User className="w-6 h-6 text-slate-500" />
                                         </div>
                                         <div>
                                             <p className="font-bold text-lg text-slate-900">{property.property_manager || property.owner_name}</p>
@@ -496,18 +497,18 @@ export default function PropertyViewPage() {
                                         {property.owner_contact && (
                                             <Button
                                                 variant="outline"
-                                                className="w-full justify-start text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-semibold py-6"
+                                                className="w-full justify-start text-slate-700 hover:bg-slate-50 font-medium py-2"
                                             >
-                                                <Phone className="w-5 h-5 mr-3 text-blue-600" />
+                                                <Phone className="w-4 h-4 mr-3 text-slate-500" />
                                                 {property.owner_contact}
                                             </Button>
                                         )}
                                         {property.owner_email && (
                                             <Button
                                                 variant="outline"
-                                                className="w-full justify-start text-slate-700 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 font-semibold py-6"
+                                                className="w-full justify-start text-slate-700 hover:bg-slate-50 font-medium py-2"
                                             >
-                                                <Mail className="w-5 h-5 mr-3 text-purple-600" />
+                                                <Mail className="w-4 h-4 mr-3 text-slate-500" />
                                                 {property.owner_email}
                                             </Button>
                                         )}

@@ -54,6 +54,10 @@ const defaultRoutes = [
     color: "text-emerald-500",
     children: [
       {
+        label: "Property Report",
+        href: "/reports/property",
+      },
+      {
         label: "Units Reports",
         href: "/reports/units",
       },

@@ -28,9 +28,10 @@ export function middleware(request: NextRequest) {
     }
 
     // If user is authenticated and trying to access login page
-    if (token && pathname === '/login') {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+    // We allow this to enable re-login if session is stale
+    // if (token && pathname === '/login') {
+    //     return NextResponse.redirect(new URL('/dashboard', request.url));
+    // }
 
     return NextResponse.next();
 }

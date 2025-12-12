@@ -1,7 +1,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+const envApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+// Ensure the URL ends with /api to match Laravel routes
+const API_BASE_URL = envApiUrl.replace(/\/$/, '').endsWith('/api')
+    ? envApiUrl
+    : `${envApiUrl.replace(/\/$/, '')}/api`;
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -123,6 +127,11 @@ export const propertyAPI = {
         const response = await apiClient.post(`/properties/${propertyId}/units`, data);
         return response.data;
     },
+
+    bulkAddUnits: async (propertyId, data) => {
+        const response = await apiClient.post(`/properties/${propertyId}/units/bulk`, data);
+        return response.data;
+    },
 };
 
 // ===========================================================================
@@ -151,8 +160,8 @@ export const unitAPI = {
         return response.data;
     },
 
-    create: async (data) => {
-        const response = await apiClient.post('/units', data);
+    create: async (propertyId, data) => {
+        const response = await apiClient.post(`/properties/${propertyId}/units`, data);
         return response.data;
     },
 
@@ -248,6 +257,11 @@ export const financeAPI = {
 
     getExpenseReport: async () => {
         const response = await apiClient.get('/finance/reports/expenses');
+        return response.data;
+    },
+
+    getPropertyReport: async (filters = {}) => {
+        const response = await apiClient.get('/finance/reports/property', { params: filters });
         return response.data;
     },
 };

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { X, Upload, Trash2, Star, Check } from "lucide-react";
-import { uploadMultipleToCloudinary } from "@/lib/cloudinary";
+import { uploadMultipleToCloudinary } from "@/lib/cloudinary"; // Keeping for reference if needed, or remove
 import api from "@/lib/api";
-import apiClient, { propertyAPI } from "@/data/apis";
+import apiClient, { propertyAPI, mediaAPI } from "@/data/apis";
 
 interface ImageFile {
     file: File;
@@ -237,28 +237,31 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
             let featuredImageUrl = '';
 
             if (images.length > 0) {
-                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-                const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+                // Upload images to local backend
+                const uploadPromises = images.map(async (img, index) => {
+                    try {
+                        const response = await mediaAPI.upload(img.file);
 
-                if (!cloudName || !uploadPreset) {
-                    throw new Error('Cloudinary configuration missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in your environment variables.');
-                }
+                        // Update progress - crude approximation since we do parallel uploads
+                        setUploadProgress(prev => Math.min(prev + (100 / images.length), 100));
 
-                // Upload all images
-                const uploadedImages = await uploadMultipleToCloudinary(
-                    images.map(img => img.file),
-                    cloudName,
-                    uploadPreset,
-                    (progress) => setUploadProgress(progress)
-                );
+                        return {
+                            url: response.url, // Keep for preview/featured check if needed
+                            path: response.path, // Use for storage
+                            isFeatured: img.isFeatured
+                        };
+                    } catch (err) {
+                        console.error("Failed to upload image:", err);
+                        throw new Error(`Failed to upload image ${index + 1}`);
+                    }
+                });
 
-                uploadedImageUrls = uploadedImages.map(img => img.secure_url);
+                const uploadedResults = await Promise.all(uploadPromises);
+                uploadedImageUrls = uploadedResults.map(res => res.path); // Send paths to backend
 
-                // Get featured image URL
-                const featuredIndex = images.findIndex(img => img.isFeatured);
-                featuredImageUrl = featuredIndex !== -1
-                    ? uploadedImages[featuredIndex].secure_url
-                    : uploadedImages[0]?.secure_url || '';
+                // Get featured image URL (or path)
+                const featuredResult = uploadedResults.find(res => res.isFeatured);
+                featuredImageUrl = featuredResult ? featuredResult.path : (uploadedResults[0]?.path || '');
             }
 
             // Step 2: Prepare property data with Cloudinary URLs

@@ -44,7 +44,30 @@ export default function DashboardLayout({
 
     // Don't render dashboard if not authenticated or unauthorized
     if (!isAuthenticated || !hasRole(['admin', 'super_admin'])) {
-        return null;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+                    <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+                    <p className="text-gray-600 mb-6">
+                        {!isAuthenticated
+                            ? "You need to be logged in to view this page."
+                            : "You do not have the required permissions to view this dashboard."
+                        }
+                    </p>
+                    <button
+                        onClick={() => {
+                            // Clear possibly stale data
+                            sessionStorage.clear();
+                            document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                            window.location.href = '/login';
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                        Return to Login
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return <LayoutWrapper>{children}</LayoutWrapper>;

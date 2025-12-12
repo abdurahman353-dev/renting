@@ -14,7 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home } from "lucide-react"
+import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Edit, Power, Ban } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -24,6 +24,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 interface Tenant {
     id: number;
@@ -56,6 +63,7 @@ export default function TenantsPage() {
     const [filterUnit, setFilterUnit] = useState("");
 
     // Form State
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState({
         name: "",
         id_number: "",
@@ -110,41 +118,91 @@ export default function TenantsPage() {
         });
     };
 
-    const handleRegisterTenant = async () => {
+    const handleEdit = (tenant: Tenant) => {
+        setEditingId(tenant.id);
+
+        setFormData({
+            name: tenant.name,
+            id_number: tenant.id_number || "",
+            phone: tenant.phone,
+            email: tenant.email || "",
+            property_id: "",
+            unit_id: "",
+            start_date: "",
+            rent_amount: ""
+        });
+        setOpen(true);
+    };
+
+    const handleRegisterOrUpdate = async () => {
         if (!formData.name || !formData.id_number || !formData.phone) return;
 
         setSubmitting(true);
         try {
-            // Filter out empty strings for optional fields to avoid 422 validation errors
-            const payload = {
-                ...formData,
-                email: formData.email || null,
-                unit_id: formData.unit_id || null,
-                start_date: formData.start_date || null,
-                rent_amount: formData.rent_amount || null,
-                property_id: undefined // Backend doesn't need property_id directly as it uses unit_id
-            };
-            await api.post('/tenants', payload);
-            // Refresh list
+            if (editingId) {
+                // Update
+                await api.put(`/tenants/${editingId}`, {
+                    name: formData.name,
+                    id_number: formData.id_number,
+                    phone: formData.phone,
+                    email: formData.email,
+                });
+                toast("Tenant updated successfully.");
+            } else {
+                // Create
+                const payload = {
+                    ...formData,
+                    email: formData.email || null,
+                    unit_id: formData.unit_id || null,
+                    start_date: formData.start_date || null,
+                    rent_amount: formData.rent_amount || null,
+                    property_id: undefined
+                };
+                await api.post('/tenants', payload);
+                toast("Tenant registered successfully.");
+            }
+
             await fetchTenants();
-            // Close dialog
             setOpen(false);
-            // Reset form
+            setEditingId(null);
             setFormData({
                 name: "", id_number: "", phone: "", email: "",
                 property_id: "", unit_id: "", start_date: "", rent_amount: ""
             });
         } catch (error) {
-            console.error("Failed to register tenant:", error);
-            alert("Failed to register tenant. ID Number might already exist.");
+            console.error("Failed to save tenant:", error);
+            toast("Failed to save tenant information.");
         } finally {
             setSubmitting(false);
         }
     };
 
+    const handleToggleStatus = async (tenant: Tenant) => {
+        const newStatus = tenant.status === 'Active' ? 'Inactive' : 'Active';
+        const action = newStatus === 'Active' ? 'activate' : 'deactivate';
+
+        if (!confirm(`Are you sure you want to ${action} this tenant? ${newStatus === 'Inactive' ? 'This will make their unit available.' : 'This will attempt to re-assign their previous unit.'}`)) {
+            return;
+        }
+
+        try {
+            await api.put(`/tenants/${tenant.id}/status`, { status: newStatus });
+            toast(`Tenant ${action}d successfully.`);
+            await fetchTenants();
+            await fetchProperties();
+        } catch (error: any) {
+            console.error("Failed to toggle status:", error);
+            const msg = error.response?.data?.message || `Failed to ${action} tenant.`;
+            toast(msg);
+        }
+    };
+
     // Filter units based on selected property - only show VACANT units
     const selectedProperty = properties.find(p => p.id.toString() === formData.property_id);
-    const availableUnits = selectedProperty?.units?.filter((u: any) => u.status?.toUpperCase() !== 'OCCUPIED') || [];
+    const availableUnits = selectedProperty?.units?.filter((u: any) => {
+        const status = u.status?.toUpperCase();
+        return status !== 'OCCUPIED' && status !== 'MAINTENANCE';
+    }) || [];
 
     // Filter tenants based on search and filters
     const filteredTenants = tenants.filter(tenant => {
@@ -183,7 +241,16 @@ export default function TenantsPage() {
                     <p className="text-muted-foreground">Manage tenant profiles and lease agreements.</p>
                 </div>
 
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog open={open} onOpenChange={(val) => {
+                    if (!val) {
+                        setEditingId(null);
+                        setFormData({
+                            name: "", id_number: "", phone: "", email: "",
+                            property_id: "", unit_id: "", start_date: "", rent_amount: ""
+                        });
+                    }
+                    setOpen(val);
+                }}>
                     <DialogTrigger asChild>
                         <Button className="bg-indigo-600 hover:bg-indigo-700">
                             <Plus className="mr-2 h-4 w-4" /> Register Tenant
@@ -191,9 +258,9 @@ export default function TenantsPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Register New Tenant</DialogTitle>
+                            <DialogTitle>{editingId ? 'Edit Tenant' : 'Register New Tenant'}</DialogTitle>
                             <DialogDescription>
-                                Create a new tenant profile.
+                                {editingId ? 'Update tenant details.' : 'Create a new tenant profile.'}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -243,75 +310,77 @@ export default function TenantsPage() {
                                 />
                             </div>
 
-                            <div className="border-t pt-4 mt-2">
-                                <p className="text-sm font-medium text-muted-foreground mb-4">Unit Assignment (Optional)</p>
-                                <div className="grid gap-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="property_id" className="text-right">Property</Label>
-                                        <select
-                                            id="property_id"
-                                            name="property_id"
-                                            value={formData.property_id}
-                                            onChange={handleInputChange}
-                                            className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <option value="">Select Property...</option>
-                                            {properties.map((p: any) => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
-                                        </select>
+                            {!editingId && (
+                                <div className="border-t pt-4 mt-2">
+                                    <p className="text-sm font-medium text-muted-foreground mb-4">Unit Assignment (Optional)</p>
+                                    <div className="grid gap-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="property_id" className="text-right">Property</Label>
+                                            <select
+                                                id="property_id"
+                                                name="property_id"
+                                                value={formData.property_id}
+                                                onChange={handleInputChange}
+                                                className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Select Property...</option>
+                                                {properties.map((p: any) => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="unit_id" className="text-right">Unit</Label>
+                                            <select
+                                                id="unit_id"
+                                                name="unit_id"
+                                                value={formData.unit_id}
+                                                onChange={handleInputChange}
+                                                disabled={!formData.property_id}
+                                                className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Select Unit...</option>
+                                                {availableUnits.map((u: any) => (
+                                                    <option key={u.id} value={u.id}>Unit {u.unit_number} (KES {u.price})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {formData.unit_id && (
+                                            <>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="start_date" className="text-right">Start Date</Label>
+                                                    <Input
+                                                        id="start_date"
+                                                        name="start_date"
+                                                        type="date"
+                                                        value={formData.start_date}
+                                                        onChange={handleInputChange}
+                                                        className="col-span-3"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="rent_amount" className="text-right">Rent (KES)</Label>
+                                                    <Input
+                                                        id="rent_amount"
+                                                        name="rent_amount"
+                                                        type="number"
+                                                        value={formData.rent_amount}
+                                                        onChange={handleInputChange}
+                                                        className="col-span-3"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="unit_id" className="text-right">Unit</Label>
-                                        <select
-                                            id="unit_id"
-                                            name="unit_id"
-                                            value={formData.unit_id}
-                                            onChange={handleInputChange}
-                                            disabled={!formData.property_id}
-                                            className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <option value="">Select Unit...</option>
-                                            {availableUnits.map((u: any) => (
-                                                <option key={u.id} value={u.id}>Unit {u.unit_number} (KES {u.price})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {formData.unit_id && (
-                                        <>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="start_date" className="text-right">Start Date</Label>
-                                                <Input
-                                                    id="start_date"
-                                                    name="start_date"
-                                                    type="date"
-                                                    value={formData.start_date}
-                                                    onChange={handleInputChange}
-                                                    className="col-span-3"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="rent_amount" className="text-right">Rent (KES)</Label>
-                                                <Input
-                                                    id="rent_amount"
-                                                    name="rent_amount"
-                                                    type="number"
-                                                    value={formData.rent_amount}
-                                                    onChange={handleInputChange}
-                                                    className="col-span-3"
-                                                />
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
-                            </div>
+                            )}
 
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                            <Button onClick={handleRegisterTenant} disabled={submitting}>
+                            <Button onClick={handleRegisterOrUpdate} disabled={submitting}>
                                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Register
+                                {editingId ? 'Save Changes' : 'Register'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -515,9 +584,35 @@ export default function TenantsPage() {
                                                 (tenant.balance ?? 0).toLocaleString()}
                                     </TableCell>
                                     <TableCell>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEdit(tenant)}>
+                                                    <Edit className="mr-2 h-4 w-4" />
+                                                    Edit Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleToggleStatus(tenant)}
+                                                    className={tenant.status?.toUpperCase() === 'ACTIVE' ? "text-red-600 focus:text-red-600" : "text-green-600 focus:text-green-600"}
+                                                >
+                                                    {tenant.status?.toUpperCase() === 'ACTIVE' ? (
+                                                        <>
+                                                            <Ban className="mr-2 h-4 w-4" />
+                                                            Mark as Inactive
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Power className="mr-2 h-4 w-4" />
+                                                            Mark as Active
+                                                        </>
+                                                    )}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             );
