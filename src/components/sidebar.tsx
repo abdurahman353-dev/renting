@@ -13,7 +13,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react"
-import { useState } from "react"
+import { Children, useState } from "react"
 
 
 const defaultRoutes = [
@@ -46,6 +46,12 @@ const defaultRoutes = [
     icon: CreditCard,
     href: "/finance",
     color: "text-orange-700",
+    children: [
+      {
+        label: "Cashier",
+        href: "/finance/cashier"
+      }
+    ]
   },
   {
     label: "Reports",

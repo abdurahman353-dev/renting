@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +23,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { propertyAPI, tenantAPI } from "@/data/apis"
 
 interface Tenant {
     id: number;
@@ -75,8 +75,8 @@ export default function TenantsPage() {
 
     const fetchTenants = async () => {
         try {
-            const response = await api.get('/tenants');
-            setTenants(response.data);
+            const response = await tenantAPI.getAll();
+            setTenants(response);
         } catch (error) {
             console.error("Failed to fetch tenants:", error);
         } finally {
@@ -86,8 +86,9 @@ export default function TenantsPage() {
 
     const fetchProperties = async () => {
         try {
-            const response = await api.get('/properties');
-            setProperties(response.data);
+            // const response = await api.get('/properties');
+            const response = await propertyAPI.getAll()
+            setProperties(response);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
         }
@@ -111,20 +112,29 @@ export default function TenantsPage() {
     };
 
     const handleRegisterTenant = async () => {
-        if (!formData.name || !formData.id_number || !formData.phone) return;
+        if (!formData.name || !formData.id_number || !formData.phone) {
+            alert("Please fill in all required fields (Name, ID Number, Phone)");
+            return;
+        }
+
+        if (!formData.property_id || !formData.unit_id || !formData.start_date || !formData.rent_amount) {
+            alert("Please complete the unit assignment details (Property, Unit, Start Date, Rent Amount)");
+            return;
+        }
 
         setSubmitting(true);
         try {
-            // Filter out empty strings for optional fields to avoid 422 validation errors
             const payload = {
-                ...formData,
+                name: formData.name,
+                id_number: formData.id_number,
+                phone: formData.phone,
                 email: formData.email || null,
-                unit_id: formData.unit_id || null,
-                start_date: formData.start_date || null,
-                rent_amount: formData.rent_amount || null,
-                property_id: undefined // Backend doesn't need property_id directly as it uses unit_id
+                property_id: formData.property_id,
+                unit_id: formData.unit_id,
+                start_date: formData.start_date,
+                rent_amount: formData.rent_amount
             };
-            await api.post('/tenants', payload);
+            await tenantAPI.create(payload);
             // Refresh list
             await fetchTenants();
             // Close dialog
@@ -134,9 +144,10 @@ export default function TenantsPage() {
                 name: "", id_number: "", phone: "", email: "",
                 property_id: "", unit_id: "", start_date: "", rent_amount: ""
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to register tenant:", error);
-            alert("Failed to register tenant. ID Number might already exist.");
+            const errorMsg = error?.response?.data?.message || error?.message || "Failed to register tenant";
+            alert(errorMsg);
         } finally {
             setSubmitting(false);
         }

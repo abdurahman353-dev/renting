@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Plus, Filter } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { unitAPI } from "@/data/apis";
 
 // Mock Data
 const UNITS = [
@@ -66,6 +68,20 @@ const UNITS = [
 
 export default function UnitsPage() {
     const router = useRouter();
+    const [units, setUnits] = useState([]);
+
+    useEffect(() => {
+        const fetchUnits = async () => {
+            try {
+                const response = await unitAPI.getAll();
+                setUnits(response);
+            } catch (error) {
+                console.error('Error fetching units:', error);
+            }
+        };
+
+        fetchUnits();
+    }, []);
 
     return (
         <div className="p-8 space-y-8">
@@ -113,7 +129,7 @@ export default function UnitsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {UNITS.map((unit) => (
+                            {units.map((unit) => (
                                 <TableRow key={unit.id}>
                                     <TableCell className="font-medium">{unit.number}</TableCell>
                                     <TableCell>{unit.property}</TableCell>

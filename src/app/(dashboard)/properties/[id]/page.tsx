@@ -32,6 +32,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { propertyAPI } from "@/data/apis";
 import AddPropertyModal from "@/components/AddPropertyModal";
+import { formatText, formatTextType } from "@/lib/utils";
 
 // Enhanced icon mapping with vibrant colors
 const AMENITY_ICONS: Record<string, { icon: any; color: string; bgColor: string }> = {
@@ -241,7 +242,7 @@ export default function PropertyViewPage() {
                                     : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0"
                                     }`}
                             >
-                                {property.status || "Active"}
+                                {formatTextType(property.status) || "Active"}
                             </Badge>
                             <Button
                                 onClick={() => setEditModalOpen(true)}
@@ -446,7 +447,7 @@ export default function PropertyViewPage() {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-white/20">
                                     <span className="text-blue-100 font-medium">Total Units</span>
-                                    <span className="font-bold text-xl">{property.total_units}</span>
+                                    <span className="font-bold text-xl">{property.units?.length}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-white/20">
                                     <span className="text-blue-100 font-medium">Occupancy</span>

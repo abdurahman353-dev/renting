@@ -142,17 +142,17 @@ export const uploadAPI = {
 
 export const unitAPI = {
     getAll: async () => {
-        const response = await apiClient.get('/units');
+        const response = await apiClient.get('/properties/units');
         return response.data;
     },
 
     getById: async (id) => {
-        const response = await apiClient.get(`/units/${id}`);
+        const response = await apiClient.get(`/properties/units/${id}`);
         return response.data;
     },
 
-    create: async (data) => {
-        const response = await apiClient.post('/units', data);
+    create: async (data, id) => {
+        const response = await apiClient.post(`/properties/${id}/units`, data);
         return response.data;
     },
 

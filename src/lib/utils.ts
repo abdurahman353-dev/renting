@@ -25,7 +25,7 @@ export function formatText(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export function formatTextType(textType: string) {
+export function formatTextType(textType: string | undefined | null) {
   if (!textType) return 'Not specified';
 
   // Replace underscores with spaces and capitalize each word

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { unitAPI } from "@/data/apis";
+import { propertyAPI, unitAPI } from "@/data/apis";
 import { Building2, Home, DollarSign, Loader2, Hash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,9 @@ const formSchema = z.object({
     status: z.string().min(1, {
         message: "Status is required.",
     }),
-    image: z.string().min(1, {
-        message: "Image is required.",
-    }),
+    // image: z.string().min(1, {
+    //     message: "Image is required.",
+    // }),
 });
 
 // Mock properties for the select dropdown
@@ -57,8 +57,13 @@ const MOCK_PROPERTIES = [
 ];
 
 export default function AddUnitPage() {
+    const [properties, setProperties] = useState<any[]>([]);
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        fetchProperties();
+    }, []);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -68,14 +73,28 @@ export default function AddUnitPage() {
             type: "",
             price: "",
             status: "Available",
-            image: "",
+            //image: "",
         },
     });
+
+    const fetchProperties = async () => {
+        try {
+            // const response = await api.get('/properties');
+            const response = await propertyAPI.getAll()
+            setProperties(response);
+        } catch (error) {
+            console.error("Failed to fetch properties:", error);
+        }
+    };
+
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             setLoading(true);
-            await unitAPI.create(values);
+            console.log('Form values:', values);
+            console.log('Property ID being sent:', values.property_id);
+            // Use the property_id from the form values
+            await unitAPI.create(values, values.property_id);
             router.push("/units");
             router.refresh();
         } catch (error: any) {
@@ -121,8 +140,8 @@ export default function AddUnitPage() {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {MOCK_PROPERTIES.map((property) => (
-                                                            <SelectItem key={property.id} value={property.id}>
+                                                        {properties.map((property) => (
+                                                            <SelectItem key={property.id} value={property.id.toString()}>
                                                                 {property.name}
                                                             </SelectItem>
                                                         ))}
@@ -219,7 +238,7 @@ export default function AddUnitPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-8">
+                                {/* <div className="space-y-8">
                                     <FormField
                                         control={form.control}
                                         name="image"
@@ -237,7 +256,7 @@ export default function AddUnitPage() {
                                             </FormItem>
                                         )}
                                     />
-                                </div>
+                                </div> */}
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4 border-t">
