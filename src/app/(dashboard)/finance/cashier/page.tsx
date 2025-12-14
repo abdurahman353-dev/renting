@@ -57,6 +57,7 @@ interface Tenant {
     name: string;
     id_number: string;
     phone: string;
+    email?: string;
     unit_number?: string;
     property_name?: string;
     balance: number;

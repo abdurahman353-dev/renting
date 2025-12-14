@@ -225,7 +225,7 @@ export const financeAPI = {
     },
 
     generateInvoice: async (data) => {
-        const response = await apiClient.post('/finance/invoices/generate', data);
+        const response = await apiClient.post('/finance/invoices/generate-monthly', data);
         return response.data;
     },
 

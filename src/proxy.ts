@@ -10,7 +10,7 @@ export function proxy(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
         if (!token) {
             // TEMPORARY: Allow access without token for viewing
-            // return NextResponse.redirect(new URL('/login', request.url));
+            return NextResponse.redirect(new URL('/login', request.url));
         }
     }
 

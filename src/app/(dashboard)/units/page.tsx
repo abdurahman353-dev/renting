@@ -66,9 +66,19 @@ const UNITS = [
     },
 ];
 
+interface Unit {
+    id: string;
+    number: string;
+    property: string;
+    type: string;
+    status: string;
+    price: string;
+    tenant: string;
+}
+
 export default function UnitsPage() {
     const router = useRouter();
-    const [units, setUnits] = useState([]);
+    const [units, setUnits] = useState<Unit[]>([]);
 
     useEffect(() => {
         const fetchUnits = async () => {

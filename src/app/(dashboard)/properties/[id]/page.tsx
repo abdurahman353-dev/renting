@@ -31,7 +31,9 @@ import {
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { propertyAPI } from "@/data/apis";
+import { useRouter } from "next/navigation";
 import AddPropertyModal from "@/components/AddPropertyModal";
+import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
 import { formatText, formatTextType } from "@/lib/utils";
 
 // Enhanced icon mapping with vibrant colors
@@ -81,9 +83,11 @@ interface Property {
 
 export default function PropertyViewPage() {
     const params = useParams();
+    const router = useRouter();
     const [property, setProperty] = useState<Property | null>(null);
     const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
     const fetchProperty = async () => {
         try {
@@ -366,13 +370,24 @@ export default function PropertyViewPage() {
                                 <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0">
                                     <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex flex-row items-center justify-between">
                                         <CardTitle className="text-2xl font-bold text-slate-800">Units</CardTitle>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 hover:from-blue-700 hover:to-purple-700"
-                                        >
-                                            + Add Unit
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setBulkModalOpen(true)}
+                                                size="sm"
+                                                className="bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                            >
+                                                Bulk Add
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => router.push("/units/new")}
+                                                size="sm"
+                                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 hover:from-blue-700 hover:to-purple-700"
+                                            >
+                                                + Add Unit
+                                            </Button>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         {property.units && property.units.length > 0 ? (
@@ -528,6 +543,18 @@ export default function PropertyViewPage() {
                     onSuccess={handleEditSuccess}
                     editMode={true}
                     propertyData={property}
+                />
+            )}
+
+            {property && (
+                <BulkUnitModal
+                    isOpen={bulkModalOpen}
+                    onClose={() => setBulkModalOpen(false)}
+                    propertyId={property.id}
+                    onSuccess={() => {
+                        fetchProperty();
+                        setBulkModalOpen(false);
+                    }}
                 />
             )}
         </div>
