@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { FileText, CreditCard, Plus, Download, Send } from "lucide-react"
+import { financeAPI, propertyAPI } from "@/data/apis"
 
 interface Invoice {
     id: string;
@@ -26,7 +27,10 @@ interface Invoice {
     // Map from backend fields
     tenant_name?: string;
     unit_number?: string;
+    property_name?: string;
     created_at?: string;
+    paid_amount?: number;
+    due_date?: string;
 }
 
 interface Payment {
@@ -52,35 +56,125 @@ export default function FinancePage() {
         arrears: 0
     });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [invRes, payRes, revRes] = await Promise.all([
-                    api.get('/finance/invoices'),
-                    api.get('/finance/payments'),
-                    api.get('/dashboard/stats') // Re-using dashboard stats for finance cards
-                ]);
-                // Ensure arrays
-                setInvoices(Array.isArray(invRes.data) ? invRes.data : []);
-                setPayments(Array.isArray(payRes.data) ? payRes.data : []);
+    const [properties, setProperties] = useState<any[]>([]);
+    const [selectedProperty, setSelectedProperty] = useState("all");
+    const [selectedStatus, setSelectedStatus] = useState("all");
 
-                // Safe stats extraction
-                const statsData = revRes.data || {};
-                setStats({
-                    revenue: statsData.revenue ?? 0,
-                    pending: statsData.pendingIssues ?? 0,
-                    arrears: 0
-                });
-            } catch (error) {
-                console.error("Failed to fetch finance data:", error);
-            } finally {
-                setLoading(false);
+    // Fetch filter options (properties)
+    useEffect(() => {
+        const fetchFilters = async () => {
+            try {
+                const res = await propertyAPI.getAll();
+                // Handle both {data: [...]} and [...] response formats
+                const propertyData = Array.isArray(res) ? res : (res.data || []);
+                setProperties(propertyData);
+            } catch (e) {
+                console.error("Failed to fetch properties:", e);
+                setProperties([]);
             }
         };
-        fetchData();
+        fetchFilters();
     }, []);
 
-    if (loading) return <div className="p-8">Loading finance data...</div>;
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                property_id: selectedProperty !== 'all' ? selectedProperty : undefined,
+                status: selectedStatus !== 'all' ? selectedStatus : undefined,
+            };
+
+            const [invRes, payRes, revRes] = await Promise.all([
+                financeAPI.getInvoices(params),
+                financeAPI.getPayments(params),
+                financeAPI.getRevenueReport()
+            ]);
+
+            // Handle response structure - could be direct array or {data: array}
+            const invoiceData = Array.isArray(invRes) ? invRes : (invRes.data || []);
+            const paymentData = Array.isArray(payRes) ? payRes : (payRes.data || []);
+            const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
+
+            setInvoices(invoiceData);
+            setPayments(paymentData);
+
+            setStats({
+                revenue: revenueData.revenue ?? 0,
+                pending: calculatePending(invoiceData),
+                arrears: calculateArrears(invoiceData)
+            });
+        } catch (error) {
+            console.error("Failed to fetch finance data:", error);
+            setInvoices([]);
+            setPayments([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Calculate pending amount from invoices
+    const calculatePending = (invoices: Invoice[]) => {
+        return invoices
+            .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
+            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+    };
+
+    // Calculate arrears (overdue invoices)
+    const calculateArrears = (invoices: Invoice[]) => {
+        const today = new Date();
+        return invoices
+            .filter(inv => {
+                if (inv.status === 'PAID') return false;
+                const dueDate = new Date(inv.due_date || inv.created_at);
+                const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                return daysDiff > 30;
+            })
+            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [selectedProperty, selectedStatus]);
+
+    const handleGenerateInvoices = async () => {
+        try {
+            const res = await financeAPI.generateInvoice({});
+            const message = res.message || res.data?.message || "Invoices generated successfully";
+            alert(message);
+            fetchData();
+        } catch (error: any) {
+            alert(error.response?.data?.message || "Failed to generate invoices");
+        }
+    };
+
+    const handleExport = () => {
+        // Simple CSV Export of current view
+        const headers = ["ID", "Tenant", "Unit", "Property", "Amount", "Paid", "Status", "Date"];
+        const rows = invoices.map(inv => [
+            inv.id,
+            inv.tenant_name || inv.tenant || 'Unknown',
+            inv.unit_number || inv.unit || 'N/A',
+            inv.property_name || '-',
+            inv.amount,
+            inv.paid_amount || 0,
+            inv.status,
+            inv.created_at || inv.date
+        ]);
+
+        let csvContent = "data:text/csv;charset=utf-8,"
+            + headers.join(",") + "\n"
+            + rows.map(e => e.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "invoices_report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    if (loading && invoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
     return (
         <div className="p-8 space-y-8">
@@ -90,13 +184,41 @@ export default function FinancePage() {
                     <p className="text-muted-foreground">Manage invoices, payments, and financial reports.</p>
                 </div>
                 <div className="flex space-x-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export Report
                     </Button>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleGenerateInvoices}>
                         <Plus className="mr-2 h-4 w-4" /> Generate Monthly Invoices
                     </Button>
                 </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-4 items-center bg-white p-4 rounded-lg border shadow-sm">
+                <select
+                    className="border rounded p-2 text-sm"
+                    value={selectedProperty}
+                    onChange={(e) => setSelectedProperty(e.target.value)}
+                >
+                    <option value="all">All Properties</option>
+                    {properties && properties.length > 0 && properties.map((p: any) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                </select>
+
+                <select
+                    className="border rounded p-2 text-sm"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                    <option value="all">All Statuses</option>
+                    <option value="PAID">Paid</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="OVERDUE">Overdue</option>
+                    <option value="PARTIAL">Partial</option>
+                </select>
+
+                <Button variant="secondary" onClick={fetchData} size="sm">Refresh</Button>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -144,6 +266,7 @@ export default function FinancePage() {
                                 <TableRow>
                                     <TableHead>Invoice ID</TableHead>
                                     <TableHead>Tenant</TableHead>
+                                    <TableHead>Property</TableHead>
                                     <TableHead>Unit</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
@@ -152,20 +275,26 @@ export default function FinancePage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {invoices.map((inv) => (
+                                {invoices.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
+                                    </TableRow>
+                                ) : invoices.map((inv) => (
                                     <TableRow key={inv.id}>
                                         <TableCell className="font-medium">{inv.id}</TableCell>
                                         <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
+                                        <TableCell>{inv.property_name || '-'}</TableCell>
                                         <TableCell>{inv.unit_number || inv.unit}</TableCell>
                                         <TableCell>{inv.created_at || inv.date}</TableCell>
                                         <TableCell>
-                                            <Badge variant={inv.status === "Paid" ? "default" : inv.status === "Overdue" ? "destructive" : "secondary"}
-                                                className={inv.status === "Paid" ? "bg-green-600" : ""}
+                                            <Badge
+                                                variant={inv.status === "PAID" ? "default" : inv.status === "OVERDUE" ? "destructive" : "secondary"}
+                                                className={inv.status === "PAID" ? "bg-green-600" : ""}
                                             >
                                                 {inv.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold">KES {inv.amount.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-bold">KES {Number(inv.amount).toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" title="Send Reminder">
                                                 <Send className="h-4 w-4 text-slate-500" />
@@ -191,14 +320,18 @@ export default function FinancePage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {payments.map((pay) => (
+                                {payments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
+                                    </TableRow>
+                                ) : payments.map((pay) => (
                                     <TableRow key={pay.id}>
                                         <TableCell className="font-medium">{pay.id}</TableCell>
                                         <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
                                         <TableCell>{pay.method}</TableCell>
                                         <TableCell className="font-mono text-xs">{pay.reference}</TableCell>
                                         <TableCell>{pay.created_at || pay.date}</TableCell>
-                                        <TableCell className="text-right font-bold text-green-600">+KES {pay.amount.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-bold text-green-600">+KES {Number(pay.amount).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

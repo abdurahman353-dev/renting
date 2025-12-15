@@ -1,11 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const envApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-// Ensure the URL ends with /api to match Laravel routes
-const API_BASE_URL = envApiUrl.replace(/\/$/, '').endsWith('/api')
-    ? envApiUrl
-    : `${envApiUrl.replace(/\/$/, '')}/api`;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -127,11 +123,6 @@ export const propertyAPI = {
         const response = await apiClient.post(`/properties/${propertyId}/units`, data);
         return response.data;
     },
-
-    bulkAddUnits: async (propertyId, data) => {
-        const response = await apiClient.post(`/properties/${propertyId}/units/bulk`, data);
-        return response.data;
-    },
 };
 
 // ===========================================================================
@@ -151,17 +142,17 @@ export const uploadAPI = {
 
 export const unitAPI = {
     getAll: async () => {
-        const response = await apiClient.get('/units');
+        const response = await apiClient.get('/properties/units');
         return response.data;
     },
 
     getById: async (id) => {
-        const response = await apiClient.get(`/units/${id}`);
+        const response = await apiClient.get(`/properties/units/${id}`);
         return response.data;
     },
 
-    create: async (propertyId, data) => {
-        const response = await apiClient.post(`/properties/${propertyId}/units`, data);
+    create: async (data, id) => {
+        const response = await apiClient.post(`/properties/${id}/units`, data);
         return response.data;
     },
 
@@ -223,48 +214,83 @@ export const tenantAPI = {
 
 export const financeAPI = {
     // Invoices
-    getInvoices: async () => {
-        const response = await apiClient.get('/finance/invoices');
+    getInvoices: async (params = {}) => {
+        const response = await apiClient.get('/billing/invoices', { params });
         return response.data;
     },
 
     getInvoice: async (id) => {
-        const response = await apiClient.get(`/finance/invoices/${id}`);
+        const response = await apiClient.get(`/billing/invoices/${id}`);
         return response.data;
     },
 
-    generateInvoice: async (data) => {
-        const response = await apiClient.post('/finance/invoices/generate', data);
+    generateInvoice: async (data = {}) => {
+        const response = await apiClient.post('/billing/invoices/generate', data);
         return response.data;
     },
 
     // Payments
-    getPayments: async () => {
-        const response = await apiClient.get('/finance/payments');
+    getPayments: async (params = {}) => {
+        const response = await apiClient.get('/billing/payments', { params });
         return response.data;
     },
 
     recordPayment: async (data) => {
-        const response = await apiClient.post('/finance/payments', data);
+        const response = await apiClient.post('/billing/payments', data);
         return response.data;
     },
 
     // Reports
     getRevenueReport: async () => {
-        const response = await apiClient.get('/finance/reports/revenue');
+        const response = await apiClient.get('/billing/reports/revenue');
         return response.data;
     },
 
     getExpenseReport: async () => {
-        const response = await apiClient.get('/finance/reports/expenses');
-        return response.data;
-    },
-
-    getPropertyReport: async (filters = {}) => {
-        const response = await apiClient.get('/finance/reports/property', { params: filters });
+        const response = await apiClient.get('/billing/reports/expenses');
         return response.data;
     },
 };
+
+// export const financeAPI = {
+//     // Invoices
+//     getInvoices: async () => {
+//         const response = await apiClient.get('/finance/invoices');
+//         return response.data;
+//     },
+
+//     getInvoice: async (id) => {
+//         const response = await apiClient.get(`/finance/invoices/${id}`);
+//         return response.data;
+//     },
+
+//     generateInvoice: async (data) => {
+//         const response = await apiClient.post('/finance/invoices/generate-monthly', data);
+//         return response.data;
+//     },
+
+//     // Payments
+//     getPayments: async () => {
+//         const response = await apiClient.get('/finance/payments');
+//         return response.data;
+//     },
+
+//     recordPayment: async (data) => {
+//         const response = await apiClient.post('/finance/payments', data);
+//         return response.data;
+//     },
+
+//     // Reports
+//     getRevenueReport: async () => {
+//         const response = await apiClient.get('/finance/reports/revenue');
+//         return response.data;
+//     },
+
+//     getExpenseReport: async () => {
+//         const response = await apiClient.get('/finance/reports/expenses');
+//         return response.data;
+//     },
+// };
 
 // ============================================================================
 // MAINTENANCE APIs

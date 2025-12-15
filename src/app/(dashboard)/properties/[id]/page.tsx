@@ -31,7 +31,10 @@ import {
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { propertyAPI } from "@/data/apis";
+import { useRouter } from "next/navigation";
 import AddPropertyModal from "@/components/AddPropertyModal";
+import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
+import { formatText, formatTextType } from "@/lib/utils";
 
 // Enhanced icon mapping with vibrant colors
 // Simplified professional icon mapping
@@ -81,9 +84,11 @@ interface Property {
 
 export default function PropertyViewPage() {
     const params = useParams();
+    const router = useRouter();
     const [property, setProperty] = useState<Property | null>(null);
     const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
     const fetchProperty = async () => {
         try {
@@ -242,7 +247,7 @@ export default function PropertyViewPage() {
                                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-0"
                                     }`}
                             >
-                                {property.status || "Active"}
+                                {formatTextType(property.status) || "Active"}
                             </Badge>
                             <Button
                                 onClick={() => setEditModalOpen(true)}
@@ -366,13 +371,24 @@ export default function PropertyViewPage() {
                                 <Card className="bg-white shadow-sm border border-slate-200">
                                     <CardHeader className="bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between pb-4">
                                         <CardTitle className="text-xl font-bold text-slate-800">Units</CardTitle>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="bg-blue-600 text-white border-0 hover:bg-blue-700"
-                                        >
-                                            + Add Unit
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setBulkModalOpen(true)}
+                                                size="sm"
+                                                className="bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                            >
+                                                Bulk Add
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => router.push("/units/new")}
+                                                size="sm"
+                                                className="bg-blue-600 text-white border-0 hover:bg-blue-700"
+                                            >
+                                                + Add Unit
+                                            </Button>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         {property.units && property.units.length > 0 ? (
@@ -528,6 +544,18 @@ export default function PropertyViewPage() {
                     onSuccess={handleEditSuccess}
                     editMode={true}
                     propertyData={property}
+                />
+            )}
+
+            {property && (
+                <BulkUnitModal
+                    isOpen={bulkModalOpen}
+                    onClose={() => setBulkModalOpen(false)}
+                    propertyId={property.id}
+                    onSuccess={() => {
+                        fetchProperty();
+                        setBulkModalOpen(false);
+                    }}
                 />
             )}
         </div>

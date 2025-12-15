@@ -13,7 +13,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react"
-import { useState } from "react"
+import { Children, useState } from "react"
 
 
 const defaultRoutes = [
@@ -46,6 +46,16 @@ const defaultRoutes = [
     icon: CreditCard,
     href: "/finance",
     color: "text-orange-700",
+    children: [
+      {
+        label: "Cashier",
+        href: "/finance/cashier"
+      },
+      {
+        label: "Finances",
+        href: "/finance"
+      }
+    ]
   },
   {
     label: "Reports",
@@ -113,7 +123,7 @@ export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarPr
         )}
       >
         <div className="px-3 py-2 flex-1 overflow-y-auto">
-          <Link href="/" className="flex items-center pl-3 mb-14">
+          <Link href="/dashboard" className="flex items-center pl-3 mb-14">
             <div className="relative w-8 h-8 mr-4">
               {/* Logo placeholder */}
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg opacity-75 blur-sm animate-pulse"></div>

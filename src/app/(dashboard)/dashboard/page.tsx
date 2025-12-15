@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, Home, AlertCircle } from "lucide-react";
+import { dashboardAPI } from "@/data/apis";
 
 interface DashboardStats {
   revenue: number;
@@ -38,13 +39,15 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const [statsRes, activityRes] = await Promise.all([
-          api.get('/dashboard/stats'),
-          api.get('/dashboard/recent-activity')
+          // api.get('/dashboard/stats'),
+          dashboardAPI.getStats(),
+          dashboardAPI.getRecentActivity(),
+          // api.get('/dashboard/recent-activity')
         ]);
 
         // Ensure we have a valid object, merge with existing defaults to be safe
-        setStats(prev => ({ ...prev, ...(statsRes.data || {}) }));
-        setActivities(Array.isArray(activityRes.data) ? activityRes.data : []);
+        setStats(prev => ({ ...prev, ...(statsRes || {}) }));
+        setActivities(Array.isArray(activityRes) ? activityRes : []);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
         // Fallback to zeros or show error state if needed

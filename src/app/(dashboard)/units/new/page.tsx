@@ -107,6 +107,18 @@ export default function AddUnitPage() {
     });
 
 
+    const fetchProperties = async () => {
+        try {
+            // const response = await api.get('/properties');
+            const response = await propertyAPI.getAll()
+            setProperties(response);
+        } catch (error) {
+            console.error("Failed to fetch properties:", error);
+        }
+    };
+
+
+
     useEffect(() => {
         const fetchProperties = async () => {
             try {
