@@ -28,10 +28,11 @@ import {
     Edit,
     Loader2,
     Sparkles,
-    TrendingUp
+    TrendingUp,
+    ArrowLeft
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { unitAPI } from "@/data/apis";
+import { publicAPI, unitAPI } from "@/data/apis";
 import { toast } from "sonner";
 
 export default function UnitDetailsPage() {
@@ -57,7 +58,7 @@ export default function UnitDetailsPage() {
 
     const fetchUnit = async () => {
         try {
-            const data = await unitAPI.getById(params.id);
+            const data = await publicAPI.getUnit(params.id);
             setUnit(data);
             setEditForm({
                 unit_number: data.unit_number || "",
@@ -113,6 +114,11 @@ export default function UnitDetailsPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="max-w-7xl mx-auto p-6 space-y-6">
+                <div className="flex items-center justify-between mb-6">
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                    </Button>
+                </div>
                 {/* Hero Section with Images */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[550px]">
@@ -181,66 +187,6 @@ export default function UnitDetailsPage() {
                             <Badge className={`text-base px-6 py-2 font-semibold shadow-sm ${statusColorClass}`}>
                                 {unit.status}
                             </Badge>
-                            <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold">
-                                        <Edit className="w-4 h-4 mr-2" /> Edit Unit
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Unit Details</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Unit Number</Label>
-                                            <Input
-                                                value={editForm.unit_number}
-                                                onChange={(e) => setEditForm({ ...editForm, unit_number: e.target.value })}
-                                                className="col-span-3"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Type</Label>
-                                            <Input
-                                                value={editForm.type}
-                                                onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                                                className="col-span-3"
-                                                placeholder="e.g. 1 Bedroom"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Rent (KES)</Label>
-                                            <Input
-                                                value={editForm.price}
-                                                onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                                                className="col-span-3"
-                                                type="number"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Status</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
-                                                value={editForm.status}
-                                                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                                            >
-                                                <option value="Available">Available</option>
-                                                <option value="Occupied">Occupied</option>
-                                                <option value="Maintenance">Maintenance</option>
-                                                <option value="Vacant">Vacant</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setOpenEdit(false)}>Cancel</Button>
-                                        <Button onClick={handleUpdate} disabled={submitting}>
-                                            {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                            Save Changes
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
                         </div>
                     </div>
                 </div>
@@ -271,7 +217,7 @@ export default function UnitDetailsPage() {
                         </Card>
 
                         {/* History */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
+                        {/* <Card className="bg-white shadow-sm border border-slate-200">
                             <CardHeader className="bg-slate-50 border-b border-slate-100">
                                 <CardTitle className="text-xl font-bold text-slate-800">History & Activity</CardTitle>
                             </CardHeader>
@@ -294,53 +240,11 @@ export default function UnitDetailsPage() {
                                     <p className="text-muted-foreground text-center py-8">No recent activity found.</p>
                                 )}
                             </CardContent>
-                        </Card>
+                        </Card> */}
                     </div>
 
                     {/* Right Column - Sidebar */}
                     <div className="space-y-6">
-                        {/* Tenant Card */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                                <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
-                                    <User className="w-5 h-5 text-slate-500" /> Current Tenant
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-6">
-                                {isOccupied && tenant ? (
-                                    <>
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <span className="font-bold text-lg text-indigo-700">{tenant.name.charAt(0)}</span>
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-lg text-slate-900">{tenant.name}</p>
-                                                <p className="text-sm text-slate-500">{tenant.email || tenant.phone}</p>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-3 pt-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Lease Start</span>
-                                                <span className="font-medium text-slate-900">{lease.start_date}</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Lease End</span>
-                                                <span className="font-medium text-slate-900">{lease.end_date || "N/A"}</span>
-                                            </div>
-                                            <Button variant="outline" className="w-full mt-4">View Full Profile</Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center py-6">
-                                        <p className="text-slate-500 mb-4">Unit is currently vacant.</p>
-                                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push('/tenants')}>
-                                            Onboard New Tenant
-                                        </Button>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
                         {/* Quick Actions */}
                         <Card className="bg-white shadow-sm border border-slate-200">
                             <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">

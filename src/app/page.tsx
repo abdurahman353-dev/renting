@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LandingNavbar } from '@/components/landing-navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from "next/navigation"
+import { propertyAPI, publicAPI } from "@/data/apis"
 
 // Import all Lucide icons used
 import {
@@ -25,8 +28,60 @@ import {
     Bell,
     PenTool as Tool
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+
+interface Property {
+    id: number;
+    name: string;
+    location: string;
+    total_units: number;
+    occupied_units: number;
+    image?: string;
+    property?: string;
+    units?: any[];
+    featured_image_url?: string;
+    images?: string;
+    path?: string
+}
 
 export default function LandingPage() {
+    const router = useRouter();
+    const [properties, setProperties] = useState<Property[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchProperties();
+    }, []);
+
+    const fetchProperties = async () => {
+        try {
+            const response = await publicAPI.getProperties();
+
+            // Handle different response structures - ensure we always get an array
+            let propertiesData: Property[] = [];
+
+            if (Array.isArray(response)) {
+                propertiesData = response;
+            } else if (response && typeof response === 'object') {
+                // Check common property names where the array might be nested
+                propertiesData = response.data || response.properties || response.results || [];
+            }
+
+            // Final safety check
+            if (!Array.isArray(propertiesData)) {
+                console.warn('Properties data is not an array:', propertiesData);
+                propertiesData = [];
+            }
+
+            setProperties(propertiesData);
+        } catch (error) {
+            console.error("Failed to fetch properties:", error);
+            setProperties([]); // Ensure properties is always an array, even on error
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white">
             <LandingNavbar />
@@ -87,138 +142,198 @@ export default function LandingPage() {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {/* Property Card 1 */}
-                        <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                            <div className="relative h-64 overflow-hidden">
-                                <img
-                                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop"
-                                    alt="Property"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                    5 Units Available
-                                </Badge>
-                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                    KES 45,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Sunrise Apartments</h3>
-                                <div className="flex items-center text-gray-500 mb-4">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    Kilimani, Nairobi
-                                </div>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 2 BD
-                                    </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Bath className="h-4 w-4 mr-1 stroke-2" /> 2 BA
-                                    </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
-                                    </div>
-                                </div>
-                                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                    <div className="flex gap-2">
-                                        <Wifi className="h-5 w-5 text-gray-400" />
-                                        <Shield className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                        View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Dynamic Properties from API */}
+                        {properties.length > 0 ? (
+                            properties.map((property) => {
+                                const availableUnits = property.total_units - property.occupied_units;
+                                const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
 
-                        {/* Property Card 2 */}
-                        <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                            <div className="relative h-64 overflow-hidden">
-                                <img
-                                    src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
-                                    alt="Property"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                    2 Units Available
-                                </Badge>
-                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                    KES 85,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Ocean View Residency</h3>
-                                <div className="flex items-center text-gray-500 mb-4">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    Nyali, Mombasa
-                                </div>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 3 BD
+                                return (
+                                    <div key={property.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+                                        <div className="relative h-64 overflow-hidden">
+                                            <img
+                                                src={displayImage}
+                                                alt={property.name}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                            <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
+                                                {availableUnits} {availableUnits === 1 ? 'Unit' : 'Units'} Available
+                                            </Badge>
+                                            <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                                                KES {formatCurrency(property.min_rent)} - {formatCurrency(property.max_rent)}<span className="text-sm font-normal opacity-90">/mo</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-6">
+                                            <h3 className="text-xl font-bold text-gray-900 mb-2">{property.name}</h3>
+                                            <div className="flex items-center text-gray-500 mb-4">
+                                                <MapPin className="h-4 w-4 mr-2" />
+                                                {property.location}
+                                            </div>
+                                            {/* <div className="flex items-center gap-4 mb-6">
+                                                <div className="flex items-center text-gray-600 text-sm">
+                                                    <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 2 BD
+                                                </div>
+                                                <div className="flex items-center text-gray-600 text-sm">
+                                                    <Bath className="h-4 w-4 mr-1 stroke-2" /> 2 BA
+                                                </div>
+                                                <div className="flex items-center text-gray-600 text-sm">
+                                                    <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
+                                                </div>
+                                            </div> */}
+                                            <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                                                <div className="flex gap-2">
+                                                    <Wifi className="h-5 w-5 text-gray-400" />
+                                                    <Shield className="h-5 w-5 text-gray-400" />
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    className="text-blue-600 hover:bg-blue-50 font-medium"
+                                                    onClick={() => router.push(`/property/${property.id}`)}
+                                                >
+                                                    View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Bath className="h-4 w-4 mr-1 stroke-2" /> 3 BA
+                                );
+                            })
+                        ) : (
+                            /* Fallback static properties if API returns empty */
+                            <>
+                                {/* Property Card 1 - Static Fallback */}
+                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+                                    <div className="relative h-64 overflow-hidden">
+                                        <img
+                                            src="https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop"
+                                            alt="Property"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
+                                            5 Units Available
+                                        </Badge>
+                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                                            KES 45,000<span className="text-sm font-normal opacity-90">/mo</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Car className="h-4 w-4 mr-1 stroke-2" /> 2 Parking
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Sunrise Apartments</h3>
+                                        <div className="flex items-center text-gray-500 mb-4">
+                                            <MapPin className="h-4 w-4 mr-2" />
+                                            Kilimani, Nairobi
+                                        </div>
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 2 BD
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 2 BA
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
+                                            </div>
+                                        </div>
+                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                                            <div className="flex gap-2">
+                                                <Wifi className="h-5 w-5 text-gray-400" />
+                                                <Shield className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
+                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                    <div className="flex gap-2">
-                                        <Wifi className="h-5 w-5 text-gray-400" />
-                                        <Shield className="h-5 w-5 text-gray-400" />
-                                        <Zap className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                        View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Property Card 3 */}
-                        <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                            <div className="relative h-64 overflow-hidden">
-                                <img
-                                    src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"
-                                    alt="Property"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                    8 Units Available
-                                </Badge>
-                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                    KES 25,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Green Valley Estate</h3>
-                                <div className="flex items-center text-gray-500 mb-4">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    Kileleshwa, Nairobi
-                                </div>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 1 BD
+                                {/* Property Card 2 - Static Fallback */}
+                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+                                    <div className="relative h-64 overflow-hidden">
+                                        <img
+                                            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
+                                            alt="Property"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
+                                            2 Units Available
+                                        </Badge>
+                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                                            KES 85,000<span className="text-sm font-normal opacity-90">/mo</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Bath className="h-4 w-4 mr-1 stroke-2" /> 1 BA
-                                    </div>
-                                    <div className="flex items-center text-gray-600 text-sm">
-                                        <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Ocean View Residency</h3>
+                                        <div className="flex items-center text-gray-500 mb-4">
+                                            <MapPin className="h-4 w-4 mr-2" />
+                                            Nyali, Mombasa
+                                        </div>
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 3 BD
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 3 BA
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 2 Parking
+                                            </div>
+                                        </div>
+                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                                            <div className="flex gap-2">
+                                                <Wifi className="h-5 w-5 text-gray-400" />
+                                                <Shield className="h-5 w-5 text-gray-400" />
+                                                <Zap className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
+                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                    <div className="flex gap-2">
-                                        <Wifi className="h-5 w-5 text-gray-400" />
-                                        <Shield className="h-5 w-5 text-gray-400" />
+
+                                {/* Property Card 3 - Static Fallback */}
+                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+                                    <div className="relative h-64 overflow-hidden">
+                                        <img
+                                            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"
+                                            alt="Property"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
+                                            8 Units Available
+                                        </Badge>
+                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                                            KES 25,000<span className="text-sm font-normal opacity-90">/mo</span>
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                        View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Green Valley Estate</h3>
+                                        <div className="flex items-center text-gray-500 mb-4">
+                                            <MapPin className="h-4 w-4 mr-2" />
+                                            Kileleshwa, Nairobi
+                                        </div>
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 1 BD
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 1 BA
+                                            </div>
+                                            <div className="flex items-center text-gray-600 text-sm">
+                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
+                                            </div>
+                                        </div>
+                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                                            <div className="flex gap-2">
+                                                <Wifi className="h-5 w-5 text-gray-400" />
+                                                <Shield className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
+                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="text-center mt-12">

@@ -20,9 +20,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Filter, Loader2, RefreshCw } from "lucide-react";
+import { Search, Plus, Filter, Loader2, RefreshCw, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { unitAPI, propertyAPI } from "@/data/apis";
+import { toast } from "sonner"; // Add this import for toast notifications
 
 export default function UnitsPage() {
     const router = useRouter();
@@ -94,6 +95,42 @@ export default function UnitsPage() {
         }
     };
 
+    const handleExport = () => {
+        // Fixed: Use filteredUnits instead of undefined reportData
+        if (!filteredUnits || filteredUnits.length === 0) {
+            toast.error("No data to export");
+            return;
+        }
+
+        // CSV Generation - Fixed to use actual unit data structure
+        const headers = ["Unit Number", "Property Name", "Type", "Status", "Price", "Tenant Name", "Contact"];
+        const rows = filteredUnits.map((unit: any) => [
+            `"${unit.unit_number}"`,
+            `"${unit.property?.name || 'N/A'}"`,
+            `"${unit.type || 'N/A'}"`,
+            `"${unit.status || 'N/A'}"`,
+            unit.price || 0,
+            `"${unit.active_lease?.tenant?.name || 'N/A'}"`,
+            `"${unit.active_lease?.tenant?.phone || 'N/A'}"`
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map((r: any[]) => r.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `units_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast.success("Units exported successfully");
+    };
+
     return (
         <div className="p-8 space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -104,10 +141,11 @@ export default function UnitsPage() {
                     </p>
                 </div>
                 <Button
-                    className="bg-indigo-600 hover:bg-indigo-700 shadow-sm"
-                    onClick={() => router.push("/units/new")}
+                    onClick={handleExport}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
-                    <Plus className="mr-2 h-4 w-4" /> Add Unit
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to CSV
                 </Button>
             </div>
 
@@ -210,7 +248,7 @@ export default function UnitsPage() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center">
+                                    <TableCell colSpan={8} className="h-24 text-center">
                                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
                                             <Loader2 className="h-4 w-4 animate-spin" /> Loading units...
                                         </div>
@@ -218,7 +256,7 @@ export default function UnitsPage() {
                                 </TableRow>
                             ) : filteredUnits.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                                         No units found matching your filters.
                                     </TableCell>
                                 </TableRow>

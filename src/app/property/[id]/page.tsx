@@ -27,10 +27,11 @@ import {
     Droplets,
     Shield,
     Users,
+    ArrowLeft,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { propertyAPI } from "@/data/apis";
+import { propertyAPI, publicAPI } from "@/data/apis";
 import { useRouter } from "next/navigation";
 import AddPropertyModal from "@/components/AddPropertyModal";
 import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
@@ -92,7 +93,7 @@ export default function PropertyViewPage() {
 
     const fetchProperty = async () => {
         try {
-            const data = await propertyAPI.getById(params.id);
+            const data = await publicAPI.getProperty(params.id);
             setProperty(data);
         } catch (error) {
             console.error("Failed to fetch property:", error);
@@ -160,6 +161,11 @@ export default function PropertyViewPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="max-w-7xl mx-auto p-6 space-y-6">
+                <div className="flex items-center justify-between mb-6">
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                    </Button>
+                </div>
                 {/* Premium Hero Section with Gradient Overlay */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[550px]">
@@ -371,7 +377,7 @@ export default function PropertyViewPage() {
                                 <Card className="bg-white shadow-sm border border-slate-200">
                                     <CardHeader className="bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between pb-4">
                                         <CardTitle className="text-xl font-bold text-slate-800">Units</CardTitle>
-                                        <div className="flex gap-2">
+                                        {/* <div className="flex gap-2">
                                             <Button
                                                 variant="outline"
                                                 onClick={() => setBulkModalOpen(true)}
@@ -388,7 +394,7 @@ export default function PropertyViewPage() {
                                             >
                                                 + Add Unit
                                             </Button>
-                                        </div>
+                                        </div> */}
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         {property.units && property.units.length > 0 ? (
@@ -426,7 +432,7 @@ export default function PropertyViewPage() {
                                                                 <TableCell className="text-right">
                                                                     <Button
                                                                         variant="ghost"
-                                                                        onClick={() => router.push(`/units/${unit.id}`)}
+                                                                        onClick={() => router.push(`/unit/${unit.id}`)}
                                                                         size="sm"
                                                                         className="hover:bg-blue-100 hover:text-blue-700 font-semibold"
                                                                     >
@@ -476,7 +482,7 @@ export default function PropertyViewPage() {
                                         <span className="font-bold text-slate-900 text-lg">KES {property.security_deposit.toLocaleString()}</span>
                                     </div>
                                 )}
-                                <div className="pt-4 space-y-3">
+                                {/* <div className="pt-4 space-y-3">
                                     <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
                                         Manage Tenants
                                     </Button>
@@ -486,7 +492,7 @@ export default function PropertyViewPage() {
                                     >
                                         Financial Report
                                     </Button>
-                                </div>
+                                </div> */}
                             </CardContent>
                         </Card>
 
@@ -538,7 +544,7 @@ export default function PropertyViewPage() {
             </div>
 
             {/* Edit Modal */}
-            {property && (
+            {/* {property && (
                 <AddPropertyModal
                     isOpen={editModalOpen}
                     onClose={() => setEditModalOpen(false)}
@@ -558,7 +564,7 @@ export default function PropertyViewPage() {
                         setBulkModalOpen(false);
                     }}
                 />
-            )}
+            )} */}
         </div>
     );
 }
