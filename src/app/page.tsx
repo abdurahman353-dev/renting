@@ -41,13 +41,16 @@ interface Property {
     units?: any[];
     featured_image_url?: string;
     images?: string;
-    path?: string
+    path?: string;
+    min_rent?: number;
+    max_rent?: number;
 }
 
 export default function LandingPage() {
     const router = useRouter();
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
         fetchProperties();
@@ -89,7 +92,35 @@ export default function LandingPage() {
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
                 <div className="absolute inset-0 bg-slate-900">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay" />
+                    {/* Video Background with Fallback */}
+                    {!imageError ? (
+                        <div className="absolute inset-0">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover opacity-90"
+                                onError={() => setImageError(true)}
+                            >
+                                <source
+                                    src="/video/grok-hero.mp4"
+                                    type="video/mp4"
+                                />
+                                {/* Fallback to image if video fails */}
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    ) : (
+                        /* Image Fallback */
+                        <div
+                            className="absolute inset-0 bg-cover bg-center opacity-100"
+                            style={{
+                                backgroundImage: 'url(https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop)'
+                            }}
+                        />
+                    )}
+
                     <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-white" />
                 </div>
 
@@ -100,7 +131,7 @@ export default function LandingPage() {
                     <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
                         Find Your Next Home <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                            Ease & Style
+                            With Ease & Style
                         </span>
                     </h1>
                     <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-10">
@@ -159,9 +190,11 @@ export default function LandingPage() {
                                             <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
                                                 {availableUnits} {availableUnits === 1 ? 'Unit' : 'Units'} Available
                                             </Badge>
-                                            <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                                KES {formatCurrency(property.min_rent)} - {formatCurrency(property.max_rent)}<span className="text-sm font-normal opacity-90">/mo</span>
-                                            </div>
+                                            {property.min_rent && property.max_rent && (
+                                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                                                    KES {formatCurrency(property.min_rent)} - {formatCurrency(property.max_rent)}<span className="text-sm font-normal opacity-90">/mo</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="p-6">
                                             <h3 className="text-xl font-bold text-gray-900 mb-2">{property.name}</h3>
@@ -169,17 +202,6 @@ export default function LandingPage() {
                                                 <MapPin className="h-4 w-4 mr-2" />
                                                 {property.location}
                                             </div>
-                                            {/* <div className="flex items-center gap-4 mb-6">
-                                                <div className="flex items-center text-gray-600 text-sm">
-                                                    <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 2 BD
-                                                </div>
-                                                <div className="flex items-center text-gray-600 text-sm">
-                                                    <Bath className="h-4 w-4 mr-1 stroke-2" /> 2 BA
-                                                </div>
-                                                <div className="flex items-center text-gray-600 text-sm">
-                                                    <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
-                                                </div>
-                                            </div> */}
                                             <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
                                                 <div className="flex gap-2">
                                                     <Wifi className="h-5 w-5 text-gray-400" />
