@@ -255,12 +255,12 @@ export default function PropertyViewPage() {
                             >
                                 {formatTextType(property.status) || "Active"}
                             </Badge>
-                            <Button
+                            {/* <Button
                                 onClick={() => setEditModalOpen(true)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold"
                             >
                                 Edit Property
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
                 </div>
