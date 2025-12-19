@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { FileText, CreditCard, Plus, Download, Send } from "lucide-react"
 import { financeAPI, propertyAPI } from "@/data/apis"
+import { formatDate } from "@/lib/utils"
 
 interface Invoice {
     id: string;
@@ -285,7 +286,7 @@ export default function FinancePage() {
                                         <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
                                         <TableCell>{inv.property_name || '-'}</TableCell>
                                         <TableCell>{inv.unit_number || inv.unit}</TableCell>
-                                        <TableCell>{inv.created_at || inv.date}</TableCell>
+                                        <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
                                         <TableCell>
                                             <Badge
                                                 variant={inv.status === "PAID" ? "default" : inv.status === "OVERDUE" ? "destructive" : "secondary"}
@@ -330,7 +331,7 @@ export default function FinancePage() {
                                         <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
                                         <TableCell>{pay.method}</TableCell>
                                         <TableCell className="font-mono text-xs">{pay.reference}</TableCell>
-                                        <TableCell>{pay.created_at || pay.date}</TableCell>
+                                        <TableCell>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</TableCell>
                                         <TableCell className="text-right font-bold text-green-600">+KES {Number(pay.amount).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}

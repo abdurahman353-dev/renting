@@ -70,20 +70,20 @@ export default function PropertyReportPage() {
     };
 
     const handleExport = () => {
-        if (!reportData?.table_data || reportData.table_data.length === 0) {
+        if (units.length === 0) {
             toast.error("No data to export");
             return;
         }
 
         // CSV Generation
-        const headers = ["Property Name", "Tenant Name", "Phone Number", "Unit", "Status", "Amount"];
-        const rows = reportData.table_data.map((row: any) => [
-            `"${row.property_name}"`, // Quote strings to handle commas
-            `"${row.tenant_name}"`,
-            `"${row.tenant_phone}"`,
-            `"${row.unit}"`,
+        const headers = ["Property Name", "Unit", "Tenant Name", "Phone Number", "Status", "Amount"];
+        const rows = units.map((row: any) => [
+            `"${row.property.name}"`, // Quote strings to handle commas
+            `"${row.unit_number}"`,
+            `"${row.active_lease?.tenant?.name}"`,
+            `"${row.active_lease?.tenant?.phone}"`,
             `"${row.status}"`,
-            row.amount
+            row.active_lease?.balance || "0"
         ]);
 
         const csvContent = [
@@ -182,7 +182,7 @@ export default function PropertyReportPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-white border-slate-200 shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-slate-500">Total Properties</CardTitle>
@@ -228,7 +228,7 @@ export default function PropertyReportPage() {
                         <p className="text-xs text-slate-500 mt-1">Awaiting payment</p>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
 
             {/* Data Table */}
             <Card className="border-slate-200 shadow-sm overflow-hidden">
@@ -236,13 +236,13 @@ export default function PropertyReportPage() {
                     <CardTitle className="text-lg text-slate-800">Detailed Report</CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
+                    <table className="w-full h-100px text-sm text-left overflow-y-auto">
                         <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
                             <tr>
                                 <th className="px-6 py-3">Property Name</th>
+                                <th className="px-6 py-3">Unit</th>
                                 <th className="px-6 py-3">Tenant Name</th>
                                 <th className="px-6 py-3">Phone Number</th>
-                                <th className="px-6 py-3">Unit</th>
                                 <th className="px-6 py-3">Status</th>
                                 <th className="px-6 py-3 text-right">Amount</th>
                             </tr>
@@ -254,19 +254,20 @@ export default function PropertyReportPage() {
                                         Loading report data...
                                     </td>
                                 </tr>
-                            ) : (!reportData?.table_data || reportData.table_data.length === 0) ? (
+                            ) : (units.length === 0) ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                                         No records found matching filters.
                                     </td>
                                 </tr>
                             ) : (
-                                reportData.table_data.map((row: any, index: number) => (
+                                // reportData.table_data.map((row: any, index: number) => (
+                                units.map((row: any, index: number) => (
                                     <tr key={index} className="bg-white hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-900">{row.property_name}</td>
-                                        <td className="px-6 py-4 text-slate-600">{row.tenant_name}</td>
-                                        <td className="px-6 py-4 text-slate-600">{row.tenant_phone}</td>
-                                        <td className="px-6 py-4 text-slate-600">{row.unit}</td>
+                                        <td className="px-6 py-4 font-medium text-slate-900">{row.property.name}</td>
+                                        <td className="px-6 py-4 text-slate-600">{row.unit_number}</td>
+                                        <td className="px-6 py-4 text-slate-600">{row.active_lease?.tenant?.name}</td>
+                                        <td className="px-6 py-4 text-slate-600">{row.active_lease?.tenant?.phone}</td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
                                                 row.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
@@ -277,7 +278,7 @@ export default function PropertyReportPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.amount).toLocaleString()}
+                                            {Number(row.active_lease?.tenant?.balance || 0.00).toLocaleString()}
                                         </td>
                                     </tr>
                                 ))
