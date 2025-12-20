@@ -96,8 +96,8 @@ export default function PropertiesPage() {
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />
                             <div className="absolute top-2 right-2">
-                                <Badge variant={property.occupied_units === property.units?.length ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
-                                    {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
+                                <Badge variant={property.occupied_units === property.total_units ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
+                                    {(property.occupied_units || 0)}/{property.total_units || 0} Occupied
                                 </Badge>
                             </div>
                         </div>
@@ -114,7 +114,7 @@ export default function PropertiesPage() {
                                 </div>
                                 <div className="flex items-center">
                                     <Home className="mr-2 h-4 w-4 text-indigo-500" />
-                                    {property.units?.length || 0} Units Total
+                                    {property.total_units || 0} Units Total
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t flex justify-between items-center">
@@ -122,7 +122,7 @@ export default function PropertiesPage() {
                                     Occupancy Rate
                                 </div>
                                 <div className="text-sm font-bold text-indigo-600">
-                                    {(property.units?.length || 0) > 0 ? Math.round(((property.occupied_units || 0) / (property.units?.length || 1)) * 100) : 0}%
+                                    {property.total_units > 0 ? Math.round(((property.occupied_units || 0) / property.total_units) * 100) : 0}%
                                 </div>
                             </div>
                         </CardContent>

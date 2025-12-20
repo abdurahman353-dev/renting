@@ -215,6 +215,11 @@ export const tenantAPI = {
         const response = await apiClient.get(`/tenants/${tenantId}/payment-history`);
         return response.data;
     },
+
+    toggleStatus: async (tenantId, data) => {
+        const response = await apiClient.post(`/tenants/${tenantId}/toggle-status`, data);
+        return response.data;
+    },
 };
 
 // ============================================================================
@@ -260,8 +265,8 @@ export const financeAPI = {
         return response.data;
     },
 
-    getPropertyReport: async (filters = {}) => {
-        const response = await apiClient.get('/finance/reports/property', { params: filters });
+    getPropertyReport: async (params = {}) => {
+        const response = await apiClient.get('/finance/reports/property', { params });
         return response.data;
     },
 };

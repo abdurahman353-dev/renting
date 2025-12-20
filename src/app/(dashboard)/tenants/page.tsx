@@ -32,6 +32,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { propertyAPI, tenantAPI } from "@/data/apis"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 interface Tenant {
@@ -50,6 +51,8 @@ interface Tenant {
     leases?: Array<{
         start_date?: string;
         rent_amount?: number;
+        deposit_amount?: number;
+        deposit_2_amount?: number;
     }>;
 }
 
@@ -75,7 +78,8 @@ export default function TenantsPage() {
         unit_id: "",
         start_date: "",
         rent_amount: "",
-        deposit_amount: ""
+        deposit_amount: "",
+        deposit_2_amount: ""
     });
     const [submitting, setSubmitting] = useState(false);
 
@@ -144,17 +148,20 @@ export default function TenantsPage() {
                 unit_id: formData.unit_id,
                 start_date: formData.start_date,
                 rent_amount: formData.rent_amount,
-                deposit_amount: formData.deposit_amount || null
+                deposit_amount: formData.deposit_amount || null,
+                deposit_2_amount: formData.deposit_2_amount || null
             };
             await tenantAPI.create(payload);
             // Refresh list
-            await fetchTenants();
+            await Promise.all([fetchTenants(), fetchProperties()]);
+
             // Close dialog
             setOpen(false);
             // Reset form
             setFormData({
                 name: "", id_number: "", phone: "", email: "",
-                property_id: "", unit_id: "", start_date: "", rent_amount: "", deposit_amount: ""
+                property_id: "", unit_id: "", start_date: "", rent_amount: "",
+                deposit_amount: "", deposit_2_amount: ""
             });
         } catch (error: any) {
             console.error("Failed to register tenant:", error);
@@ -195,6 +202,21 @@ export default function TenantsPage() {
     // Get unique units for the selected property filter
     const filterPropertyObj = properties.find(p => p.name === filterProperty);
     const availableFilterUnits = filterPropertyObj?.units || [];
+
+    const handleDeactivate = async (tenantId: number) => {
+        if (!confirm("Are you sure you want to deactivate this tenant? This will make the unit vacant.")) return;
+
+        try {
+            await tenantAPI.toggleStatus(tenantId, { status: 'Inactive' });
+            toast.success("Tenant deactivated successfully");
+            // Refresh both to show new status and updated unit vacancy
+            await Promise.all([fetchTenants(), fetchProperties()]);
+        } catch (error: any) {
+            console.error("Failed to deactivate tenant:", error);
+            const msg = error?.response?.data?.message || "Failed to deactivate tenant";
+            alert(msg);
+        }
+    };
 
     if (loading) return <div className="p-8">Loading tenants...</div>;
 
@@ -326,12 +348,24 @@ export default function TenantsPage() {
                                                 />
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="deposit_amount" className="sm:text-right">Deposit (KES)</Label>
+                                                <Label htmlFor="deposit_amount" className="sm:text-right">Deposit 1 (KES)</Label>
                                                 <Input
                                                     id="deposit_amount"
                                                     name="deposit_amount"
                                                     type="number"
                                                     value={formData.deposit_amount}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Optional"
+                                                    className="sm:col-span-3"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="deposit_2_amount" className="sm:text-right">Deposit 2 (KES)</Label>
+                                                <Input
+                                                    id="deposit_2_amount"
+                                                    name="deposit_2_amount"
+                                                    type="number"
+                                                    value={formData.deposit_2_amount}
                                                     onChange={handleInputChange}
                                                     placeholder="Optional"
                                                     className="sm:col-span-3"
@@ -482,6 +516,7 @@ export default function TenantsPage() {
                             <TableHead>Email</TableHead>
                             <TableHead>Start Date</TableHead>
                             <TableHead>Rent (KES)</TableHead>
+                            <TableHead>Deposit (Total)</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Balance (KES)</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
@@ -529,6 +564,16 @@ export default function TenantsPage() {
                                         {typeof rentAmount === 'number' ? rentAmount.toLocaleString() : rentAmount}
                                     </TableCell>
                                     <TableCell>
+                                        <div className="font-medium text-slate-700">
+                                            {((Number(lease?.deposit_amount) || 0) + (Number(lease?.deposit_2_amount) || 0)).toLocaleString()}
+                                        </div>
+                                        {(Number(lease?.deposit_2_amount) > 0) && (
+                                            <div className="text-[10px] text-muted-foreground">
+                                                ({Number(lease?.deposit_amount).toLocaleString()} + {Number(lease?.deposit_2_amount).toLocaleString()})
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
                                         <Badge
                                             className={
                                                 tenant.status?.toUpperCase() === "ACTIVE"
@@ -566,7 +611,10 @@ export default function TenantsPage() {
                                                     View Statement
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600">
+                                                <DropdownMenuItem
+                                                    className="text-red-600 focus:text-red-600 cursor-pointer"
+                                                    onClick={() => handleDeactivate(tenant.id)}
+                                                >
                                                     Deactivate
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
