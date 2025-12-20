@@ -269,6 +269,11 @@ export const financeAPI = {
         const response = await apiClient.get('/finance/reports/property', { params });
         return response.data;
     },
+
+    getTenantReport: async (params = {}) => {
+        const response = await apiClient.get('/finance/reports/tenant', { params });
+        return response.data;
+    },
 };
 
 // export const financeAPI = {

@@ -99,33 +99,31 @@ export default function TenantReportPage() {
     const years = [currentYear - 1, currentYear, currentYear + 1];
 
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+        <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Tenant Report</h2>
-                    <p className="text-muted-foreground mt-1">
-                        Monthly financial summary of tenant payments and balances.
-                    </p>
+                    <h1 className="text-3xl font-bold text-slate-900">Tenant Report</h1>
+                    <p className="text-slate-500 mt-1">Monthly financial summary per tenant</p>
                 </div>
-                <Button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                <Button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Download className="mr-2 h-4 w-4" />
                     Export to Excel
                 </Button>
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
-                <div className="flex items-center gap-2 mb-5 text-slate-800 font-semibold">
-                    <Filter className="h-4 w-4 text-indigo-500" />
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex items-center gap-2 mb-4 text-slate-700 font-medium">
+                    <Filter className="h-4 w-4" />
                     Filters
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Property Select */}
-                    <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Property</label>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Property</label>
                         <select
-                            className="w-full h-11 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+                            className="w-full p-2 border rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.property_id}
                             onChange={(e) => setFilters({ ...filters, property_id: e.target.value })}
                         >
@@ -137,10 +135,10 @@ export default function TenantReportPage() {
                     </div>
 
                     {/* Month Select */}
-                    <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Month</label>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Month</label>
                         <select
-                            className="w-full h-11 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+                            className="w-full p-2 border rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.month}
                             onChange={(e) => setFilters({ ...filters, month: parseInt(e.target.value) })}
                         >
@@ -151,10 +149,10 @@ export default function TenantReportPage() {
                     </div>
 
                     {/* Year Select */}
-                    <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Year</label>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Year</label>
                         <select
-                            className="w-full h-11 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+                            className="w-full p-2 border rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.year}
                             onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
                         >
@@ -167,56 +165,39 @@ export default function TenantReportPage() {
             </div>
 
             {/* Table */}
-            <Card className="border-slate-200/60 shadow-sm rounded-2xl overflow-hidden bg-white">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-5">
-                    <CardTitle className="text-xl font-bold text-slate-800">Detailed Tenant Financials</CardTitle>
+            <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader>
+                    <CardTitle className="text-lg text-slate-800">Detailed Tenant Financials</CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse">
-                        <thead className="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50/80 border-b border-slate-100">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
                             <tr>
-                                <th className="px-8 py-4">Property</th>
-                                <th className="px-8 py-4">Tenant Name</th>
-                                <th className="px-8 py-4">Phone Number</th>
-                                <th className="px-8 py-4 text-center">Unit</th>
-                                <th className="px-8 py-4 text-right">Amount Paid</th>
-                                <th className="px-8 py-4 text-right">Balance</th>
+                                <th className="px-6 py-3">Property Name</th>
+                                <th className="px-6 py-3">Tenant Name</th>
+                                <th className="px-6 py-3">Phone Number</th>
+                                <th className="px-6 py-3 text-center">Unit</th>
+                                <th className="px-6 py-3 text-right">Amount Paid</th>
+                                <th className="px-6 py-3 text-right">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-16 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="h-8 w-8 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                                            <p className="text-slate-500 font-medium">Crunching report data...</p>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
                             ) : data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-16 text-center text-slate-400 font-medium italic">
-                                        No tenant records found for the selected period.
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">No records found for this period.</td></tr>
                             ) : (
                                 data.map((row: any) => (
-                                    <tr key={row.id} className="hover:bg-indigo-50/30 transition-colors group">
-                                        <td className="px-8 py-4.5 font-semibold text-slate-600">{row.property_name}</td>
-                                        <td className="px-8 py-4.5">
-                                            <div className="font-bold text-slate-900 text-[15px]">{row.tenant_name}</div>
-                                        </td>
-                                        <td className="px-8 py-4.5 text-slate-500 font-medium">{row.phone}</td>
-                                        <td className="px-8 py-4.5 text-center font-bold text-slate-700">
-                                            <span className="bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/50">
-                                                {row.unit_number}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-4.5 text-right font-bold text-emerald-600">
+                                    <tr key={row.id} className="bg-white hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-slate-900">{row.property_name}</td>
+                                        <td className="px-6 py-4 text-slate-700 font-semibold">{row.tenant_name}</td>
+                                        <td className="px-6 py-4 text-slate-500">{row.phone}</td>
+                                        <td className="px-6 py-4 text-center font-medium">{row.unit_number}</td>
+                                        <td className="px-6 py-4 text-right font-medium text-emerald-600 bg-emerald-50/30">
                                             {Number(row.amount_paid).toLocaleString()}
                                         </td>
-                                        <td className={`px-8 py-4.5 text-right font-black text-[15px] ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                            {Number(row.balance).toLocaleString()}
+                                        <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                            {row.balance < 0 ? '' : ''}{Number(row.balance).toLocaleString()}
                                         </td>
                                     </tr>
                                 ))
