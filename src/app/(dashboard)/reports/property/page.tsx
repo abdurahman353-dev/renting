@@ -201,8 +201,8 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-right font-medium text-slate-700">
                                             {Number(row.amount_paid).toLocaleString()}
                                         </td>
-                                        <td className={`px-6 py-4 text-right font-bold ${row.balance > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            {row.balance > 0 ? '+' : ''}{Number(row.balance).toLocaleString()}
+                                        <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                            {Number(row.balance).toLocaleString()}
                                         </td>
                                     </tr>
                                 ))

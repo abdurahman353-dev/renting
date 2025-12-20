@@ -1,69 +1,308 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { Download, Filter, Building2, Home, User, CheckCircle2, XCircle } from "lucide-react";
+import { financeAPI, propertyAPI } from "@/data/apis";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter } from "lucide-react";
 
 export default function UnitsReportPage() {
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<any[]>([]);
+    const [properties, setProperties] = useState<any[]>([]);
+
+    // Default to current month/year
+    const [filters, setFilters] = useState({
+        property_id: "all",
+        month: new Date().getMonth() + 1, // 1-12
+        year: new Date().getFullYear()
+    });
+
+    useEffect(() => {
+        loadProperties();
+    }, []);
+
+    useEffect(() => {
+        fetchReport();
+    }, [filters]);
+
+    const loadProperties = async () => {
+        try {
+            const res = await propertyAPI.getAll();
+            setProperties(res);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchReport = async () => {
+        setLoading(true);
+        try {
+            const res = await financeAPI.getUnitReport(filters);
+            setData(res);
+        } catch (error) {
+            console.error("Failed to fetch report:", error);
+            toast.error("Failed to fetch unit report data");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExport = () => {
+        if (!data || data.length === 0) {
+            toast.error("No data to export");
+            return;
+        }
+
+        const headers = ["Unit", "Property", "Tenant", "Status", "Amount Paid", "Balance"];
+        const rows = data.map((row: any) => [
+            `"${row.unit_number}"`,
+            `"${row.property_name}"`,
+            `"${row.tenant_name}"`,
+            `"${row.status}"`,
+            row.amount_paid,
+            row.balance
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map((r) => r.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `unit_monthly_report_${filters.year}_${filters.month}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const months = [
+        { value: 1, label: "January" },
+        { value: 2, label: "February" },
+        { value: 3, label: "March" },
+        { value: 4, label: "April" },
+        { value: 5, label: "May" },
+        { value: 6, label: "June" },
+        { value: 7, label: "July" },
+        { value: 8, label: "August" },
+        { value: 9, label: "September" },
+        { value: 10, label: "October" },
+        { value: 11, label: "November" },
+        { value: 12, label: "December" }
+    ];
+
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 1, currentYear, currentYear + 1];
+
+    const stats = {
+        total: data.length,
+        occupied: data.filter(u => u.status.toLowerCase() === 'occupied').length,
+        available: data.filter(u => u.status.toLowerCase() !== 'occupied').length,
+    };
+
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Units Report</h2>
-                    <p className="text-muted-foreground">
-                        View detailed reports and analytics for your units.
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Units Period Report</h2>
+                    <p className="text-muted-foreground mt-1 text-sm font-medium">
+                        Comprehensive overview of unit occupancy and financial status for {months.find(m => m.value === filters.month)?.label} {filters.year}.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline">
-                        <Filter className="mr-2 h-4 w-4" /> Filter
-                    </Button>
-                    <Button>
-                        <Download className="mr-2 h-4 w-4" /> Export
-                    </Button>
+                <Button onClick={handleExport} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to Excel
+                </Button>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-0">
+                        <div className="flex items-center p-6">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                <Home className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Units</p>
+                                <p className="text-2xl font-black text-slate-900">{stats.total}</p>
+                            </div>
+                        </div>
+                        <div className="h-1 w-full bg-indigo-500/10">
+                            <div className="h-full bg-indigo-500 w-full"></div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-0">
+                        <div className="flex items-center p-6">
+                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Occupied</p>
+                                <p className="text-2xl font-black text-slate-900">{stats.occupied}</p>
+                            </div>
+                        </div>
+                        <div className="h-1 w-full bg-emerald-500/10">
+                            <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.occupied / stats.total) * 100}%` : '0%' }}></div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-0">
+                        <div className="flex items-center p-6">
+                            <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                <XCircle className="h-6 w-6 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Available</p>
+                                <p className="text-2xl font-black text-slate-900">{stats.available}</p>
+                            </div>
+                        </div>
+                        <div className="h-1 w-full bg-amber-500/10">
+                            <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.available / stats.total) * 100}%` : '0%' }}></div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+                <div className="flex items-center gap-2 mb-6 text-slate-800 font-bold">
+                    <Filter className="h-4 w-4 text-indigo-600" />
+                    Filter Parameters
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Property Select */}
+                    <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Property</label>
+                        <select
+                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            value={filters.property_id}
+                            onChange={(e) => setFilters({ ...filters, property_id: e.target.value })}
+                        >
+                            <option value="all">All Properties</option>
+                            {properties.map(p => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Month Select */}
+                    <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Month</label>
+                        <select
+                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            value={filters.month}
+                            onChange={(e) => setFilters({ ...filters, month: parseInt(e.target.value) })}
+                        >
+                            {months.map(m => (
+                                <option key={m.value} value={m.value}>{m.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Year Select */}
+                    <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Year</label>
+                        <select
+                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            value={filters.year}
+                            onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
+                        >
+                            {years.map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Total Units
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">45</div>
-                        <p className="text-xs text-muted-foreground">+2 from last month</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Occupancy Rate
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">88%</div>
-                        <p className="text-xs text-muted-foreground">+4% from last month</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Vacant Units
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">5</div>
-                        <p className="text-xs text-muted-foreground">-1 from last month</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Card className="h-[400px] flex items-center justify-center bg-slate-50 border-dashed">
-                <div className="text-center text-muted-foreground">
-                    <p>Chart Placeholder</p>
-                    <p className="text-sm">Occupancy trends over time</p>
+            {/* Table */}
+            <Card className="border-slate-200/60 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="bg-slate-50/30 border-b border-slate-100 py-6 px-8">
+                    <CardTitle className="text-xl font-black text-slate-800 flex items-center">
+                        <Building2 className="mr-3 h-5 w-5 text-slate-400" />
+                        Unit Status Breakdown
+                    </CardTitle>
+                </CardHeader>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left border-collapse">
+                        <thead className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50/80 border-b border-slate-100">
+                            <tr>
+                                <th className="px-8 py-5">Unit Detail</th>
+                                <th className="px-8 py-5">Property</th>
+                                <th className="px-8 py-5">Current Tenant</th>
+                                <th className="px-8 py-5 text-center">Occupancy Status</th>
+                                <th className="px-8 py-5 text-right">Amnt Paid (Month)</th>
+                                <th className="px-8 py-5 text-right">Running Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-20 text-center">
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="h-10 w-10 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
+                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Assembling Data...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                                        No metrics found for this period.
+                                    </td>
+                                </tr>
+                            ) : (
+                                data.map((row: any) => (
+                                    <tr key={row.id} className="hover:bg-slate-50/80 transition-all duration-200 group">
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center">
+                                                <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center mr-3 font-bold text-slate-600 border border-slate-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 transition-colors">
+                                                    {row.unit_number.slice(-2)}
+                                                </div>
+                                                <span className="font-bold text-slate-800 text-base">{row.unit_number}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-5 font-bold text-slate-500">{row.property_name}</td>
+                                        <td className="px-8 py-5">
+                                            {row.tenant_name !== 'N/A' ? (
+                                                <div className="flex items-center font-bold text-slate-800">
+                                                    <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2"></div>
+                                                    {row.tenant_name}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-300 italic font-medium">No active tenant</span>
+                                            )}
+                                        </td>
+                                        <td className="px-8 py-5 text-center">
+                                            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                                                }`}>
+                                                {row.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
+                                            {row.amount_paid > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
+                                        </td>
+                                        <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                            {row.balance !== 0 ? Number(row.balance).toLocaleString() : (row.amount_paid > 0 ? '0' : '—')}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </Card>
         </div>

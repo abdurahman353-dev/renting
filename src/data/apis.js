@@ -274,6 +274,11 @@ export const financeAPI = {
         const response = await apiClient.get('/finance/reports/tenant', { params });
         return response.data;
     },
+
+    getUnitReport: async (params = {}) => {
+        const response = await apiClient.get('/finance/reports/unit', { params });
+        return response.data;
+    },
 };
 
 // export const financeAPI = {
