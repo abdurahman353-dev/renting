@@ -43,7 +43,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
 
     // Form State
     const [formData, setFormData] = useState({
-        name: "", location: "", total_units: "", full_address: "", city: "",
+        name: "", location: "", full_address: "", city: "",
         state: "", postal_code: "", property_type: "", year_built: "",
         floors: "", parking_spaces: "", pet_policy: "", min_rent: "",
         max_rent: "", security_deposit: "", service_charge: "", base_price: "",
@@ -60,7 +60,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             setFormData({
                 name: initialData.name || "",
                 location: initialData.location || "",
-                total_units: initialData.total_units?.toString() || "",
                 full_address: initialData.full_address || "",
                 city: initialData.city || "",
                 state: initialData.state || "",
@@ -231,7 +230,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             // 2. Prepare Payload
             const payload = {
                 ...formData,
-                total_units: parseInt(formData.total_units),
                 year_built: formData.year_built ? parseInt(formData.year_built) : null,
                 floors: formData.floors ? parseInt(formData.floors) : null,
                 parking_spaces: formData.parking_spaces ? parseInt(formData.parking_spaces) : null,
@@ -304,17 +302,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                             value={formData.location}
                             onChange={handleInputChange}
                             placeholder="e.g. Westlands"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Total Units *</Label>
-                        <Input
-                            type="number"
-                            name="total_units"
-                            min="1"
-                            value={formData.total_units}
-                            onChange={handleInputChange}
                             required
                         />
                     </div>
@@ -601,6 +588,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                     {isEditMode ? "Update Property" : "Create Property"}
                 </Button>
             </div>
-        </form>
+        </form >
     );
 }

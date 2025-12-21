@@ -21,6 +21,7 @@ import { formatDate } from "@/lib/utils"
 
 interface Invoice {
     id: string;
+    invoice_number: string;
     tenant: string;
     unit: string;
     amount: number;
@@ -144,7 +145,8 @@ export default function FinancePage() {
         return invoices
             .filter(inv => {
                 if (inv.status === 'PAID') return false;
-                const dueDate = new Date(inv.due_date || inv.created_at);
+                const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
+                const dueDate = new Date(rawDate);
                 const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
                 return daysDiff > 30;
             })
