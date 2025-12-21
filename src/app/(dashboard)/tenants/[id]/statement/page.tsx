@@ -72,7 +72,7 @@ export default function TenantStatementPage() {
     }
 
     return (
-        <div className="p-8 space-y-6 max-w-5xl mx-auto">
+        <div className="p-8 space-y-2 max-w-9xl mx-auto">
             <div className="flex items-center justify-between print:hidden">
                 <Button variant="ghost" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to Tenant
@@ -125,12 +125,12 @@ export default function TenantStatementPage() {
                                 <TableRow key={index}>
                                     <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold mr-2 ${txn.type === 'INVOICE'
+                                        {/* <span className={`px-2 py-1 rounded-full text-xs font-semibold mr-2 ${txn.type === 'INVOICE'
                                             ? 'bg-orange-100 text-orange-700'
                                             : 'bg-green-100 text-green-700'
                                             }`}>
                                             {txn.type}
-                                        </span>
+                                        </span> */}
                                         {txn.description}
                                     </TableCell>
                                     <TableCell className="text-right font-mono text-xs">{txn.reference}</TableCell>

@@ -92,7 +92,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
         // Basic Information
         name: "",
         location: "",
-        total_units: "",
 
         // Address Details
         full_address: "",
@@ -153,7 +152,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 state: propertyData.state || "",
                 postal_code: propertyData.postal_code || "",
                 location: propertyData.location || "",
-                total_units: propertyData.total_units?.toString() || "",
                 property_type: propertyData.property_type || "",
                 year_built: propertyData.year_built?.toString() || "",
                 floors: propertyData.floors?.toString() || "",
@@ -257,19 +255,18 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 });
 
                 const uploadedResults = await Promise.all(uploadPromises);
-                uploadedImageUrls = uploadedResults.map(res => res.path); // Send paths to backend
+                uploadedImageUrls = uploadedResults.map((res: any) => res.path); // Send paths to backend
 
                 // Get featured image URL (or path)
-                const featuredResult = uploadedResults.find(res => res.isFeatured);
+                const featuredResult = uploadedResults.find((res: any) => res.isFeatured);
                 featuredImageUrl = featuredResult ? featuredResult.path : (uploadedResults[0]?.path || '');
             }
 
             // Step 2: Prepare property data with Cloudinary URLs
-            const propertyDataPayload = {
+            const propertyDataPayload: any = {
                 // Basic Information
                 name: formData.name,
                 location: formData.location,
-                total_units: parseInt(formData.total_units),
 
                 // Address Details
                 full_address: formData.full_address,
@@ -319,9 +316,18 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
 
                 // Images from Cloudinary
                 images: uploadedImageUrls,
-                featured_image_index: uploadedResults.findIndex(res => res.isFeatured),
                 featured_image_url: featuredImageUrl,
             };
+
+            // Add featured image index if images were uploaded
+            if (images.length > 0) {
+                // Note: We need a way to reference the results again if we want findIndex
+                // Let's just track the index during the upload or recalculate
+                const featuredIndex = images.findIndex(img => img.isFeatured);
+                propertyDataPayload.featured_image_index = featuredIndex >= 0 ? featuredIndex : 0;
+            } else {
+                propertyDataPayload.featured_image_index = -1;
+            }
 
 
             // Step 3: Submit to your backend
@@ -348,7 +354,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
 
     const resetForm = () => {
         setFormData({
-            name: "", location: "", total_units: "", full_address: "", city: "", state: "",
+            name: "", location: "", full_address: "", city: "", state: "",
             postal_code: "", property_type: "", year_built: "", floors: "", parking_spaces: "",
             pet_policy: "", min_rent: "", max_rent: "", security_deposit: "", service_charge: "",
             base_price: "", description: "", property_manager: "", status: "active",
@@ -369,10 +375,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 }
                 if (!formData.location.trim()) {
                     alert('Please enter a location/area');
-                    return false;
-                }
-                if (!formData.total_units || parseInt(formData.total_units) < 1) {
-                    alert('Please enter a valid number of total units (minimum 1)');
                     return false;
                 }
                 return true;
@@ -505,19 +507,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Westlands"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Total Units *</label>
-                                    <input
-                                        type="number"
-                                        name="total_units"
-                                        value={formData.total_units}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="10"
-                                        min="1"
                                         required
                                     />
                                 </div>
@@ -952,7 +941,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                                 <div className="text-sm text-blue-800 space-y-1">
                                     <p><strong>Property:</strong> {formData.name || 'Not specified'}</p>
                                     <p><strong>Location:</strong> {formData.city || formData.location || 'Not specified'}</p>
-                                    <p><strong>Units:</strong> {formData.total_units || '0'}</p>
                                     <p><strong>Images:</strong> {images.length} uploaded</p>
                                     <p><strong>Amenities:</strong> {formData.amenities.length} selected</p>
                                 </div>

@@ -152,9 +152,10 @@ export default function PropertyViewPage() {
             ? `KES ${property.min_rent.toLocaleString()}`
             : "Contact for pricing";
 
+    const totalUnitsCount = property.units?.length || 0;
     const occupiedUnits = property.units?.filter(u => u.status === 'occupied').length || 0;
-    const occupancyRate = property.total_units > 0
-        ? Math.round((occupiedUnits / property.total_units) * 100)
+    const occupancyRate = totalUnitsCount > 0
+        ? Math.round((occupiedUnits / totalUnitsCount) * 100)
         : 0;
 
     return (
@@ -463,7 +464,7 @@ export default function PropertyViewPage() {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-slate-100">
                                     <span className="text-slate-600 font-medium">Total Units</span>
-                                    <span className="font-bold text-slate-900 text-lg">{property.total_units}</span>
+                                    <span className="font-bold text-slate-900 text-lg">{totalUnitsCount}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-slate-100">
                                     <span className="text-slate-600 font-medium">Occupancy</span>
