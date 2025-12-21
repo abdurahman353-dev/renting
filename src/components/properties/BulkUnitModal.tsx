@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import api from "@/data/apis";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface BulkUnitModalProps {
     isOpen: boolean;
@@ -67,10 +68,13 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess }: BulkUn
         try {
             setIsSubmitting(true);
             await api.post(`/properties/${propertyId}/units/bulk`, { units: generatedUnits });
+            toast.success(`Successfully added ${generatedUnits.length} units`);
             onSuccess();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to add bulk units:", error);
+            const errorMessage = error.response?.data?.message || "Failed to add bulk units. Please check for duplicate unit numbers.";
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
