@@ -32,7 +32,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { propertyAPI } from "@/data/apis";
 import { useRouter } from "next/navigation";
-import AddPropertyModal from "@/components/AddPropertyModal";
 import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
 import { formatText, formatTextType } from "@/lib/utils";
 
@@ -250,7 +249,7 @@ export default function PropertyViewPage() {
                                 {formatTextType(property.status) || "Active"}
                             </Badge>
                             <Button
-                                onClick={() => setEditModalOpen(true)}
+                                onClick={() => router.push(`/properties/${property.id}/edit`)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold"
                             >
                                 Edit Property
@@ -537,16 +536,7 @@ export default function PropertyViewPage() {
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            {property && (
-                <AddPropertyModal
-                    isOpen={editModalOpen}
-                    onClose={() => setEditModalOpen(false)}
-                    onSuccess={handleEditSuccess}
-                    editMode={true}
-                    propertyData={property}
-                />
-            )}
+
 
             {property && (
                 <BulkUnitModal

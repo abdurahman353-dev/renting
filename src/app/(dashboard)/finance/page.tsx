@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,8 +15,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { FileText, CreditCard, Plus, Download, Send } from "lucide-react"
-import { financeAPI, propertyAPI } from "@/data/apis"
+import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown } from "lucide-react"
+import { financeAPI, propertyAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
 
 interface Invoice {
@@ -47,6 +48,7 @@ interface Payment {
 }
 
 export default function FinancePage() {
+    const router = useRouter();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -60,18 +62,27 @@ export default function FinancePage() {
     const [properties, setProperties] = useState<any[]>([]);
     const [selectedProperty, setSelectedProperty] = useState("all");
     const [selectedStatus, setSelectedStatus] = useState("all");
+    const [selectedTenant, setSelectedTenant] = useState("all");
+    const [tenants, setTenants] = useState<any[]>([]);
 
-    // Fetch filter options (properties)
+    // Fetch filter options (properties and tenants)
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                const res = await propertyAPI.getAll();
-                // Handle both {data: [...]} and [...] response formats
-                const propertyData = Array.isArray(res) ? res : (res.data || []);
+                const [propRes, tenantRes] = await Promise.all([
+                    propertyAPI.getAll(),
+                    tenantAPI.getAll()
+                ]);
+
+                const propertyData = Array.isArray(propRes) ? propRes : (propRes.data || []);
+                const tenantData = Array.isArray(tenantRes) ? tenantRes : (tenantRes.data || []);
+
                 setProperties(propertyData);
+                setTenants(tenantData);
             } catch (e) {
-                console.error("Failed to fetch properties:", e);
+                console.error("Failed to fetch filters:", e);
                 setProperties([]);
+                setTenants([]);
             }
         };
         fetchFilters();
@@ -83,27 +94,34 @@ export default function FinancePage() {
             const params = {
                 property_id: selectedProperty !== 'all' ? selectedProperty : undefined,
                 status: selectedStatus !== 'all' ? selectedStatus : undefined,
+                tenant_id: selectedTenant !== 'all' ? selectedTenant : undefined,
             };
 
-            const [invRes, payRes, revRes] = await Promise.all([
+            const [invRes, payRes] = await Promise.all([
                 financeAPI.getInvoices(params),
                 financeAPI.getPayments(params),
-                financeAPI.getRevenueReport()
             ]);
 
-            // Handle response structure - could be direct array or {data: array}
+            // Revenue report is a separate call that shouldn't block the main table loading
+            financeAPI.getRevenueReport().then(revRes => {
+                const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
+                setStats(prev => ({
+                    ...prev,
+                    revenue: revenueData.revenue ?? 0,
+                }));
+            }).catch(console.error);
+
             const invoiceData = Array.isArray(invRes) ? invRes : (invRes.data || []);
             const paymentData = Array.isArray(payRes) ? payRes : (payRes.data || []);
-            const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
 
             setInvoices(invoiceData);
             setPayments(paymentData);
 
-            setStats({
-                revenue: revenueData.revenue ?? 0,
+            setStats(prev => ({
+                ...prev,
                 pending: calculatePending(invoiceData),
                 arrears: calculateArrears(invoiceData)
-            });
+            }));
         } catch (error) {
             console.error("Failed to fetch finance data:", error);
             setInvoices([]);
@@ -135,7 +153,7 @@ export default function FinancePage() {
 
     useEffect(() => {
         fetchData();
-    }, [selectedProperty, selectedStatus]);
+    }, [selectedProperty, selectedStatus, selectedTenant]);
 
     const handleGenerateInvoices = async () => {
         try {
@@ -209,6 +227,17 @@ export default function FinancePage() {
 
                 <select
                     className="border rounded p-2 text-sm"
+                    value={selectedTenant}
+                    onChange={(e) => setSelectedTenant(e.target.value)}
+                >
+                    <option value="all">All Tenants</option>
+                    {tenants && tenants.length > 0 && tenants.map((t: any) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                </select>
+
+                <select
+                    className="border rounded p-2 text-sm"
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                 >
@@ -222,7 +251,7 @@ export default function FinancePage() {
                 <Button variant="secondary" onClick={fetchData} size="sm">Refresh</Button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue (Dec)</CardTitle>
@@ -253,7 +282,7 @@ export default function FinancePage() {
                         <p className="text-xs text-muted-foreground">Overdue &gt; 30 days</p>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
 
             <Tabs defaultValue="invoices" className="space-y-4">
                 <TabsList>
@@ -282,7 +311,7 @@ export default function FinancePage() {
                                     </TableRow>
                                 ) : invoices.map((inv) => (
                                     <TableRow key={inv.id}>
-                                        <TableCell className="font-medium">{inv.id}</TableCell>
+                                        <TableCell className="font-medium">{inv.invoice_number}</TableCell>
                                         <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
                                         <TableCell>{inv.property_name || '-'}</TableCell>
                                         <TableCell>{inv.unit_number || inv.unit}</TableCell>
@@ -297,9 +326,27 @@ export default function FinancePage() {
                                         </TableCell>
                                         <TableCell className="text-right font-bold">KES {Number(inv.amount).toLocaleString()}</TableCell>
                                         <TableCell>
-                                            <Button variant="ghost" size="icon" title="Send Reminder">
-                                                <Send className="h-4 w-4 text-slate-500" />
-                                            </Button>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    title="View Invoice"
+                                                    onClick={() => router.push(`/invoices/${inv.id}`)}
+                                                >
+                                                    <Eye className="h-4 w-4 text-slate-500" />
+                                                </Button>
+                                                {(inv.status === 'PENDING' || inv.status === 'PARTIAL') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Process Payment"
+                                                        onClick={() => router.push(`/finance/cashier?invoice_id=${inv.id}`)}
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    >
+                                                        <BanknoteArrowDown className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}

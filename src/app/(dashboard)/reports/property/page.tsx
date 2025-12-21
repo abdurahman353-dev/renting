@@ -97,7 +97,7 @@ export default function PropertyReportPage() {
     ];
 
     const currentYear = new Date().getFullYear();
-    const years = [currentYear - 1, currentYear, currentYear + 1];
+    const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
 
     return (
         <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
@@ -178,7 +178,7 @@ export default function PropertyReportPage() {
                                 <th className="px-6 py-3 text-center">Total Units</th>
                                 <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
                                 <th className="px-6 py-3 text-center text-slate-400">Vacant Units</th>
-                                <th className="px-6 py-3 text-right">Deposits</th>
+                                {/* <th className="px-6 py-3 text-right">Deposits</th> */}
                                 <th className="px-6 py-3 text-right">Amount Paid</th>
                                 <th className="px-6 py-3 text-right">Balance</th>
                             </tr>
@@ -195,9 +195,9 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-center">{row.total_units}</td>
                                         <td className="px-6 py-4 text-center font-medium text-emerald-600 bg-emerald-50 rounded-lg">{row.occupied_units}</td>
                                         <td className="px-6 py-4 text-center text-slate-500">{row.vacant_units}</td>
-                                        <td className="px-6 py-4 text-right font-medium text-blue-600">
+                                        {/* <td className="px-6 py-4 text-right font-medium text-blue-600">
                                             {Number(row.total_deposits || 0).toLocaleString()}
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 text-right font-medium text-slate-700">
                                             {Number(row.amount_paid).toLocaleString()}
                                         </td>

@@ -313,13 +313,16 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 // Additional
                 notes: formData.notes,
 
+
                 // Amenities
                 amenities: formData.amenities,
 
                 // Images from Cloudinary
                 images: uploadedImageUrls,
+                featured_image_index: uploadedResults.findIndex(res => res.isFeatured),
                 featured_image_url: featuredImageUrl,
             };
+
 
             // Step 3: Submit to your backend
             if (editMode && propertyData) {

@@ -33,7 +33,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { propertyAPI, publicAPI } from "@/data/apis";
 import { useRouter } from "next/navigation";
-import AddPropertyModal from "@/components/AddPropertyModal";
 import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
 import { formatText, formatTextType } from "@/lib/utils";
 
@@ -255,12 +254,6 @@ export default function PropertyViewPage() {
                             >
                                 {formatTextType(property.status) || "Active"}
                             </Badge>
-                            {/* <Button
-                                onClick={() => setEditModalOpen(true)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold"
-                            >
-                                Edit Property
-                            </Button> */}
                         </div>
                     </div>
                 </div>
