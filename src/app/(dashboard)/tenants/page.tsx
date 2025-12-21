@@ -82,6 +82,20 @@ export default function TenantsPage() {
         deposit_2_amount: ""
     });
     const [submitting, setSubmitting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingTenantId, setEditingTenantId] = useState<number | null>(null);
+
+
+
+
+
+
+
+
+
+
+
+
 
     useEffect(() => {
         fetchTenants();
@@ -151,26 +165,103 @@ export default function TenantsPage() {
                 deposit_amount: formData.deposit_amount || null,
                 deposit_2_amount: formData.deposit_2_amount || null
             };
-            await tenantAPI.create(payload);
+
+            if (isEditing && editingTenantId) {
+                await tenantAPI.update(editingTenantId, payload);
+                toast.success("successfully updated the desired tenant");
+            } else {
+                await tenantAPI.create(payload);
+                toast.success("Tenant registered successfully");
+            }
+
             // Refresh list
             await Promise.all([fetchTenants(), fetchProperties()]);
 
             // Close dialog
             setOpen(false);
             // Reset form
-            setFormData({
-                name: "", id_number: "", phone: "", email: "",
-                property_id: "", unit_id: "", start_date: "", rent_amount: "",
-                deposit_amount: "", deposit_2_amount: ""
-            });
+            resetForm();
         } catch (error: any) {
-            console.error("Failed to register tenant:", error);
-            const errorMsg = error?.response?.data?.message || error?.message || "Failed to register tenant";
+            console.error("Failed to save tenant:", error);
+            const errorMsg = error?.response?.data?.message || error?.message || "Failed to save tenant";
             alert(errorMsg);
         } finally {
             setSubmitting(false);
         }
     };
+
+    const resetForm = () => {
+        setFormData({
+            name: "", id_number: "", phone: "", email: "",
+            property_id: "", unit_id: "", start_date: "", rent_amount: "",
+            deposit_amount: "", deposit_2_amount: ""
+        });
+        setIsEditing(false);
+        setEditingTenantId(null);
+    };
+
+    const handleEditClick = (tenant: any) => {
+        const lease = tenant.leases?.[0];
+        setFormData({
+            name: tenant.name,
+            id_number: tenant.id_number || "",
+            phone: tenant.phone,
+            email: tenant.email || "",
+            property_id: tenant.property?.id?.toString() || "",
+            unit_id: tenant.unit?.id?.toString() || "",
+            start_date: lease?.start_date ? new Date(lease.start_date).toISOString().split('T')[0] : "",
+            rent_amount: lease?.rent_amount?.toString() || "",
+            deposit_amount: lease?.deposit_amount?.toString() || "",
+            deposit_2_amount: lease?.deposit_2_amount?.toString() || ""
+        });
+        setIsEditing(true);
+        setEditingTenantId(tenant.id);
+        setOpen(true);
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Filter units based on selected property - only show VACANT units
     const selectedProperty = properties.find(p => p.id.toString() === formData.property_id);
@@ -228,17 +319,23 @@ export default function TenantsPage() {
                     <p className="text-muted-foreground">Manage tenant profiles and lease agreements.</p>
                 </div>
 
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog open={open} onOpenChange={(val) => {
+                    setOpen(val);
+                    if (!val) resetForm();
+                }}>
                     <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+                            resetForm();
+                            setOpen(true);
+                        }}>
                             <Plus className="mr-2 h-4 w-4" /> Register Tenant
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>Register New Tenant</DialogTitle>
+                            <DialogTitle>{isEditing ? "Edit Tenant" : "Register New Tenant"}</DialogTitle>
                             <DialogDescription>
-                                Create a new tenant profile.
+                                {isEditing ? "Update tenant profile details." : "Create a new tenant profile."}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -381,7 +478,7 @@ export default function TenantsPage() {
                             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                             <Button onClick={handleRegisterTenant} disabled={submitting}>
                                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Register
+                                {isEditing ? "Update" : "Register"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -607,6 +704,11 @@ export default function TenantsPage() {
                                                 <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}`)}>
                                                     View Details
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleEditClick(tenant)}>
+                                                    Edit Tenant
+                                                </DropdownMenuItem>
+
+
                                                 <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
                                                     View Statement
                                                 </DropdownMenuItem>
