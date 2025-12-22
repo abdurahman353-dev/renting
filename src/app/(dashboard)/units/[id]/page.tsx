@@ -333,7 +333,7 @@ export default function UnitDetailsPage() {
                                 ) : (
                                     <div className="text-center py-6">
                                         <p className="text-slate-500 mb-4">Unit is currently vacant.</p>
-                                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push('/tenants')}>
+                                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push(`/tenants?property_id=${unit.property?.id}&unit_id=${unit.id}`)}>
                                             Onboard New Tenant
                                         </Button>
                                     </div>

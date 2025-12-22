@@ -246,8 +246,8 @@ export default function LandingPage() {
                                             </Badge>
                                             {(property.min_rent || property.max_rent) && (
                                                 <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
-                                                    KES {formatCurrency(property.min_rent || 0)}
-                                                    {property.max_rent && property.max_rent > (property.min_rent || 0) ? ` - ${formatCurrency(property.max_rent)}` : ''}
+                                                    KES {formatCurrency(String(property.min_rent || 0))}
+                                                    {property.max_rent && property.max_rent > (property.min_rent || 0) ? ` - ${formatCurrency(String(property.max_rent))}` : ''}
                                                     <span className="text-sm font-normal opacity-90">/mo</span>
                                                 </div>
                                             )}
@@ -310,7 +310,7 @@ export default function LandingPage() {
             {/* Footer */}
             <footer id="contact" className="bg-[#0B1120] text-gray-400 py-16">
                 <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-4 gap-12 mb-12">
+                    <div className="grid md:grid-cols-3 gap-12 mb-12">
                         <div className="space-y-4">
                             <Link href="/" className="flex items-center gap-2 mb-4">
                                 <div className="p-2 bg-blue-600 rounded-lg text-white">
@@ -324,10 +324,10 @@ export default function LandingPage() {
                         <div>
                             <h4 className="text-white font-bold mb-6">Quick Links</h4>
                             <ul className="space-y-4">
-                                <li><a href="#" className="hover:text-blue-500 transition-colors">Find a Home</a></li>
-                                <li><a href="#" className="hover:text-blue-500 transition-colors">List Your Property</a></li>
-                                <li><a href="#" className="hover:text-blue-500 transition-colors">About Us</a></li>
-                                <li><a href="#" className="hover:text-blue-500 transition-colors">Contact Support</a></li>
+                                <li><a href="#" className="hover:text-blue-500 transition-colors">Home</a></li>
+                                <li><a href="#featured" className="hover:text-blue-500 transition-colors">Properties</a></li>
+                                <li><a href="#contact" className="hover:text-blue-500 transition-colors">Contact Us</a></li>
+
                             </ul>
                         </div>
 
@@ -348,30 +348,10 @@ export default function LandingPage() {
                                 </li>
                             </ul>
                         </div>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-6">Newsletter</h4>
-                            <p className="mb-4 text-sm">Subscribe to get notified about new premium listings.</p>
-                            <div className="flex gap-2">
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="bg-gray-800 border-none rounded-lg px-4 py-2 w-full focus:ring-1 focus:ring-blue-600 outline-none text-white text-sm"
-                                />
-                                <Button className="bg-blue-600 hover:bg-blue-700">
-                                    <ArrowRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
                     </div>
 
                     <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p className="text-sm">© {new Date().getFullYear()} RentSys. All rights reserved.</p>
-                        <div className="flex gap-6 text-sm">
-                            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-                            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-                            <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
-                        </div>
+                        <p className="text-sm">© 2025 RentSys. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

@@ -33,7 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { propertyAPI, tenantAPI } from "@/data/apis"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 interface Tenant {
     id: number;
@@ -57,7 +58,16 @@ interface Tenant {
 }
 
 export default function TenantsPage() {
+    return (
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
+            <TenantsContent />
+        </Suspense>
+    );
+}
+
+function TenantsContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -97,10 +107,37 @@ export default function TenantsPage() {
 
 
 
+    // Fetch data
     useEffect(() => {
         fetchTenants();
         fetchProperties();
     }, []);
+
+    // Handle query parameters for pre-filling
+    useEffect(() => {
+        const propertyId = searchParams.get('property_id');
+        const unitId = searchParams.get('unit_id');
+
+        if (propertyId && unitId && properties.length > 0) {
+            const selectedProperty = properties.find(p => p.id.toString() === propertyId);
+            const selectedUnit = selectedProperty?.units?.find((u: any) => u.id.toString() === unitId);
+
+            if (selectedProperty && selectedUnit) {
+                setFormData(prev => ({
+                    ...prev,
+                    property_id: propertyId,
+                    unit_id: unitId,
+                    rent_amount: selectedUnit.price?.toString() || "",
+                    start_date: new Date().toISOString().split('T')[0] // Default to today
+                }));
+                setOpen(true);
+
+                // Clear the query parameters from the URL
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
+    }, [searchParams, properties]);
 
     const fetchTenants = async () => {
         try {
