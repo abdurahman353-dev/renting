@@ -87,6 +87,16 @@ export const authAPI = {
     isAuthenticated: () => {
         return !!Cookies.get('admin_token');
     },
+
+    forgotPassword: async (email) => {
+        const response = await apiClient.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    resetPassword: async (data) => {
+        const response = await apiClient.post('/auth/reset-password', data);
+        return response.data;
+    }
 };
 
 // ============================================================================
@@ -280,46 +290,6 @@ export const financeAPI = {
         return response.data;
     },
 };
-
-// export const financeAPI = {
-//     // Invoices
-//     getInvoices: async () => {
-//         const response = await apiClient.get('/finance/invoices');
-//         return response.data;
-//     },
-
-//     getInvoice: async (id) => {
-//         const response = await apiClient.get(`/finance/invoices/${id}`);
-//         return response.data;
-//     },
-
-//     generateInvoice: async (data) => {
-//         const response = await apiClient.post('/finance/invoices/generate-monthly', data);
-//         return response.data;
-//     },
-
-//     // Payments
-//     getPayments: async () => {
-//         const response = await apiClient.get('/finance/payments');
-//         return response.data;
-//     },
-
-//     recordPayment: async (data) => {
-//         const response = await apiClient.post('/finance/payments', data);
-//         return response.data;
-//     },
-
-//     // Reports
-//     getRevenueReport: async () => {
-//         const response = await apiClient.get('/finance/reports/revenue');
-//         return response.data;
-//     },
-
-//     getExpenseReport: async () => {
-//         const response = await apiClient.get('/finance/reports/expenses');
-//         return response.data;
-//     },
-// };
 
 // ============================================================================
 // MAINTENANCE APIs
