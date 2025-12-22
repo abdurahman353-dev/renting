@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import api from "@/data/apis";
 import { Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,7 +25,7 @@ import {
     Phone,
     User,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 // Mock Data
 const TENANT_DETAILS = {
@@ -78,7 +80,38 @@ const TENANT_DETAILS = {
 
 export default function TenantDetailsPage() {
     const router = useRouter();
-    const tenant = TENANT_DETAILS;
+    //  const tenant = TENANT_DETAILS;
+    const params = useParams();
+    const [tenant, setTenant] = useState<any>(null);
+    const [paymentHistory, setPaymentHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTenant = async () => {
+            try {
+                // Fetch tenant details
+                const tenantRes = await api.get(`/tenants/${params.id}`);
+                setTenant(tenantRes);
+                console.log("tenant data", tenantRes)
+
+                // Fetch payment history (using existing endpoint if available or statement)
+                try {
+                    const historyRes = await api.get(`/tenants/${params.id}/payment-history`);
+                    setPaymentHistory(historyRes);
+                } catch (e) {
+                    console.warn("Could not fetch payment history");
+                }
+            } catch (error) {
+                console.error("Failed to fetch tenant:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (params.id) {
+            fetchTenant();
+        }
+    }, [params.id]);
 
     return (
         <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -96,7 +129,7 @@ export default function TenantDetailsPage() {
                         <User className="w-8 h-8 text-slate-500" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">{tenant.name}</h1>
+                        <h1 className="text-3xl font-bold text-slate-900">{tenant?.name}</h1>
                         <div className="flex items-center text-slate-500 mt-1">
                             <MapPin className="w-4 h-4 mr-1" />
                             <span>

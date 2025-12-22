@@ -56,13 +56,6 @@ export default function PropertiesPage() {
                     <h2 className="text-3xl font-bold tracking-tight">Properties</h2>
                     <p className="text-muted-foreground">Manage your houses and residential units.</p>
                 </div>
-
-                <Button
-                    onClick={() => setModalOpen(true)}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-                >
-                    <Plus className="mr-2 h-4 w-4" /> Add Property
-                </Button>
             </div>
 
             <AddPropertyModal

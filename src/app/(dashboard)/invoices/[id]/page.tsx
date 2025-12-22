@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 interface Invoice {
     id: number;
     invoice_number: string;
-    tenant: { id: number; name: string; email?: string; phone?: string };
+    tenant: { id: number; id_number: string; name: string; email?: string; phone?: string };
     property_name: string;
     unit_number: string;
     amount: number;
@@ -99,14 +99,14 @@ export default function InvoiceViewPage() {
                 </div>
 
                 {/* Invoice Card */}
-                <Card className="shadow-lg">
-                    <CardHeader className="border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                        <div className="flex justify-between items-start">
+                <Card className="pt-0">
+                    <CardHeader className="border-b bg-slate-200 text-black rounded-t-lg h-full">
+                        <div className="flex justify-between items-start mt-4 mb-2">
                             <div>
-                                <CardTitle className="text-2xl font-bold mb-2">INVOICE</CardTitle>
-                                <p className="text-blue-100">#{invoice.invoice_number}</p>
+                                <CardTitle className="text-2xl font-bold">INVOICE</CardTitle>
+                                <p className="text-black-100">#{invoice.invoice_number}</p>
                             </div>
-                            <Badge className={statusColors[invoice.status as keyof typeof statusColors] || "bg-slate-100 text-slate-700"}>
+                            <Badge className={statusColors[invoice.status as keyof typeof statusColors] || "bg-slate-100 text-slate-700 mt-4 mb-2"}>
                                 {invoice.status}
                             </Badge>
                         </div>
@@ -117,9 +117,10 @@ export default function InvoiceViewPage() {
                         <div className="grid grid-cols-2 gap-8">
                             <div>
                                 <h3 className="text-sm font-semibold text-slate-500 mb-2">BILLED TO</h3>
-                                <p className="font-bold text-lg">{invoice.tenant.name}</p>
-                                {invoice.tenant.email && <p className="text-slate-600">{invoice.tenant.email}</p>}
-                                {invoice.tenant.phone && <p className="text-slate-600">{invoice.tenant.phone}</p>}
+                                <p className="font-bold text-lg">Name: {invoice.tenant.name}</p>
+                                {invoice.tenant.email && <p className="text-slate-600">Email: {invoice.tenant.email}</p>}
+                                {invoice.tenant.id_number && <p className="text-slate-600">DI No: {invoice.tenant.id_number}</p>}
+                                {invoice.tenant.phone && <p className="text-slate-600">Phone: {invoice.tenant.phone}</p>}
                             </div>
                             <div className="text-right">
                                 <h3 className="text-sm font-semibold text-slate-500 mb-2">INVOICE DETAILS</h3>
@@ -149,7 +150,7 @@ export default function InvoiceViewPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="border-b border-slate-100">
+                                    <tr>
                                         <td className="py-4">
                                             <p className="font-medium">{invoice.type.charAt(0).toUpperCase() + invoice.type.slice(1)}</p>
                                             {invoice.description && <p className="text-sm text-slate-600">{invoice.description}</p>}

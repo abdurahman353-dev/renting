@@ -146,15 +146,7 @@ export default function LoginPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Link
-                                        href="/forgot-password"
-                                        className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                    >
-                                        Forgot password?
-                                    </Link>
-                                </div>
+                                <Label htmlFor="password">Password</Label>
                                 <div className="relative">
                                     <Input
                                         id="password"
@@ -183,6 +175,14 @@ export default function LoginPage() {
                                             <Eye className="h-4 w-4" />
                                         )}
                                     </button>
+                                </div>
+                                <div className="flex items-center justify-end">
+                                    <Link
+                                        href="/forgot-password"
+                                        className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                    >
+                                        Forgot password?
+                                    </Link>
                                 </div>
                                 {fieldErrors.password && (
                                     <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">

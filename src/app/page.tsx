@@ -44,13 +44,19 @@ interface Property {
     path?: string;
     min_rent?: number;
     max_rent?: number;
+    category?: string;
 }
 
 export default function LandingPage() {
     const router = useRouter();
-    const [properties, setProperties] = useState<Property[]>([]);
+    const [allProperties, setAllProperties] = useState<Property[]>([]);
+    const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
+
+    // Filter states
+    const [searchLocation, setSearchLocation] = useState('');
+    const [searchType, setSearchType] = useState('Property Type');
 
     useEffect(() => {
         fetchProperties();
@@ -76,12 +82,40 @@ export default function LandingPage() {
                 propertiesData = [];
             }
 
-            setProperties(propertiesData);
+            setAllProperties(propertiesData);
+            setFilteredProperties(propertiesData);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
-            setProperties([]); // Ensure properties is always an array, even on error
+            setAllProperties([]);
+            setFilteredProperties([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSearch = () => {
+        let filtered = allProperties;
+
+        if (searchLocation.trim() !== '') {
+            filtered = filtered.filter(p =>
+                p.location.toLowerCase().includes(searchLocation.toLowerCase()) ||
+                p.name.toLowerCase().includes(searchLocation.toLowerCase())
+            );
+        }
+
+        if (searchType !== 'Property Type') {
+            filtered = filtered.filter(p =>
+                p.category?.toLowerCase() === searchType.toLowerCase() ||
+                p.name.toLowerCase().includes(searchType.toLowerCase())
+            );
+        }
+
+        setFilteredProperties(filtered);
+
+        // Scroll to featured section to show results
+        const featuredSection = document.getElementById('featured');
+        if (featuredSection) {
+            featuredSection.scrollIntoView({ behavior: 'smooth' });
         }
     };
 
@@ -125,7 +159,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="container relative mx-auto px-4 text-center z-10">
-                    <Badge variant="outline" className="mb-6 border-white/20 text-white px-4 py-1.5 backdrop-blur-md">
+                    <Badge variant="outline" className="mb-6 border-white/20 text-white px-4 py-1.5 backdrop-blur-md" style={{ background: 'transparent' }}>
                         ✨ Simplify Your Living Experience
                     </Badge>
                     <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
@@ -141,42 +175,62 @@ export default function LandingPage() {
                     {/* Search Bar */}
                     <div className="max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-2xl shadow-blue-900/20 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                            <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Location (e.g. Westlands)"
-                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium"
+                                value={searchLocation}
+                                onChange={(e) => setSearchLocation(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-slate-900"
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                             />
                         </div>
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                            <select className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600">
+                            <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                            <select
+                                value={searchType}
+                                onChange={(e) => setSearchType(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
+                            >
                                 <option>Property Type</option>
                                 <option>Apartment</option>
                                 <option>Bedsitter</option>
                                 <option>Villa</option>
+                                <option>Office</option>
                             </select>
                         </div>
-                        <Button className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-lg shadow-lg shadow-blue-600/25">
+                        <Button
+                            onClick={handleSearch}
+                            className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-lg shadow-lg shadow-blue-600/25 transition-all active:scale-95"
+                        >
                             Search Now
                         </Button>
                     </div>
                 </div>
             </section>
 
-            {/* Featured Properties */}
+            {/* Featured Properties Section */}
             <section id="featured" className="py-20 bg-gray-50">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Featured Properties</h2>
-                        <p className="text-gray-500 max-w-2xl mx-auto">Explore our hand-picked selection of premium properties available for rent right now.</p>
+                        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                            {searchLocation || searchType !== 'Property Type' ? 'Search Results' : 'Featured Properties'}
+                        </h2>
+                        <p className="text-gray-500 max-w-2xl mx-auto">
+                            {filteredProperties.length > 0
+                                ? `Found ${filteredProperties.length} premium properties for you.`
+                                : "No properties found matching your criteria. Try adjustment your filters."}
+                        </p>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {/* Dynamic Properties from API */}
-                        {properties.length > 0 ? (
-                            properties.map((property) => {
-                                const availableUnits = property.total_units - property.occupied_units;
+                        {loading ? (
+                            Array(3).fill(0).map((_, i) => (
+                                <div key={i} className="h-96 bg-white rounded-3xl animate-pulse"></div>
+                            ))
+                        ) : filteredProperties.length > 0 ? (
+                            filteredProperties.map((property) => {
+                                const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
                                 const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
 
                                 return (
@@ -187,32 +241,34 @@ export default function LandingPage() {
                                                 alt={property.name}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
-                                            <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                                {availableUnits} {availableUnits === 1 ? 'Unit' : 'Units'} Available
+                                            <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white border-0 shadow-sm">
+                                                {availableUnits > 0 ? `${availableUnits} Available` : 'Fully Occupied'}
                                             </Badge>
-                                            {property.min_rent && property.max_rent && (
-                                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                                    KES {formatCurrency(property.min_rent)} - {formatCurrency(property.max_rent)}<span className="text-sm font-normal opacity-90">/mo</span>
+                                            {(property.min_rent || property.max_rent) && (
+                                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
+                                                    KES {formatCurrency(property.min_rent || 0)}
+                                                    {property.max_rent && property.max_rent > (property.min_rent || 0) ? ` - ${formatCurrency(property.max_rent)}` : ''}
+                                                    <span className="text-sm font-normal opacity-90">/mo</span>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="p-6">
-                                            <h3 className="text-xl font-bold text-gray-900 mb-2">{property.name}</h3>
-                                            <div className="flex items-center text-gray-500 mb-4">
-                                                <MapPin className="h-4 w-4 mr-2" />
+                                            <h3 className="text-xl font-bold text-gray-900 mb-2 truncate">{property.name}</h3>
+                                            <div className="flex items-center text-gray-500 mb-4 text-sm">
+                                                <MapPin className="h-4 w-4 mr-2 text-blue-500" />
                                                 {property.location}
                                             </div>
                                             <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                                <div className="flex gap-2">
-                                                    <Wifi className="h-5 w-5 text-gray-400" />
-                                                    <Shield className="h-5 w-5 text-gray-400" />
+                                                <div className="flex gap-3">
+                                                    <Wifi className="h-5 w-5 text-gray-300" />
+                                                    <Shield className="h-5 w-5 text-gray-300" />
                                                 </div>
                                                 <Button
                                                     variant="ghost"
-                                                    className="text-blue-600 hover:bg-blue-50 font-medium"
+                                                    className="text-blue-600 hover:bg-blue-50 font-bold"
                                                     onClick={() => router.push(`/property/${property.id}`)}
                                                 >
-                                                    View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                                    Details <ArrowRight className="ml-2 h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </div>
@@ -220,149 +276,34 @@ export default function LandingPage() {
                                 );
                             })
                         ) : (
-                            /* Fallback static properties if API returns empty */
-                            <>
-                                {/* Property Card 1 - Static Fallback */}
-                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                                    <div className="relative h-64 overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop"
-                                            alt="Property"
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                            5 Units Available
-                                        </Badge>
-                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                            KES 45,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Sunrise Apartments</h3>
-                                        <div className="flex items-center text-gray-500 mb-4">
-                                            <MapPin className="h-4 w-4 mr-2" />
-                                            Kilimani, Nairobi
-                                        </div>
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 2 BD
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 2 BA
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
-                                            </div>
-                                        </div>
-                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                            <div className="flex gap-2">
-                                                <Wifi className="h-5 w-5 text-gray-400" />
-                                                <Shield className="h-5 w-5 text-gray-400" />
-                                            </div>
-                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
+                            <div className="col-span-full py-20 text-center">
+                                <div className="p-6 bg-white rounded-2xl shadow-sm inline-block mb-4">
+                                    <Search className="h-12 w-12 text-slate-200" />
                                 </div>
-
-                                {/* Property Card 2 - Static Fallback */}
-                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                                    <div className="relative h-64 overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
-                                            alt="Property"
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                            2 Units Available
-                                        </Badge>
-                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                            KES 85,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Ocean View Residency</h3>
-                                        <div className="flex items-center text-gray-500 mb-4">
-                                            <MapPin className="h-4 w-4 mr-2" />
-                                            Nyali, Mombasa
-                                        </div>
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 3 BD
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 3 BA
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 2 Parking
-                                            </div>
-                                        </div>
-                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                            <div className="flex gap-2">
-                                                <Wifi className="h-5 w-5 text-gray-400" />
-                                                <Shield className="h-5 w-5 text-gray-400" />
-                                                <Zap className="h-5 w-5 text-gray-400" />
-                                            </div>
-                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Property Card 3 - Static Fallback */}
-                                <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                                    <div className="relative h-64 overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"
-                                            alt="Property"
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white">
-                                            8 Units Available
-                                        </Badge>
-                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                            KES 25,000<span className="text-sm font-normal opacity-90">/mo</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Green Valley Estate</h3>
-                                        <div className="flex items-center text-gray-500 mb-4">
-                                            <MapPin className="h-4 w-4 mr-2" />
-                                            Kileleshwa, Nairobi
-                                        </div>
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <BedDouble className="h-4 w-4 mr-1 stroke-2" /> 1 BD
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Bath className="h-4 w-4 mr-1 stroke-2" /> 1 BA
-                                            </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
-                                                <Car className="h-4 w-4 mr-1 stroke-2" /> 1 Parking
-                                            </div>
-                                        </div>
-                                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                            <div className="flex gap-2">
-                                                <Wifi className="h-5 w-5 text-gray-400" />
-                                                <Shield className="h-5 w-5 text-gray-400" />
-                                            </div>
-                                            <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-medium">
-                                                View Details <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">No Properties Found</h3>
+                                <p className="text-slate-500">Try searching for a different location or property type.</p>
+                                <Button
+                                    variant="outline"
+                                    className="mt-6"
+                                    onClick={() => {
+                                        setSearchLocation('');
+                                        setSearchType('Property Type');
+                                        setFilteredProperties(allProperties);
+                                    }}
+                                >
+                                    Clear All Filters
+                                </Button>
+                            </div>
                         )}
                     </div>
 
-                    <div className="text-center mt-12">
-                        <Button className="h-12 px-8 bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 text-lg shadow-sm">
-                            View All Properties
-                        </Button>
-                    </div>
+                    {(filteredProperties.length > 0 && !loading) && (
+                        <div className="text-center mt-12">
+                            <Button className="h-12 px-8 bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 text-lg shadow-sm font-semibold">
+                                Browse All Listings
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -415,7 +356,7 @@ export default function LandingPage() {
                                 <input
                                     type="email"
                                     placeholder="Enter your email"
-                                    className="bg-gray-800 border-none rounded-lg px-4 py-2 w-full focus:ring-1 focus:ring-blue-600 outline-none text-white"
+                                    className="bg-gray-800 border-none rounded-lg px-4 py-2 w-full focus:ring-1 focus:ring-blue-600 outline-none text-white text-sm"
                                 />
                                 <Button className="bg-blue-600 hover:bg-blue-700">
                                     <ArrowRight className="h-4 w-4" />
@@ -425,8 +366,8 @@ export default function LandingPage() {
                     </div>
 
                     <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p>© {new Date().getFullYear()} RentSys. All rights reserved.</p>
-                        <div className="flex gap-6">
+                        <p className="text-sm">© {new Date().getFullYear()} RentSys. All rights reserved.</p>
+                        <div className="flex gap-6 text-sm">
                             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
                             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
                             <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
