@@ -18,21 +18,15 @@ export function LandingNavbar() {
                 </Link>
 
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+                    <Link href="#" className="hover:text-blue-600 transition-colors">Home</Link>
                     <Link href="#featured" className="hover:text-blue-600 transition-colors">Properties</Link>
-                    <Link href="#features" className="hover:text-blue-600 transition-colors">Features</Link>
-                    <Link href="#about" className="hover:text-blue-600 transition-colors">About Us</Link>
                     <Link href="#contact" className="hover:text-blue-600 transition-colors">Contact</Link>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <Link href="/login">
-                        <Button variant="ghost" className="font-medium hover:bg-blue-50 hover:text-blue-600">
-                            Login
-                        </Button>
-                    </Link>
-                    <Link href="#contact">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
-                            Get Started
+                        <Button className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold px-6 shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 border-0">
+                            Admin Login
                         </Button>
                     </Link>
                 </div>
