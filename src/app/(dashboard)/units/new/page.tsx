@@ -245,10 +245,10 @@ export default function AddUnitPage() {
                 setMode(v as "single" | "bulk");
                 form.setValue("mode", v as "single" | "bulk");
             }} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-8">
+                {/* <TabsList className="grid w-full grid-cols-2 mb-8">
                     <TabsTrigger value="single">Single Unit</TabsTrigger>
                     <TabsTrigger value="bulk">Bulk Creation</TabsTrigger>
-                </TabsList>
+                </TabsList> */}
 
                 <Card className="border-slate-200 shadow-sm bg-white">
                     <CardHeader>
