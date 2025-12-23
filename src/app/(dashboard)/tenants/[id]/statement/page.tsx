@@ -81,14 +81,14 @@ export default function TenantStatementPage() {
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" /> Print
                     </Button>
-                    {/* <Button>
+                    <Button>
                         <Download className="mr-2 h-4 w-4" /> PDF
-                    </Button> */}
+                    </Button>
                 </div>
             </div>
 
-            <Card className="bg-white shadow-sm border" id="printable-statement">
-                <CardHeader className="border-b bg-slate-50">
+            <Card className="bg-white shadow-sm pt-0" id="printable-statement">
+                <CardHeader className="border-b bg-slate-50 rounded-t-lg pt-6">
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle className="text-2xl font-bold">Statement of Account</CardTitle>

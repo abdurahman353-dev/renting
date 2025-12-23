@@ -255,11 +255,11 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 });
 
                 const uploadedResults = await Promise.all(uploadPromises);
-                uploadedImageUrls = uploadedResults.map((res: any) => res.path); // Send paths to backend
+                uploadedImageUrls = uploadedResults.map((res: any) => res.path || res.url); // Send paths (or urls as fallback) to backend
 
                 // Get featured image URL (or path)
                 const featuredResult = uploadedResults.find((res: any) => res.isFeatured);
-                featuredImageUrl = featuredResult ? featuredResult.path : (uploadedResults[0]?.path || '');
+                featuredImageUrl = featuredResult ? (featuredResult.path || featuredResult.url) : (uploadedResults[0]?.path || uploadedResults[0]?.url || '');
             }
 
             // Step 2: Prepare property data with Cloudinary URLs
