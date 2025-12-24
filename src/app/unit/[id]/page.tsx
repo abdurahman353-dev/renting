@@ -29,7 +29,9 @@ import {
     Loader2,
     Sparkles,
     TrendingUp,
-    ArrowLeft
+    ArrowLeft,
+    Phone,
+    EyeIcon
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { publicAPI, unitAPI } from "@/data/apis";
@@ -254,13 +256,13 @@ export default function UnitDetailsPage() {
                             </CardHeader>
                             <CardContent className="space-y-3 pt-6">
                                 <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
-                                    <FileText className="w-4 h-4 mr-2" /> Create Lease Agreement
+                                    <EyeIcon className="w-4 h-4 mr-2" /> Request Viewing
                                 </Button>
-                                <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
+                                {/* <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
                                     <Wrench className="w-4 h-4 mr-2" /> Schedule Maintenance
-                                </Button>
+                                </Button> */}
                                 <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
-                                    <DollarSign className="w-4 h-4 mr-2" /> Record Payment
+                                    <Phone className="w-4 h-4 mr-2" /> Contact Agent
                                 </Button>
                             </CardContent>
                         </Card>
