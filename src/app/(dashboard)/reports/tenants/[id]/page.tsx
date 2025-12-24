@@ -27,77 +27,28 @@ import {
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 
-// Mock Data
-const TENANT_DETAILS = {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "(555) 123-4567",
-    unit: "101",
-    property: "Sunset Heights Apartments",
-    address: "123 Sunset Blvd, Los Angeles, CA 90026",
-    leaseStart: "Jan 15, 2024",
-    leaseEnd: "Jan 14, 2025",
-    monthlyRent: "$2,500.00",
-    deposit: "$2,500.00",
-    status: "Active",
-    balance: "$0.00",
-    transactions: [
-        {
-            id: "t1",
-            date: "2024-03-01",
-            type: "Rent Payment",
-            amount: "$2,500.00",
-            status: "Paid",
-            method: "Bank Transfer",
-        },
-        {
-            id: "t2",
-            date: "2024-02-01",
-            type: "Rent Payment",
-            amount: "$2,500.00",
-            status: "Paid",
-            method: "Bank Transfer",
-        },
-        {
-            id: "t3",
-            date: "2024-01-15",
-            type: "Security Deposit",
-            amount: "$2,500.00",
-            status: "Paid",
-            method: "Bank Transfer",
-        },
-        {
-            id: "t4",
-            date: "2024-01-15",
-            type: "Rent Payment (Pro-rated)",
-            amount: "$1,250.00",
-            status: "Paid",
-            method: "Bank Transfer",
-        },
-    ],
-};
-
 export default function TenantDetailsPage() {
     const router = useRouter();
-    //  const tenant = TENANT_DETAILS;
     const params = useParams();
+
+    // ✅ FIXED STATE TYPES
     const [tenant, setTenant] = useState<any>(null);
-    const [paymentHistory, setPaymentHistory] = useState([]);
+    const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchTenant = async () => {
             try {
-                // Fetch tenant details
+                // ✅ FETCH TENANT DATA
                 const tenantRes = await api.get(`/tenants/${params.id}`);
-                setTenant(tenantRes);
-                console.log("tenant data", tenantRes)
+                setTenant(tenantRes.data);
 
-                // Fetch payment history (using existing endpoint if available or statement)
+                // ✅ FETCH PAYMENT HISTORY
                 try {
-                    const historyRes = await api.get(`/tenants/${params.id}/payment-history`);
-                    setPaymentHistory(historyRes);
+                    const historyRes = await api.get(
+                        `/tenants/${params.id}/payment-history`
+                    );
+                    setPaymentHistory(historyRes.data);
                 } catch (e) {
                     console.warn("Could not fetch payment history");
                 }
@@ -108,10 +59,14 @@ export default function TenantDetailsPage() {
             }
         };
 
-        if (params.id) {
+        if (params?.id) {
             fetchTenant();
         }
-    }, [params.id]);
+    }, [params?.id]);
+
+    if (loading) {
+        return <div className="p-8">Loading...</div>;
+    }
 
     return (
         <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -129,22 +84,26 @@ export default function TenantDetailsPage() {
                         <User className="w-8 h-8 text-slate-500" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">{tenant?.name}</h1>
+                        <h1 className="text-3xl font-bold text-slate-900">
+                            {tenant?.name}
+                        </h1>
                         <div className="flex items-center text-slate-500 mt-1">
                             <MapPin className="w-4 h-4 mr-1" />
                             <span>
-                                Unit {tenant.unit}, {tenant.property}
+                                Unit {tenant?.unit}, {tenant?.property}
                             </span>
                         </div>
                     </div>
                 </div>
+
                 <div className="flex items-center gap-3">
                     <Badge
-                        variant={tenant.status === "Active" ? "default" : "secondary"}
+                        variant={tenant?.status === "Active" ? "default" : "secondary"}
                         className="text-base px-4 py-1"
                     >
-                        {tenant.status}
+                        {tenant?.status}
                     </Badge>
+
                     <Button className="bg-indigo-600 hover:bg-indigo-700">
                         <Download className="mr-2 h-4 w-4" /> View Rent Statement
                     </Button>
@@ -152,7 +111,7 @@ export default function TenantDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column - Info */}
+                {/* LEFT COLUMN */}
                 <div className="space-y-6">
                     <Card>
                         <CardHeader>
@@ -161,11 +120,11 @@ export default function TenantDetailsPage() {
                         <CardContent className="space-y-4">
                             <div className="flex items-center">
                                 <Mail className="w-4 h-4 mr-3 text-slate-500" />
-                                <span>{tenant.email}</span>
+                                <span>{tenant?.email}</span>
                             </div>
                             <div className="flex items-center">
                                 <Phone className="w-4 h-4 mr-3 text-slate-500" />
-                                <span>{tenant.phone}</span>
+                                <span>{tenant?.phone}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -177,40 +136,38 @@ export default function TenantDetailsPage() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between border-b pb-2">
                                 <span className="text-slate-500">Start Date</span>
-                                <span className="font-medium">{tenant.leaseStart}</span>
+                                <span className="font-medium">{tenant?.leaseStart}</span>
                             </div>
                             <div className="flex justify-between border-b pb-2">
                                 <span className="text-slate-500">End Date</span>
-                                <span className="font-medium">{tenant.leaseEnd}</span>
+                                <span className="font-medium">{tenant?.leaseEnd}</span>
                             </div>
                             <div className="flex justify-between border-b pb-2">
                                 <span className="text-slate-500">Monthly Rent</span>
-                                <span className="font-medium">{tenant.monthlyRent}</span>
+                                <span className="font-medium">{tenant?.monthlyRent}</span>
                             </div>
                             <div className="flex justify-between border-b pb-2">
                                 <span className="text-slate-500">Security Deposit</span>
-                                <span className="font-medium">{tenant.deposit}</span>
+                                <span className="font-medium">{tenant?.deposit}</span>
                             </div>
-                            <div className="pt-2">
-                                <Button variant="outline" className="w-full">
-                                    <FileText className="mr-2 h-4 w-4" /> View Lease Agreement
-                                </Button>
-                            </div>
+
+                            <Button variant="outline" className="w-full">
+                                <FileText className="mr-2 h-4 w-4" /> View Lease Agreement
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Right Column - Transactions */}
+                {/* RIGHT COLUMN */}
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Transaction History</CardTitle>
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                    <Filter className="mr-2 h-4 w-4" /> Filter
-                                </Button>
-                            </div>
+                            <Button variant="outline" size="sm">
+                                <Filter className="mr-2 h-4 w-4" /> Filter
+                            </Button>
                         </CardHeader>
+
                         <CardContent>
                             <Table>
                                 <TableHeader>
@@ -222,8 +179,9 @@ export default function TenantDetailsPage() {
                                         <TableHead className="text-right">Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
+
                                 <TableBody>
-                                    {tenant.transactions.map((transaction) => (
+                                    {paymentHistory.map((transaction: any) => (
                                         <TableRow key={transaction.id}>
                                             <TableCell className="font-medium">
                                                 <div className="flex items-center">
@@ -231,13 +189,16 @@ export default function TenantDetailsPage() {
                                                     {transaction.date}
                                                 </div>
                                             </TableCell>
+
                                             <TableCell>{transaction.type}</TableCell>
+
                                             <TableCell>
                                                 <div className="flex items-center text-sm text-slate-500">
                                                     <CreditCard className="mr-2 h-4 w-4" />
                                                     {transaction.method}
                                                 </div>
                                             </TableCell>
+
                                             <TableCell>
                                                 <Badge
                                                     variant="outline"
@@ -246,6 +207,7 @@ export default function TenantDetailsPage() {
                                                     {transaction.status}
                                                 </Badge>
                                             </TableCell>
+
                                             <TableCell className="text-right font-medium">
                                                 {transaction.amount}
                                             </TableCell>
