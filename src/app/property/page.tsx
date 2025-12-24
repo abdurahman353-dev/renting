@@ -1,15 +1,22 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import api from "@/lib/api"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MapPin, Home } from "lucide-react"
+import { useState, useEffect } from 'react';
+import { LandingNavbar } from '@/components/landing-navbar';
+import { LandingFooter } from '@/components/landing-footer';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from "next/navigation"
-import AddPropertyModal from "@/components/AddPropertyModal"
-import { propertyAPI } from "@/data/apis"
+import { publicAPI } from "@/data/apis"
+import {
+    Search,
+    MapPin,
+    Wifi,
+    Shield,
+    ArrowRight,
+    Building2,
+    Loader2
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface Property {
     id: number;
@@ -22,14 +29,17 @@ interface Property {
     units?: any[];
     featured_image_url?: string;
     images?: string;
-    path?: string
+    path?: string;
+    min_rent?: number;
+    max_rent?: number;
+    category?: string;
 }
 
-export default function PropertiesPage() {
-    const router = useRouter()
+export default function AllPropertiesPage() {
+    const router = useRouter();
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
-    const [modalOpen, setModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         fetchProperties();
@@ -37,9 +47,16 @@ export default function PropertiesPage() {
 
     const fetchProperties = async () => {
         try {
-            // const response = await api.get('/properties');
-            const response = await propertyAPI.getAll();
-            setProperties(response || response.data);
+            const response = await publicAPI.getProperties();
+
+            let data: Property[] = [];
+            if (Array.isArray(response)) {
+                data = response;
+            } else if (response && typeof response === 'object') {
+                data = response.data || response.properties || [];
+            }
+
+            setProperties(data);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
         } finally {
@@ -47,81 +64,114 @@ export default function PropertiesPage() {
         }
     };
 
-    if (loading) return <div className="p-8">Loading properties...</div>;
+    const filteredProperties = properties.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Properties</h2>
-                    <p className="text-muted-foreground">Manage your houses and residential units.</p>
-                </div>
-            </div>
+        <div className="min-h-screen bg-white">
+            <LandingNavbar />
 
-            <AddPropertyModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                onSuccess={fetchProperties}
-            />
+            <main className="pt-32 pb-20">
+                <div className="container mx-auto px-4">
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                            All Available Properties
+                        </h1>
+                        <p className="text-gray-500 max-w-2xl mx-auto">
+                            Discover our full range of premium residential and commercial spaces.
+                        </p>
+                    </div>
 
-            <div className="flex items-center space-x-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search properties..."
-                        className="pl-8"
-                    />
-                </div>
-            </div>
+                    {/* Search/Filter Bar */}
+                    <div className="max-w-2xl mx-auto mb-16 relative">
+                        <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by name or location..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-slate-900 shadow-sm"
+                        />
+                    </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {properties.map((property) => (
-                    <Card
-                        key={property.id}
-                        onClick={() => router.push(`/properties/${property.id}`)}
-                        className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200"
-                    >
-                        <div className="h-48 overflow-hidden relative">
-                            <img
-                                src={property.featured_image_url || property.images || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
-                                alt={property.name}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            <div className="absolute top-2 right-2">
-                                <Badge variant={property.occupied_units === property.units?.length ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
-                                    {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
-                                </Badge>
-                            </div>
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
+                            <p className="text-gray-500 font-medium">Loading properties...</p>
                         </div>
-                        <CardHeader>
-                            <CardTitle className="flex justify-between items-start">
-                                <span>{property.name}</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                                <div className="flex items-center">
-                                    <MapPin className="mr-2 h-4 w-4 text-indigo-500" />
-                                    {property.location}
+                    ) : (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredProperties.length > 0 ? (
+                                filteredProperties.map((property) => {
+                                    const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
+                                    const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
+
+                                    return (
+                                        <div key={property.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+                                            <div className="relative h-64 overflow-hidden">
+                                                <img
+                                                    src={displayImage}
+                                                    alt={property.name}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                />
+                                                <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white border-0 shadow-sm font-semibold">
+                                                    {availableUnits > 0 ? `${availableUnits} Available` : 'Fully Occupied'}
+                                                </Badge>
+                                                {(property.min_rent || property.max_rent) && (
+                                                    <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
+                                                        KES {formatCurrency(String(property.min_rent || 0))}
+                                                        {property.max_rent && property.max_rent > (property.min_rent || 0) ? ` - ${formatCurrency(String(property.max_rent))}` : ''}
+                                                        <span className="text-sm font-normal opacity-90">/mo</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-6">
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2 truncate">{property.name}</h3>
+                                                <div className="flex items-center text-gray-500 mb-4 text-sm">
+                                                    <MapPin className="h-4 w-4 mr-2 text-blue-500" />
+                                                    {property.location}
+                                                </div>
+                                                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                                                    <div className="flex gap-3">
+                                                        <Wifi className="h-5 w-5 text-gray-300" />
+                                                        <Shield className="h-5 w-5 text-gray-300" />
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="text-blue-600 hover:bg-blue-50 font-bold"
+                                                        onClick={() => router.push(`/property/${property.id}`)}
+                                                    >
+                                                        Details <ArrowRight className="ml-2 h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-full py-20 text-center">
+                                    <div className="p-6 bg-gray-50 rounded-full inline-block mb-4">
+                                        <Building2 className="h-12 w-12 text-gray-300" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">No matching properties</h3>
+                                    <p className="text-gray-500">Try adjusting your search terms to find what you're looking for.</p>
+                                    <Button
+                                        variant="outline"
+                                        className="mt-6"
+                                        onClick={() => setSearchTerm('')}
+                                    >
+                                        Clear Search
+                                    </Button>
                                 </div>
-                                <div className="flex items-center">
-                                    <Home className="mr-2 h-4 w-4 text-indigo-500" />
-                                    {property.units?.length || 0} Units Total
-                                </div>
-                            </div>
-                            <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                                <div className="text-xs font-medium text-slate-500">
-                                    Occupancy Rate
-                                </div>
-                                <div className="text-sm font-bold text-indigo-600">
-                                    {(property.units?.length || 0) > 0 ? Math.round(((property.occupied_units || 0) / (property.units?.length || 1)) * 100) : 0}%
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            <LandingFooter />
         </div>
-    )
+    );
 }

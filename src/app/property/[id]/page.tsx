@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,9 @@ import { useEffect, useState } from "react";
 import { propertyAPI, publicAPI } from "@/data/apis";
 import { useRouter } from "next/navigation";
 import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
-import { formatText, formatTextType } from "@/lib/utils";
+import { LandingNavbar } from "@/components/landing-navbar";
+import { LandingFooter } from "@/components/landing-footer";
+import { formatText, formatTextType, formatCurrency } from "@/lib/utils";
 
 // Enhanced icon mapping with vibrant colors
 // Simplified professional icon mapping
@@ -114,22 +116,30 @@ export default function PropertyViewPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-slate-600 font-medium">Loading property details...</p>
+            <div className="min-h-screen flex flex-col bg-slate-50">
+                <LandingNavbar />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-600 font-medium">Loading property details...</p>
+                    </div>
                 </div>
+                <LandingFooter />
             </div>
         );
     }
 
     if (!property) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="text-center">
-                    <Building2 className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-600 text-xl font-semibold">Property not found</p>
+            <div className="min-h-screen flex flex-col bg-slate-50">
+                <LandingNavbar />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <Building2 className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                        <p className="text-slate-600 text-xl font-semibold">Property not found</p>
+                    </div>
                 </div>
+                <LandingFooter />
             </div>
         );
     }
@@ -160,405 +170,343 @@ export default function PropertyViewPage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-                <div className="flex items-center justify-between mb-6">
-                    <Button variant="outline" onClick={() => router.back()}>
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                    </Button>
-                </div>
-                {/* Premium Hero Section with Gradient Overlay */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[550px]">
-                        <div className="md:col-span-2 h-full relative group">
-                            <img
-                                src={images[0]}
-                                alt={property.name}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                            <div className="absolute bottom-6 left-6 right-6">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Sparkles className="w-5 h-5 text-yellow-400" />
-                                    <span className="text-yellow-400 font-semibold text-sm">Premium Property</span>
-                                </div>
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    className="bg-white/90 backdrop-blur-sm hover:bg-white"
-                                >
-                                    View All {images.length} Photos
-                                </Button>
-                            </div>
-                        </div>
-                        {images.length > 1 && (
-                            <>
-                                <div className="hidden md:grid grid-rows-2 gap-3">
-                                    <div className="relative group overflow-hidden rounded-xl">
-                                        <img
-                                            src={images[1]}
-                                            alt="Interior"
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
+            <LandingNavbar />
+
+            <main className="pt-28 pb-12">
+                <div className="max-w-7xl mx-auto px-6 space-y-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <Button variant="outline" onClick={() => router.push('/property')} className="rounded-xl border-slate-200 hover:bg-white hover:text-blue-600 hover:border-blue-200 transition-all">
+                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to All Listings
+                        </Button>
+                    </div>
+
+                    {/* Premium Hero Section with Gradient Overlay */}
+                    <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[550px]">
+                            <div className="md:col-span-2 h-full relative group">
+                                <img
+                                    src={images[0]}
+                                    alt={property.name}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                <div className="absolute bottom-6 left-6 right-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                                        <span className="text-yellow-400 font-semibold text-sm">Premium Listing</span>
                                     </div>
-                                    {images.length > 2 && (
-                                        <div className="relative group overflow-hidden rounded-xl">
-                                            <img
-                                                src={images[2]}
-                                                alt="Kitchen"
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                        </div>
-                                    )}
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="bg-white/90 backdrop-blur-sm hover:bg-white text-slate-900 border-0"
+                                    >
+                                        View All {images.length} Photos
+                                    </Button>
                                 </div>
-                                {images.length > 3 && (
+                            </div>
+                            {images.length > 1 && (
+                                <>
                                     <div className="hidden md:grid grid-rows-2 gap-3">
                                         <div className="relative group overflow-hidden rounded-xl">
                                             <img
-                                                src={images[3]}
-                                                alt="Bedroom"
+                                                src={images[1]}
+                                                alt="Interior"
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
                                         </div>
-                                        {images.length > 4 && (
-                                            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group">
-                                                <div className="text-center text-white">
-                                                    <p className="text-4xl font-bold mb-2">+{images.length - 4}</p>
-                                                    <p className="text-sm font-medium">More Photos</p>
-                                                </div>
+                                        {images.length > 2 && (
+                                            <div className="relative group overflow-hidden rounded-xl">
+                                                <img
+                                                    src={images[2]}
+                                                    alt="Kitchen"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                />
                                             </div>
                                         )}
                                     </div>
-                                )}
-                            </>
-                        )}
+                                    {images.length > 3 && (
+                                        <div className="hidden md:grid grid-rows-2 gap-3">
+                                            <div className="relative group overflow-hidden rounded-xl">
+                                                <img
+                                                    src={images[3]}
+                                                    alt="Bedroom"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                />
+                                            </div>
+                                            {images.length > 4 && (
+                                                <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group">
+                                                    <div className="text-center text-white">
+                                                        <p className="text-4xl font-bold mb-2">+{images.length - 4}</p>
+                                                        <p className="text-sm font-medium">More Photos</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {/* Header */}
-                <div className="bg-white rounded-2xl shadow-sm p-8 border border-slate-200">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-slate-900 mb-3">
-                                {property.name}
-                            </h1>
-                            <div className="flex items-center text-slate-600 gap-2">
-                                <MapPin className="w-5 h-5 text-slate-500" />
-                                <span className="text-lg">{fullAddress}</span>
+                    {/* Header */}
+                    <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-100">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="flex-1">
+                                <h1 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
+                                    {property.name}
+                                </h1>
+                                <div className="flex items-center text-slate-500 gap-2">
+                                    <MapPin className="w-5 h-5 text-blue-500" />
+                                    <span className="text-lg font-medium">{fullAddress}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Badge
+                                    className={`text-base px-6 py-2 font-bold shadow-sm rounded-full ${property.status === "active"
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                        : "bg-slate-50 text-slate-700 border-slate-100"
+                                        }`}
+                                >
+                                    {formatTextType(property.status) || "Available"}
+                                </Badge>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Badge
-                                className={`text-base px-6 py-2 font-semibold shadow-sm ${property.status === "active"
-                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0"
-                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-0"
-                                    }`}
-                            >
-                                {formatTextType(property.status) || "Active"}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Tabs defaultValue="overview" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl">
-                                <TabsTrigger
-                                    value="overview"
-                                    className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-lg font-medium"
-                                >
-                                    Overview
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="units"
-                                    className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded-lg font-medium"
-                                >
-                                    Units
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="overview" className="space-y-6 mt-6">
-                                {/* Description with Premium Card */}
-                                {property.description && (
-                                    <Card className="bg-white shadow-sm border border-slate-200">
-                                        <CardHeader className="bg-slate-50 border-b border-slate-100">
-                                            <CardTitle className="text-xl font-bold text-slate-800">About this Property</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pt-6">
-                                            <p className="text-slate-600 leading-relaxed text-base">
-                                                {property.description}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-
-                                {/* Property Details */}
-                                <Card className="bg-white shadow-sm border border-slate-200">
-                                    <CardHeader className="bg-slate-50 border-b border-slate-100">
-                                        <CardTitle className="text-xl font-bold text-slate-800">Property Details</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-6">
-                                        <div className="grid grid-cols-2 gap-6">
-                                            {property.property_type && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                                    <span className="text-slate-600 font-medium">Type</span>
-                                                    <span className="font-semibold text-slate-900">{property.property_type}</span>
-                                                </div>
-                                            )}
-                                            {property.year_built && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                                    <span className="text-slate-600 font-medium">Year Built</span>
-                                                    <span className="font-semibold text-slate-900">{property.year_built}</span>
-                                                </div>
-                                            )}
-                                            {property.floors && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                                    <span className="text-slate-600 font-medium">Floors</span>
-                                                    <span className="font-semibold text-slate-900">{property.floors}</span>
-                                                </div>
-                                            )}
-                                            {property.parking_spaces && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                                    <span className="text-slate-600 font-medium">Parking Spaces</span>
-                                                    <span className="font-semibold text-slate-900">{property.parking_spaces}</span>
-                                                </div>
-                                            )}
-                                            {property.pet_policy && (
-                                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg col-span-2">
-                                                    <span className="text-slate-600 font-medium">Pet Policy</span>
-                                                    <span className="font-semibold text-slate-900">{property.pet_policy}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Amenities */}
-                                {property.amenities && property.amenities.length > 0 && (
-                                    <Card className="bg-white shadow-sm border border-slate-200">
-                                        <CardHeader className="bg-slate-50 border-b border-slate-100">
-                                            <CardTitle className="text-xl font-bold text-slate-800">Amenities</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pt-6">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                {property.amenities.map((amenity: any, index: number) => {
-                                                    const amenityConfig = AMENITY_ICONS[amenity.amenity_name] || {
-                                                        icon: Home,
-                                                        color: "text-slate-600",
-                                                        bgColor: "bg-slate-100"
-                                                    };
-                                                    const IconComponent = amenityConfig.icon;
-                                                    return (
-                                                        <div
-                                                            key={index}
-                                                            className={`flex items-center gap-3 p-4 ${amenityConfig.bgColor} rounded-lg border border-slate-100 transition-all duration-300 group`}
-                                                        >
-                                                            <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
-                                                            <span className="text-slate-700 font-medium text-sm">
-                                                                {amenity.amenities}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="units" className="mt-6">
-                                <Card className="bg-white shadow-sm border border-slate-200">
-                                    <CardHeader className="bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between pb-4">
-                                        <CardTitle className="text-xl font-bold text-slate-800">Units</CardTitle>
-                                        {/* <div className="flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setBulkModalOpen(true)}
-                                                size="sm"
-                                                className="bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                            >
-                                                Bulk Add
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => router.push("/units/new")}
-                                                size="sm"
-                                                className="bg-blue-600 text-white border-0 hover:bg-blue-700"
-                                            >
-                                                + Add Unit
-                                            </Button>
-                                        </div> */}
-                                    </CardHeader>
-                                    <CardContent className="pt-6">
-                                        {property.units && property.units.length > 0 ? (
-                                            <div className="overflow-x-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow className="bg-slate-50">
-                                                            <TableHead className="font-semibold text-slate-700">Unit</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Price</TableHead>
-                                                            <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {property.units.map((unit: any) => (
-                                                            <TableRow key={unit.id} className="hover:bg-blue-50/50 transition-colors">
-                                                                <TableCell className="font-bold text-slate-900">
-                                                                    {unit.unit_number}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Badge
-                                                                        className={`font-semibold ${unit.status === "vacant"
-                                                                            ? "bg-emerald-100 text-emerald-700 border-0"
-                                                                            : unit.status === "occupied"
-                                                                                ? "bg-blue-100 text-blue-700 border-0"
-                                                                                : "bg-slate-100 text-slate-700 border-0"
-                                                                            }`}
-                                                                    >
-                                                                        {unit.status}
-                                                                    </Badge>
-                                                                </TableCell>
-                                                                <TableCell className="font-semibold text-slate-900">
-                                                                    KES {unit.price?.toLocaleString() || 'N/A'}
-                                                                </TableCell>
-                                                                <TableCell className="text-right">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        onClick={() => router.push(`/unit/${unit.id}`)}
-                                                                        size="sm"
-                                                                        className="hover:bg-blue-100 hover:text-blue-700 font-semibold"
-                                                                    >
-                                                                        View
-                                                                    </Button>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
-                                        ) : (
-                                            <p className="text-slate-500 text-center py-12 text-lg">No units available</p>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
                     </div>
 
-                    {/* Right Column - Sidebar */}
-                    <div className="space-y-6">
-                        {/* Property Summary */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                                <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
-                                    <TrendingUp className="w-5 h-5 text-slate-500" />
-                                    Property Summary
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4 pt-6">
-                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                                    <span className="text-slate-600 font-medium">Price Range</span>
-                                    <span className="font-bold text-slate-900 text-lg">{priceRange}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                                    <span className="text-slate-600 font-medium">Total Units</span>
-                                    <span className="font-bold text-slate-900 text-lg">{totalUnitsCount}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                                    <span className="text-slate-600 font-medium">Occupancy</span>
-                                    <span className="font-bold text-slate-900 text-lg">{occupancyRate}%</span>
-                                </div>
-                                {property.security_deposit && (
-                                    <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                                        <span className="text-slate-600 font-medium">Security Deposit</span>
-                                        <span className="font-bold text-slate-900 text-lg">KES {property.security_deposit.toLocaleString()}</span>
-                                    </div>
-                                )}
-                                {/* <div className="pt-4 space-y-3">
-                                    <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
-                                        Manage Tenants
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2"
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-slate-900">
+                        {/* Left Column - Main Content */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <Tabs defaultValue="overview" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1.5 rounded-2xl h-14">
+                                    <TabsTrigger
+                                        value="overview"
+                                        className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-xl font-bold transition-all text-slate-600"
                                     >
-                                        Financial Report
-                                    </Button>
-                                </div> */}
-                            </CardContent>
-                        </Card>
+                                        Overview
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="units"
+                                        className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-xl font-bold transition-all text-slate-600"
+                                    >
+                                        Units & Availability
+                                    </TabsTrigger>
+                                </TabsList>
 
-                        {/* Contact Card */}
-                        {(property.property_manager || property.owner_name) && (
-                            <Card className="bg-white shadow-sm border border-slate-200">
-                                <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                                    <CardTitle className="text-xl font-bold text-slate-800">
-                                        {property.property_manager ? 'Property Manager' : 'Owner'}
+                                <TabsContent value="overview" className="space-y-6 mt-8">
+                                    {/* Description */}
+                                    {property.description && (
+                                        <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden">
+                                            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-6">
+                                                <CardTitle className="text-xl font-bold text-slate-900">About this Property</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-8">
+                                                <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-line">
+                                                    {property.description}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+
+                                    {/* Property Details Grid */}
+                                    <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-6">
+                                            <CardTitle className="text-xl font-bold text-slate-900">Property Details</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="pt-8 pb-8">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[
+                                                    { label: "Type", value: property.property_type },
+                                                    { label: "Year Built", value: property.year_built },
+                                                    { label: "Floors", value: property.floors },
+                                                    { label: "Parking", value: property.parking_spaces ? `${property.parking_spaces} Spaces` : null },
+                                                    { label: "Pet Policy", value: property.pet_policy, wide: true },
+                                                ].map((item, i) => item.value && (
+                                                    <div key={i} className={`flex justify-between items-center py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100 ${item.wide ? 'md:col-span-2' : ''}`}>
+                                                        <span className="text-slate-500 font-semibold">{item.label}</span>
+                                                        <span className="font-bold text-slate-900">{item.value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Amenities */}
+                                    {property.amenities && property.amenities.length > 0 && (
+                                        <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden">
+                                            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-6">
+                                                <CardTitle className="text-xl font-bold text-slate-900">Amenities & Features</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-8 pb-8">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 font-slate-900">
+                                                    {property.amenities.map((amenity: any, index: number) => {
+                                                        const amenityConfig = AMENITY_ICONS[amenity.amenity_name] || {
+                                                            icon: Home,
+                                                            color: "text-blue-600",
+                                                            bgColor: "bg-blue-50/50"
+                                                        };
+                                                        const IconComponent = amenityConfig.icon;
+                                                        return (
+                                                            <div
+                                                                key={index}
+                                                                className={`flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 transition-all duration-300 hover:border-blue-200 group`}
+                                                            >
+                                                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                                    <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
+                                                                </div>
+                                                                <span className="text-slate-700 font-bold text-sm">
+                                                                    {amenity.amenity_name || amenity.amenities}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="units" className="mt-8">
+                                    <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-6">
+                                            <CardTitle className="text-xl font-bold text-slate-900 text-slate-900">Available Units</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="pt-6">
+                                            {property.units && property.units.length > 0 ? (
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow className="border-b border-slate-100 hover:bg-transparent">
+                                                                <TableHead className="font-bold text-slate-500 py-4">Unit #</TableHead>
+                                                                <TableHead className="font-bold text-slate-500 py-4">Status</TableHead>
+                                                                <TableHead className="font-bold text-slate-500 py-4">Monthly Rent</TableHead>
+                                                                <TableHead className="text-right font-bold text-slate-500 py-4">Action</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {property.units.map((unit: any) => (
+                                                                <TableRow key={unit.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
+                                                                    <TableCell className="font-extrabold text-slate-900 py-5">
+                                                                        {unit.unit_number}
+                                                                    </TableCell>
+                                                                    <TableCell className="py-5">
+                                                                        <Badge
+                                                                            className={`font-bold px-3 py-1 rounded-full ${unit.status === "vacant"
+                                                                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                                                                : unit.status === "occupied"
+                                                                                    ? "bg-blue-50 text-blue-700 border-blue-100"
+                                                                                    : "bg-slate-50 text-slate-700 border-slate-100"
+                                                                                }`}
+                                                                        >
+                                                                            {unit.status}
+                                                                        </Badge>
+                                                                    </TableCell>
+                                                                    <TableCell className="font-bold text-slate-900 py-5">
+                                                                        KES {unit.price?.toLocaleString() || 'N/A'}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right py-5">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="rounded-xl font-bold text-blue-600 hover:bg-blue-100"
+                                                                        >
+                                                                            Inquire
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-16">
+                                                    <Home className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                                    <p className="text-slate-500 text-lg font-medium">No units currently listed.</p>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+
+                        {/* Right Column - Sidebar */}
+                        <div className="space-y-6">
+                            {/* Rental Summary Card */}
+                            <Card className="bg-white shadow-lg border border-slate-100 rounded-3xl overflow-hidden sticky top-32">
+                                <CardHeader className="bg-blue-600 text-white py-6">
+                                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                        <TrendingUp className="w-5 h-5" />
+                                        Leasing Information
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="pt-6">
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                                            <User className="w-6 h-6 text-slate-500" />
+                                <CardContent className="space-y-5 pt-8 pb-8">
+                                    <div className="space-y-1">
+                                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Starting From</p>
+                                        <p className="text-3xl font-extrabold text-blue-600">
+                                            KES {property.min_rent?.toLocaleString() || '0'}
+                                            <span className="text-slate-400 text-base font-normal tracking-normal italic ml-1">/mo</span>
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-4 pt-4">
+                                        <div className="flex justify-between items-center py-2">
+                                            <span className="text-slate-600 font-bold">Security Deposit</span>
+                                            <span className="font-bold text-slate-900">KES {property.security_deposit?.toLocaleString() ?? '1 Mon Rent'}</span>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-lg text-slate-900">{property.property_manager || property.owner_name}</p>
-                                            <p className="text-sm text-slate-600 font-medium">
-                                                {property.property_manager ? 'Property Manager' : 'Owner'}
-                                            </p>
+                                        <div className="flex justify-between items-center py-2">
+                                            <span className="text-slate-600 font-bold">Service Charge</span>
+                                            <span className="font-bold text-slate-900">KES {property.service_charge?.toLocaleString() ?? 'Included'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2">
+                                            <span className="text-slate-600 font-bold">Total Units</span>
+                                            <span className="font-bold text-slate-900">{totalUnitsCount} Units</span>
                                         </div>
                                     </div>
-                                    <div className="space-y-3">
-                                        {property.owner_contact && (
-                                            <Button
-                                                variant="outline"
-                                                className="w-full justify-start text-slate-700 hover:bg-slate-50 font-medium py-2"
-                                            >
-                                                <Phone className="w-4 h-4 mr-3 text-slate-500" />
-                                                {property.owner_contact}
-                                            </Button>
-                                        )}
-                                        {property.owner_email && (
-                                            <Button
-                                                variant="outline"
-                                                className="w-full justify-start text-slate-700 hover:bg-slate-50 font-medium py-2"
-                                            >
-                                                <Mail className="w-4 h-4 mr-3 text-slate-500" />
-                                                {property.owner_email}
-                                            </Button>
-                                        )}
+
+                                    <div className="pt-6 space-y-3">
+                                        <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-extrabold h-14 rounded-2xl shadow-md shadow-blue-100 transition-all">
+                                            Apply to Rent
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold h-14 rounded-2xl"
+                                        >
+                                            Schedule Viewing
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
-                        )}
+
+                            {/* Property Contact */}
+                            <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden p-6">
+                                <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <Phone className="w-5 h-5 text-blue-500" />
+                                    Contact Agency
+                                </h4>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                            <Building2 className="w-6 h-6 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900">RentSys Real Estate</p>
+                                            <p className="text-xs text-slate-500 font-bold">verified Agency</p>
+                                        </div>
+                                    </div>
+                                    <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
+                                        <Phone className="w-4 h-4 mr-3" /> +254 700 000 000
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
+                                        <Mail className="w-4 h-4 mr-3" /> sales@rentsys.com
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
 
-            {/* Edit Modal */}
-            {/* {property && (
-                <AddPropertyModal
-                    isOpen={editModalOpen}
-                    onClose={() => setEditModalOpen(false)}
-                    onSuccess={handleEditSuccess}
-                    editMode={true}
-                    propertyData={property}
-                />
-            )}
-
-            {property && (
-                <BulkUnitModal
-                    isOpen={bulkModalOpen}
-                    onClose={() => setBulkModalOpen(false)}
-                    propertyId={property.id}
-                    onSuccess={() => {
-                        fetchProperty();
-                        setBulkModalOpen(false);
-                    }}
-                />
-            )} */}
+            <LandingFooter />
         </div>
     );
 }

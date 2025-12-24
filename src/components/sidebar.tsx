@@ -14,9 +14,21 @@ import {
   ChevronRight
 } from "lucide-react"
 import { Children, useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 
 
-const defaultRoutes = [
+interface SidebarRoute {
+  label: string;
+  icon: any;
+  href: string;
+  color?: string;
+  children?: {
+    label: string;
+    href: string;
+  }[];
+}
+
+const defaultRoutes: SidebarRoute[] = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
@@ -77,23 +89,22 @@ const defaultRoutes = [
       },
     ]
   }
-  // {
-  //   label: "Settings",
-  //   icon: Settings,
-  //   href: "/settings",
-  // },
 ]
 
-interface SidebarRoute {
-  label: string;
-  icon: any;
-  href: string;
-  color?: string;
-  children?: {
-    label: string;
-    href: string;
-  }[];
-}
+const superAdminRoutes: SidebarRoute[] = [
+  {
+    label: "Activity",
+    icon: FileText,
+    href: "/activity",
+    color: "text-emerald-500",
+  },
+  {
+    label: "Admins",
+    icon: Users,
+    href: "/admins",
+    color: "text-pink-700",
+  },
+]
 
 interface SidebarProps {
   isOpen: boolean
@@ -101,9 +112,14 @@ interface SidebarProps {
   routes?: SidebarRoute[]
 }
 
-export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarProps) {
+export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps) {
   const pathname = usePathname()
+  const { isSuperAdmin, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
+
+  // If routes are passed as props, use them. 
+  // Otherwise, use defaultRoutes and conditionally add superAdminRoutes.
+  const routes = propRoutes || (isSuperAdmin() ? [...defaultRoutes, ...superAdminRoutes] : defaultRoutes)
 
   const toggleMenu = (href: string) => {
     setExpandedMenus(prev =>
@@ -195,7 +211,7 @@ export function Sidebar({ isOpen, setIsOpen, routes = defaultRoutes }: SidebarPr
         <div className="px-3 py-2">
           <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
             <p className="text-xs text-slate-400 mb-1">Logged in as</p>
-            <p className="text-sm font-medium text-white">Admin User</p>
+            <p className="text-sm font-medium text-white">{user?.name || "User"}</p>
           </div>
         </div>
       </div>

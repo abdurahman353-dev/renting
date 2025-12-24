@@ -28,6 +28,7 @@ import {
     Bell,
     PenTool as Tool
 } from 'lucide-react';
+import { LandingFooter } from '@/components/landing-footer';
 import { formatCurrency } from '@/lib/utils';
 
 interface Property {
@@ -229,7 +230,7 @@ export default function LandingPage() {
                                 <div key={i} className="h-96 bg-white rounded-3xl animate-pulse"></div>
                             ))
                         ) : filteredProperties.length > 0 ? (
-                            filteredProperties.map((property) => {
+                            filteredProperties.slice(0, 6).map((property) => {
                                 const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
                                 const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
 
@@ -299,62 +300,17 @@ export default function LandingPage() {
 
                     {(filteredProperties.length > 0 && !loading) && (
                         <div className="text-center mt-12">
-                            <Button className="h-12 px-8 bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 text-lg shadow-sm font-semibold">
-                                Browse All Listings
-                            </Button>
+                            <Link href="/property">
+                                <Button className="h-12 px-8 bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 text-lg shadow-sm font-semibold">
+                                    Browse All Listings
+                                </Button>
+                            </Link>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer id="contact" className="bg-[#0B1120] text-gray-400 py-16">
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-3 gap-12 mb-12">
-                        <div className="space-y-4">
-                            <Link href="/" className="flex items-center gap-2 mb-4">
-                                <div className="p-2 bg-blue-600 rounded-lg text-white">
-                                    <Building2 className="h-5 w-5" />
-                                </div>
-                                <span className="text-xl font-bold text-white">RentSys</span>
-                            </Link>
-                            <p className="leading-relaxed">The complete solution for modern property management. Making renting simple, transparent, and secure for everyone.</p>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-6">Quick Links</h4>
-                            <ul className="space-y-4">
-                                <li><a href="#" className="hover:text-blue-500 transition-colors">Home</a></li>
-                                <li><a href="#featured" className="hover:text-blue-500 transition-colors">Properties</a></li>
-                                <li><a href="#contact" className="hover:text-blue-500 transition-colors">Contact Us</a></li>
-
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-6">Contact Us</h4>
-                            <ul className="space-y-4">
-                                <li className="flex items-center gap-3">
-                                    <Phone className="h-5 w-5 text-blue-500" />
-                                    +254 700 000 000
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <Mail className="h-5 w-5 text-blue-500" />
-                                    support@rentsys.com
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <MapPin className="h-5 w-5 text-blue-500" />
-                                    Nairobi, Kenya
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p className="text-sm">© 2025 RentSys. All rights reserved.</p>
-                    </div>
-                </div>
-            </footer>
+            <LandingFooter />
         </div>
     );
 }

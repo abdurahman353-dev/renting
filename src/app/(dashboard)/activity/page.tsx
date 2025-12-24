@@ -14,6 +14,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { superAdminAPI } from '@/data/apis';
 
 type Log = {
     id: string;
@@ -33,9 +38,50 @@ const mockLogs: Log[] = [
 ];
 
 export default function ActivityLogsPage() {
+    const { isSuperAdmin, loading } = useAuth();
+    const router = useRouter();
+    const [activityLogs, setActivityLogs] = useState<Log[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredLogs = mockLogs.filter(log =>
+    useEffect(() => {
+        if (!loading && !isSuperAdmin()) {
+            router.replace('/dashboard');
+        }
+    }, [isSuperAdmin, loading, router]);
+
+    const fetchActivityLogs = async () => {
+        try {
+            const response = await superAdminAPI.getActivityLogs()
+            // Ensure response is an array before setting state
+            if (Array.isArray(response)) {
+                setActivityLogs(response);
+            } else {
+                console.error('Expected array for activity logs, got:', response);
+                setActivityLogs([]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch activity logs:', error);
+            setActivityLogs([]);
+        }
+    };
+
+    useEffect(() => {
+        if (isSuperAdmin()) {
+            fetchActivityLogs();
+        }
+    }, [isSuperAdmin]);
+
+    if (loading) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+        );
+    }
+
+    if (!isSuperAdmin()) return null;
+
+    const filteredLogs = activityLogs.filter(log =>
         log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.action.toLowerCase().includes(searchTerm.toLowerCase())
     );
