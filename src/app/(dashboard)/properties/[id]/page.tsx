@@ -547,6 +547,7 @@ export default function PropertyViewPage() {
                         fetchProperty();
                         setBulkModalOpen(false);
                     }}
+                    existingUnits={property.units?.map(u => u.unit_number.toString()) || []}
                 />
             )}
         </div>

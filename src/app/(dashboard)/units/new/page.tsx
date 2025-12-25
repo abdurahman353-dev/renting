@@ -91,6 +91,7 @@ export default function AddUnitPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [properties, setProperties] = useState<any[]>([]);
+    const [existingUnitNumbers, setExistingUnitNumbers] = useState<string[]>([]);
     const [mode, setMode] = useState<"single" | "bulk">("single");
 
     const form = useForm<FormValues>({
@@ -134,6 +135,24 @@ export default function AddUnitPage() {
         };
         fetchProperties();
     }, []);
+
+    const selectedPropertyId = form.watch("property_id");
+
+    useEffect(() => {
+        if (selectedPropertyId) {
+            const property = properties.find(p => p.id.toString() === selectedPropertyId);
+            if (property && property.units) {
+                setExistingUnitNumbers(property.units.map((u: any) => u.unit_number.toString()));
+            } else if (property) {
+                // If units not loaded, fetch property detail
+                propertyAPI.getById(selectedPropertyId).then(data => {
+                    setExistingUnitNumbers(data.units?.map((u: any) => u.unit_number.toString()) || []);
+                });
+            }
+        } else {
+            setExistingUnitNumbers([]);
+        }
+    }, [selectedPropertyId, properties]);
 
     const onSubmit: SubmitHandler<FormValues> = async (values) => {
         try {
@@ -299,10 +318,18 @@ export default function AddUnitPage() {
                                                         <FormLabel>Unit Number</FormLabel>
                                                         <FormControl>
                                                             <div className="relative">
-                                                                <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                                <Input placeholder="e.g. A-101" className="pl-9" {...field} value={field.value || ''} />
+                                                                <Hash className={`absolute left-3 top-2.5 h-4 w-4 ${existingUnitNumbers.includes(field.value || '') ? "text-red-500" : "text-muted-foreground"}`} />
+                                                                <Input
+                                                                    placeholder="e.g. A-101"
+                                                                    className={`pl-9 ${existingUnitNumbers.includes(field.value || '') ? "border-red-500 bg-red-50 focus-visible:ring-red-500" : ""}`}
+                                                                    {...field}
+                                                                    value={field.value || ''}
+                                                                />
                                                             </div>
                                                         </FormControl>
+                                                        {existingUnitNumbers.includes(field.value || '') && (
+                                                            <p className="text-xs font-medium text-red-600 mt-1">This unit number already exists in the selected property.</p>
+                                                        )}
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}

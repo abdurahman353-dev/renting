@@ -22,6 +22,7 @@ interface BulkUnitModalProps {
     onClose: () => void;
     propertyId: number;
     onSuccess: () => void;
+    existingUnits?: string[];
 }
 
 interface GeneratedUnit {
@@ -31,7 +32,7 @@ interface GeneratedUnit {
     type: string;
 }
 
-export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess }: BulkUnitModalProps) {
+export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existingUnits = [] }: BulkUnitModalProps) {
     const [prefix, setPrefix] = useState("A");
     const [startNumber, setStartNumber] = useState(101);
     const [count, setCount] = useState(10);
@@ -141,11 +142,16 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess }: BulkUn
                                     {generatedUnits.map((unit, index) => (
                                         <TableRow key={index}>
                                             <TableCell>
-                                                <Input
-                                                    value={unit.unit_number}
-                                                    onChange={(e) => handleUnitChange(index, 'unit_number', e.target.value)}
-                                                    className="h-8"
-                                                />
+                                                <div className="space-y-1">
+                                                    <Input
+                                                        value={unit.unit_number}
+                                                        onChange={(e) => handleUnitChange(index, 'unit_number', e.target.value)}
+                                                        className={`h-8 ${existingUnits.includes(unit.unit_number) ? "border-red-500 focus-visible:ring-red-500 bg-red-50" : ""}`}
+                                                    />
+                                                    {existingUnits.includes(unit.unit_number) && (
+                                                        <p className="text-[10px] font-medium text-red-600">Already exists</p>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Select value={unit.type} onValueChange={(val) => handleUnitChange(index, 'type', val)}>
@@ -191,7 +197,11 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess }: BulkUn
                             <Button variant="outline" onClick={resetForm} disabled={isSubmitting}>
                                 Back to Settings
                             </Button>
-                            <Button onClick={handleSubmit} disabled={isSubmitting || generatedUnits.length === 0} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting || generatedUnits.length === 0 || generatedUnits.some(u => existingUnits.includes(u.unit_number))}
+                                className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                            >
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save {generatedUnits.length} Units
                             </Button>

@@ -36,6 +36,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { publicAPI, unitAPI } from "@/data/apis";
 import { toast } from "sonner";
+import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 
 export default function UnitDetailsPage() {
     const params = useParams();
@@ -44,6 +45,8 @@ export default function UnitDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [openEdit, setOpenEdit] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [galleryOpen, setGalleryOpen] = useState(false);
+    const [galleryIndex, setGalleryIndex] = useState(0);
 
     // Edit Form State
     const [editForm, setEditForm] = useState({
@@ -128,15 +131,21 @@ export default function UnitDetailsPage() {
                             <img
                                 src={images[0]}
                                 alt={`Unit ${unit.unit_number}`}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 cursor-pointer"
+                                onClick={() => { setGalleryIndex(0); setGalleryOpen(true); }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
                             <div className="absolute bottom-6 left-6 right-6">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Sparkles className="w-5 h-5 text-yellow-400" />
                                     <span className="text-yellow-400 font-semibold text-sm">Premium Listing</span>
                                 </div>
-                                <Button variant="secondary" size="sm" className="bg-white/90 backdrop-blur-sm hover:bg-white">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="bg-white/90 backdrop-blur-sm hover:bg-white"
+                                    onClick={() => { setGalleryIndex(0); setGalleryOpen(true); }}
+                                >
                                     View All {images.length} Photos
                                 </Button>
                             </div>
@@ -144,22 +153,25 @@ export default function UnitDetailsPage() {
                         {images.length > 1 && (
                             <>
                                 <div className="hidden md:grid grid-rows-2 gap-3">
-                                    <div className="relative group overflow-hidden rounded-xl">
+                                    <div className="relative group overflow-hidden rounded-xl cursor-pointer" onClick={() => { setGalleryIndex(1); setGalleryOpen(true); }}>
                                         <img src={images[1]} alt="View 2" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     </div>
                                     {images.length > 2 && (
-                                        <div className="relative group overflow-hidden rounded-xl">
+                                        <div className="relative group overflow-hidden rounded-xl cursor-pointer" onClick={() => { setGalleryIndex(2); setGalleryOpen(true); }}>
                                             <img src={images[2]} alt="View 3" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                         </div>
                                     )}
                                 </div>
                                 {images.length > 3 && (
                                     <div className="hidden md:grid grid-rows-2 gap-3">
-                                        <div className="relative group overflow-hidden rounded-xl">
+                                        <div className="relative group overflow-hidden rounded-xl cursor-pointer" onClick={() => { setGalleryIndex(3); setGalleryOpen(true); }}>
                                             <img src={images[3]} alt="View 4" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                         </div>
                                         {images.length > 4 && (
-                                            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group">
+                                            <div
+                                                className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group"
+                                                onClick={() => { setGalleryIndex(4); setGalleryOpen(true); }}
+                                            >
                                                 <div className="text-center text-white">
                                                     <p className="text-4xl font-bold mb-2">+{images.length - 4}</p>
                                                     <p className="text-sm font-medium">More Photos</p>
@@ -269,6 +281,13 @@ export default function UnitDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            <ImageGalleryModal
+                images={images}
+                isOpen={galleryOpen}
+                onClose={() => setGalleryOpen(false)}
+                initialIndex={galleryIndex}
+            />
         </div>
     );
 }
