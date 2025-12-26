@@ -5,8 +5,16 @@ import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MapPin, Home } from "lucide-react"
+import { Search, Plus, MapPin, Home, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { propertyAPI } from "@/data/apis"
@@ -30,6 +38,7 @@ export default function PropertiesPage() {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+    const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
 
     useEffect(() => {
         fetchProperties();
@@ -44,6 +53,20 @@ export default function PropertiesPage() {
             console.error("Failed to fetch properties:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!propertyToDelete) return;
+
+        try {
+            await propertyAPI.delete(propertyToDelete.id);
+            // Refresh properties
+            fetchProperties();
+            setPropertyToDelete(null);
+        } catch (error) {
+            console.error("Failed to delete property:", error);
+            alert("Failed to delete property. Please try again.");
         }
     };
 
@@ -89,11 +112,22 @@ export default function PropertiesPage() {
                                 alt={property.name}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />
-                            <div className="absolute top-2 right-2">
+                            <div className="absolute top-2 left-2">
                                 <Badge variant={property.occupied_units === property.total_units ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
                                     {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
                                 </Badge>
                             </div>
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPropertyToDelete(property);
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
                         </div>
                         <CardHeader>
                             <CardTitle className="flex justify-between items-start">
@@ -123,6 +157,24 @@ export default function PropertiesPage() {
                     </Card>
                 ))}
             </div>
-        </div>
+
+
+            <Dialog open={!!propertyToDelete} onOpenChange={(open) => !open && setPropertyToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone. This will permanently delete
+                            <span className="font-semibold text-foreground"> {propertyToDelete?.name} </span>
+                            and remove all its associated data including units, tenants, leases, and financial records.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setPropertyToDelete(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={handleDelete}>Delete Property</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     )
 }
