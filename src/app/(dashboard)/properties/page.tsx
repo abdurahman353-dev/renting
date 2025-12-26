@@ -67,9 +67,14 @@ export default function PropertiesPage() {
             // Refresh properties
             fetchProperties();
             setPropertyToDelete(null);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to delete property:", error);
-            alert("Failed to delete property. Please try again.");
+            if (error.response && error.response.status === 422 && error.response.data.tenants) {
+                const tenantNames = error.response.data.tenants.map((t: any) => `${t.name} (KES ${t.balance})`).join(', ');
+                alert(`Cannot delete property. The following tenants have pending balances:\n\n${tenantNames}\n\nPlease clear these balances before deleting.`);
+            } else {
+                alert("Failed to delete property. Please try again.");
+            }
         }
     };
 
