@@ -15,9 +15,10 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown } from "lucide-react"
-import { financeAPI, propertyAPI, tenantAPI } from "@/data/apis"
+import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet } from "lucide-react"
+import { financeAPI, propertyAPI, unitAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
+import FilterComponent from "./FilterComponent"
 
 interface Invoice {
     id: string;
@@ -61,29 +62,37 @@ export default function FinancePage() {
     });
 
     const [properties, setProperties] = useState<any[]>([]);
-    const [selectedProperty, setSelectedProperty] = useState("all");
-    const [selectedStatus, setSelectedStatus] = useState("all");
-    const [selectedTenant, setSelectedTenant] = useState("all");
-    const [tenants, setTenants] = useState<any[]>([]);
+    const [units, setUnits] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState("invoices");
 
-    // Fetch filter options (properties and tenants)
+    // Filter states
+    const [filters, setFilters] = useState({
+        property_id: "all",
+        unit_id: "all",
+        status: "all",
+        tenant_id: "all",
+        month: "",
+        year: new Date().getFullYear().toString()
+    });
+
+    // Fetch filter properties and units
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                const [propRes, tenantRes] = await Promise.all([
+                const [propRes, unitRes] = await Promise.all([
                     propertyAPI.getAll(),
-                    tenantAPI.getAll()
+                    unitAPI.getAll()
                 ]);
 
                 const propertyData = Array.isArray(propRes) ? propRes : (propRes.data || []);
-                const tenantData = Array.isArray(tenantRes) ? tenantRes : (tenantRes.data || []);
+                const unitData = Array.isArray(unitRes) ? unitRes : (unitRes.data || []);
 
                 setProperties(propertyData);
-                setTenants(tenantData);
+                setUnits(unitData);
             } catch (e) {
                 console.error("Failed to fetch filters:", e);
                 setProperties([]);
-                setTenants([]);
+                setUnits([]);
             }
         };
         fetchFilters();
@@ -93,9 +102,13 @@ export default function FinancePage() {
         setLoading(true);
         try {
             const params = {
-                property_id: selectedProperty !== 'all' ? selectedProperty : undefined,
-                status: selectedStatus !== 'all' ? selectedStatus : undefined,
-                tenant_id: selectedTenant !== 'all' ? selectedTenant : undefined,
+                ...filters,
+                property_id: filters.property_id !== 'all' ? filters.property_id : undefined,
+                unit_id: filters.unit_id !== 'all' ? filters.unit_id : undefined,
+                status: filters.status !== 'all' ? filters.status : undefined,
+                tenant_id: filters.tenant_id !== 'all' ? filters.tenant_id : undefined,
+                month: filters.month || undefined,
+                year: filters.year || undefined
             };
 
             const [invRes, payRes] = await Promise.all([
@@ -118,10 +131,27 @@ export default function FinancePage() {
             setInvoices(invoiceData);
             setPayments(paymentData);
 
+            // Calculate pending amount from invoices
+            const pendingAmount = invoiceData
+                .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
+                .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+
+            // Calculate arrears (overdue invoices)
+            const today = new Date();
+            const arrearsAmount = invoiceData
+                .filter(inv => {
+                    if (inv.status === 'PAID') return false;
+                    const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
+                    const dueDate = new Date(rawDate);
+                    const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                    return daysDiff > 30;
+                })
+                .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+
             setStats(prev => ({
                 ...prev,
-                pending: calculatePending(invoiceData),
-                arrears: calculateArrears(invoiceData)
+                pending: pendingAmount,
+                arrears: arrearsAmount
             }));
         } catch (error) {
             console.error("Failed to fetch finance data:", error);
@@ -132,30 +162,14 @@ export default function FinancePage() {
         }
     };
 
-    // Calculate pending amount from invoices
-    const calculatePending = (invoices: Invoice[]) => {
-        return invoices
-            .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
-            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-    };
-
-    // Calculate arrears (overdue invoices)
-    const calculateArrears = (invoices: Invoice[]) => {
-        const today = new Date();
-        return invoices
-            .filter(inv => {
-                if (inv.status === 'PAID') return false;
-                const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
-                const dueDate = new Date(rawDate);
-                const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                return daysDiff > 30;
-            })
-            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-    };
-
     useEffect(() => {
+        // Initial fetch only, subsequent controlled by refresh button in filter
         fetchData();
-    }, [selectedProperty, selectedStatus, selectedTenant]);
+    }, []); // Only on mount
+
+    const onFilterChange = (newFilters: any) => {
+        setFilters(prev => ({ ...prev, ...newFilters }));
+    };
 
     const handleGenerateInvoices = async () => {
         try {
@@ -201,59 +215,52 @@ export default function FinancePage() {
         <div className="p-8 space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Finance</h2>
-                    <p className="text-muted-foreground">Manage invoices, payments, and financial reports.</p>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900">Finance</h2>
+                    <p className="text-slate-500 font-medium">Manage invoices, payments, and financial overview.</p>
                 </div>
-                <div className="flex space-x-2">
-                    <Button variant="outline" onClick={handleExport}>
-                        <Download className="mr-2 h-4 w-4" /> Export Report
+                <div className="flex space-x-3">
+                    <Button
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200"
+                        onClick={handleExport}
+                    >
+                        <Download className="mr-2 h-4 w-4" /> Export Excel
                     </Button>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleGenerateInvoices}>
+                    <Button
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                        onClick={handleGenerateInvoices}
+                    >
                         <Plus className="mr-2 h-4 w-4" /> Generate Monthly Invoices
                     </Button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-4 items-center bg-white p-4 rounded-lg border shadow-sm">
-                <select
-                    className="border rounded p-2 text-sm"
-                    value={selectedProperty}
-                    onChange={(e) => setSelectedProperty(e.target.value)}
-                >
-                    <option value="all">All Properties</option>
-                    {properties && properties.length > 0 && properties.map((p: any) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                </select>
+            {/* Advanced Filters */}
+            <FilterComponent
+                properties={properties}
+                units={units}
+                onFilterChange={onFilterChange}
+                onRefresh={fetchData}
+            />
 
-                <select
-                    className="border rounded p-2 text-sm"
-                    value={selectedTenant}
-                    onChange={(e) => setSelectedTenant(e.target.value)}
-                >
-                    <option value="all">All Tenants</option>
-                    {tenants && tenants.length > 0 && tenants.map((t: any) => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                </select>
+            <Tabs defaultValue="invoices" onValueChange={setActiveTab} className="space-y-6">
+                <TabsList className="bg-slate-100 p-1 rounded-xl w-auto inline-flex gap-2">
+                    <TabsTrigger
+                        value="invoices"
+                        className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm px-6 py-2 rounded-lg transition-all duration-300 font-bold border border-transparent data-[state=active]:border-indigo-100"
+                    >
+                        <FileText className={`w-4 h-4 mr-2 ${activeTab === 'invoices' ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        Invoices
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="payments"
+                        className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm px-6 py-2 rounded-lg transition-all duration-300 font-bold border border-transparent data-[state=active]:border-emerald-100"
+                    >
+                        <Wallet className={`w-4 h-4 mr-2 ${activeTab === 'payments' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                        Payments
+                    </TabsTrigger>
+                </TabsList>
 
-                <select
-                    className="border rounded p-2 text-sm"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                >
-                    <option value="all">All Statuses</option>
-                    <option value="PAID">Paid</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="OVERDUE">Overdue</option>
-                    <option value="PARTIAL">Partial</option>
-                </select>
-
-                <Button variant="secondary" onClick={fetchData} size="sm">Refresh</Button>
-            </div>
-
-            {/* <div className="grid gap-4 md:grid-cols-3">
+                {/* <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue (Dec)</CardTitle>
@@ -286,11 +293,7 @@ export default function FinancePage() {
                 </Card>
             </div> */}
 
-            <Tabs defaultValue="invoices" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                    <TabsTrigger value="payments">Payments</TabsTrigger>
-                </TabsList>
+
                 <TabsContent value="invoices" className="space-y-4">
                     <div className="rounded-md border bg-white shadow-sm">
                         <Table>
@@ -320,13 +323,12 @@ export default function FinancePage() {
                                         <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
                                         <TableCell>
                                             <Badge
-                                                variant={inv.status === "PAID" ? "default" : inv.status === "OVERDUE" ? "destructive" : "secondary"}
-                                                className={inv.status === "PAID" ? "bg-green-600" : ""}
+                                                className={`px-3 py-1 font-bold rounded-full ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
                                             >
-                                                {inv.status}
+                                                {inv.status === "OVERDUE" ? "NOT PAID" : inv.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold">KES {Number(inv.amount).toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-black text-slate-700">KES {Number(inv.amount).toLocaleString()}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1">
                                                 <Button
