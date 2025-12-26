@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Home, AlertCircle, TrendingUp } from "lucide-react";
+import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2 } from "lucide-react";
 import { dashboardAPI } from "@/data/apis";
 import {
   AreaChart,
@@ -24,6 +24,7 @@ interface DashboardStats {
   occupancyGrowth: number;
   pendingIssues: number;
   issuesChange: number;
+  totalProperties?: number;
 }
 
 interface ActivityItem {
@@ -44,7 +45,8 @@ export default function DashboardPage() {
     revenue: 0, revenueGrowth: 0,
     activeTenants: 0, tenantsGrowth: 0,
     occupancyRate: 0, occupancyGrowth: 0,
-    pendingIssues: 0, issuesChange: 0
+    pendingIssues: 0, issuesChange: 0,
+    totalProperties: 0
   });
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
@@ -170,24 +172,21 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Pending Issues */}
+        {/* Properties */}
         <Card className="border-none shadow-lg shadow-amber-100/50 bg-white overflow-hidden group hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 cursor-pointer">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending Issues</CardTitle>
+            <CardTitle className="text-xs font-bold text-slate-400 uppercase tracking-widest">PROPERTIES</CardTitle>
             <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-sm">
-              <AlertCircle className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500">
-              {stats.pendingIssues}
+              {stats.totalProperties || 0}
             </div>
             <div className="flex items-center mt-3">
-              <div className={`flex items-center gap-1 text-[10px] font-black ${stats.issuesChange <= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'} px-2 py-1 rounded-full border border-amber-100/50`}>
-                {stats.issuesChange > 0 ? '+' : ''}{stats.issuesChange}
-              </div>
-              <span className="text-[10px] text-slate-400 ml-2 font-bold uppercase tracking-tighter">since yesterday</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Total Properties managed</span>
             </div>
           </CardContent>
         </Card>

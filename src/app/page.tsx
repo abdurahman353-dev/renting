@@ -56,12 +56,33 @@ export default function LandingPage() {
     const [imageError, setImageError] = useState(false);
 
     // Filter states
+    // Filter states
     const [searchLocation, setSearchLocation] = useState('');
     const [searchType, setSearchType] = useState('Property Type');
+    const [searchMinPrice, setSearchMinPrice] = useState('');
+    const [searchMaxPrice, setSearchMaxPrice] = useState('');
+
+    // Dynamic Filter Options
+    const [locationOptions, setLocationOptions] = useState<string[]>([]);
+    const [typeOptions, setTypeOptions] = useState<string[]>([]);
 
     useEffect(() => {
         fetchProperties();
+        fetchSearchOptions();
     }, []);
+
+    const fetchSearchOptions = async () => {
+        try {
+            const options = await publicAPI.getSearchOptions();
+            if (options) {
+                if (options.locations) setLocationOptions(options.locations);
+                if (options.types) setTypeOptions(options.types);
+            }
+        } catch (error) {
+            console.error("Failed to fetch search options", error);
+        }
+    };
+
 
     const fetchProperties = async () => {
         try {
@@ -94,29 +115,36 @@ export default function LandingPage() {
         }
     };
 
-    const handleSearch = () => {
-        let filtered = allProperties;
+    const handleSearch = async () => {
+        setLoading(true);
+        try {
+            const filters: any = {};
+            if (searchLocation) filters.location = searchLocation;
+            if (searchType !== 'Property Type') filters.type = searchType;
+            if (searchMinPrice) filters.min_price = searchMinPrice;
+            if (searchMaxPrice) filters.max_price = searchMaxPrice;
 
-        if (searchLocation.trim() !== '') {
-            filtered = filtered.filter(p =>
-                p.location.toLowerCase().includes(searchLocation.toLowerCase()) ||
-                p.name.toLowerCase().includes(searchLocation.toLowerCase())
-            );
-        }
+            const response = await publicAPI.getProperties(filters);
 
-        if (searchType !== 'Property Type') {
-            filtered = filtered.filter(p =>
-                p.category?.toLowerCase() === searchType.toLowerCase() ||
-                p.name.toLowerCase().includes(searchType.toLowerCase())
-            );
-        }
+            // Handle different response structures
+            let propertiesData: Property[] = [];
+            if (Array.isArray(response)) {
+                propertiesData = response;
+            } else if (response && typeof response === 'object') {
+                propertiesData = response.data || response.properties || response.results || [];
+            }
 
-        setFilteredProperties(filtered);
+            setFilteredProperties(propertiesData);
 
-        // Scroll to featured section to show results
-        const featuredSection = document.getElementById('featured');
-        if (featuredSection) {
-            featuredSection.scrollIntoView({ behavior: 'smooth' });
+            // Scroll to featured section
+            const featuredSection = document.getElementById('featured');
+            if (featuredSection) {
+                featuredSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error("Search failed", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -174,17 +202,20 @@ export default function LandingPage() {
                     </p>
 
                     {/* Search Bar */}
-                    <div className="max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-2xl shadow-blue-900/20 flex flex-col md:flex-row gap-4">
+                    {/* Search Bar */}
+                    <div className="max-w-5xl mx-auto bg-white p-4 rounded-2xl shadow-2xl shadow-blue-900/20 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Location (e.g. Westlands)"
+                            <select
                                 value={searchLocation}
                                 onChange={(e) => setSearchLocation(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-slate-900"
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                            />
+                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
+                            >
+                                <option value="">Select Location</option>
+                                {locationOptions.map((loc, i) => (
+                                    <option key={i} value={loc}>{loc}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
@@ -194,11 +225,28 @@ export default function LandingPage() {
                                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
                             >
                                 <option>Property Type</option>
-                                <option>Apartment</option>
-                                <option>Bedsitter</option>
-                                <option>Villa</option>
-                                <option>Office</option>
+                                <option value="1 Bedroom">1 Bedroom</option>
+                                <option value="2 Bedroom">2 Bedroom</option>
+                                <option value="3 Bedroom">3 Bedroom</option>
+                                <option value="Shop">Shop</option>
+                                <option value="Office">Office</option>
                             </select>
+                        </div>
+                        <div className="flex-1 relative flex gap-2">
+                            <input
+                                type="number"
+                                placeholder="Min Price"
+                                value={searchMinPrice}
+                                onChange={(e) => setSearchMinPrice(e.target.value)}
+                                className="w-1/2 pl-4 pr-2 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
+                            />
+                            <input
+                                type="number"
+                                placeholder="Max Price"
+                                value={searchMaxPrice}
+                                onChange={(e) => setSearchMaxPrice(e.target.value)}
+                                className="w-1/2 pl-4 pr-2 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
+                            />
                         </div>
                         <Button
                             onClick={handleSearch}

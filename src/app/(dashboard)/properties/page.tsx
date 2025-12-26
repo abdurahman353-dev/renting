@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Plus, MapPin, Home, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import { propertyAPI } from "@/data/apis"
+import { propertyAPI, authAPI } from "@/data/apis"
 
 interface Property {
     id: number;
@@ -39,8 +39,11 @@ export default function PropertiesPage() {
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
+        const currentUser = authAPI.getUser();
+        setUser(currentUser);
         fetchProperties();
     }, []);
 
@@ -117,17 +120,19 @@ export default function PropertiesPage() {
                                     {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
                                 </Badge>
                             </div>
-                            <Button
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setPropertyToDelete(property);
-                                }}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {user?.role === 'super_admin' && (
+                                <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPropertyToDelete(property);
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
                         <CardHeader>
                             <CardTitle className="flex justify-between items-start">

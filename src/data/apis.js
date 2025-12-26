@@ -454,6 +454,11 @@ export const publicAPI = {
         return response.data;
     },
 
+    getSearchOptions: async () => {
+        const response = await axios.get(`${API_BASE_URL}/public/search-options`);
+        return response.data;
+    },
+
     getProperty: async (id) => {
         const response = await axios.get(`${API_BASE_URL}/public/properties/${id}`);
         return response.data;

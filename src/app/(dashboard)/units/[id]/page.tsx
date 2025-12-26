@@ -81,9 +81,18 @@ export default function UnitDetailsPage() {
             toast.success("Unit updated successfully");
             setOpenEdit(false);
             fetchUnit(); // Refresh data
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update unit:", error);
-            toast.error("Failed to update unit");
+            if (error.response && error.response.status === 422) {
+                const errors = error.response.data.errors;
+                if (errors && errors.unit_number) {
+                    toast.error("Unit number already exists");
+                    return;
+                }
+                toast.error("Validation failed");
+            } else {
+                toast.error("Failed to update unit");
+            }
         } finally {
             setSubmitting(false);
         }
@@ -202,12 +211,18 @@ export default function UnitDetailsPage() {
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label className="text-right">Type</Label>
-                                            <Input
+                                            <select
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
                                                 value={editForm.type}
                                                 onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                                                className="col-span-3"
-                                                placeholder="e.g. 1 Bedroom"
-                                            />
+                                            >
+                                                <option value="">Select Type</option>
+                                                <option value="1 Bedroom">1 Bedroom</option>
+                                                <option value="2 Bedroom">2 Bedroom</option>
+                                                <option value="3 Bedroom">3 Bedroom</option>
+                                                <option value="Shop">Shop</option>
+                                                <option value="Office">Office</option>
+                                            </select>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label className="text-right">Rent (KES)</Label>
@@ -225,10 +240,8 @@ export default function UnitDetailsPage() {
                                                 value={editForm.status}
                                                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                                             >
-                                                <option value="Available">Available</option>
-                                                <option value="Occupied">Occupied</option>
-                                                <option value="Maintenance">Maintenance</option>
                                                 <option value="Vacant">Vacant</option>
+                                                <option value="Maintenance">Maintenance</option>
                                             </select>
                                         </div>
                                     </div>
