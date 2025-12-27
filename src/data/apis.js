@@ -372,6 +372,11 @@ export const communicationAPI = {
         const response = await apiClient.post('/communications/send', data);
         return response.data;
     },
+    getNotifications: async () => {
+        const response = await apiClient.get('/user/notifications');
+        return response.data;
+    },
+
 };
 
 // ============================================================================

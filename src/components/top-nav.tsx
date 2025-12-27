@@ -7,6 +7,7 @@ import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
 import { useAuth } from "@/contexts/AuthContext"
 import api from "@/lib/api"
 import { formatDate } from "@/lib/utils"
+import apiClient, { communicationAPI } from "@/data/apis"
 
 interface TopNavProps {
     onSidebarToggle: () => void
@@ -50,9 +51,11 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
     const fetchNotifications = async () => {
         if (!user) return;
         try {
-            const res = await api.get('/user/notifications');
-            setNotifications(res.data.notifications || []);
-            setUnreadCount(res.data.unread_count || 0);
+            // const res = await api.get('/user/notifications');
+            const res = await communicationAPI.getNotifications()
+            // The backend returns { notifications: [...], unread_count: X }
+            setNotifications(res.notifications || []);
+            setUnreadCount(res.unread_count || 0);
         } catch (error) {
             console.error("Failed to fetch notifications", error);
         }

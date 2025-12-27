@@ -433,7 +433,7 @@ export default function PropertyViewPage() {
                                                                         variant="ghost"
                                                                         onClick={() => router.push(`/units/${unit.id}`)}
                                                                         size="sm"
-                                                                        className="hover:bg-blue-100 hover:text-blue-700 font-semibold"
+                                                                        className="hover:bg-blue-100 text-blue-500 hover:text-blue-700 font-semibold"
                                                                     >
                                                                         View
                                                                     </Button>
