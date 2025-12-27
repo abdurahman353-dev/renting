@@ -320,9 +320,12 @@ function TenantsContent() {
 
 
 
-    // Filter units based on selected property - only show VACANT units
+    // Filter units based on selected property - only show units that are NOT occupied and NOT under maintenance
     const selectedProperty = properties.find(p => p.id.toString() === formData.property_id);
-    const availableUnits = selectedProperty?.units?.filter((u: any) => u.status?.toUpperCase() !== 'OCCUPIED') || [];
+    const availableUnits = selectedProperty?.units?.filter((u: any) => {
+        const status = u.status?.toUpperCase();
+        return status !== 'OCCUPIED' && status !== 'MAINTENANCE';
+    }) || [];
 
     // Filter tenants based on search and filters
     const filteredTenants = tenants.filter(tenant => {

@@ -26,12 +26,13 @@ import {
     DollarSign,
     Calendar,
     Edit,
+    Trash2,
     Loader2,
     Sparkles,
     TrendingUp
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { unitAPI } from "@/data/apis";
+import { unitAPI, authAPI } from "@/data/apis";
 import { toast } from "sonner";
 
 export default function UnitDetailsPage() {
@@ -41,6 +42,8 @@ export default function UnitDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [openEdit, setOpenEdit] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [unitToDelete, setUnitToDelete] = useState(false);
 
     // Edit Form State
     const [editForm, setEditForm] = useState({
@@ -52,6 +55,8 @@ export default function UnitDetailsPage() {
     });
 
     useEffect(() => {
+        const currentUser = authAPI.getUser();
+        setUser(currentUser);
         fetchUnit();
     }, [params.id]);
 
@@ -98,13 +103,30 @@ export default function UnitDetailsPage() {
         }
     };
 
+    const handleDeleteUnit = async () => {
+        setSubmitting(true);
+        try {
+            await unitAPI.delete(params.id);
+            toast.success("Unit deleted successfully");
+            router.push(`/properties/${unit.property_id}`);
+        } catch (error: any) {
+            console.error(error);
+            const message = error.response?.data?.message || "Failed to delete unit";
+            toast.error(message);
+        } finally {
+            setSubmitting(false);
+            setUnitToDelete(false);
+        }
+    };
+
     if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
     if (!unit) return <div className="p-8">Unit not found</div>;
 
     const lease = unit.active_lease;
     const tenant = lease?.tenant;
     const isOccupied = unit.status?.toUpperCase() === 'OCCUPIED';
-    const isAvailable = unit.status?.toUpperCase() === 'AVAILABLE';
+    const isAvailable = unit.status?.toUpperCase() === 'AVAILABLE' || unit.status?.toUpperCase() === 'VACANT';
+    const isMaintenance = unit.status?.toUpperCase() === 'MAINTENANCE';
 
     // Image Handling
     const images = unit.images && unit.images.length > 0
@@ -117,7 +139,9 @@ export default function UnitDetailsPage() {
         ? "bg-green-100 text-green-700 hover:bg-green-200 border-0"
         : isOccupied
             ? "bg-blue-100 text-blue-700 hover:bg-blue-200 border-0"
-            : "bg-slate-100 text-slate-700";
+            : isMaintenance
+                ? "bg-red-100 text-red-700 hover:bg-red-200 border-0"
+                : "bg-slate-100 text-slate-700";
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -190,70 +214,82 @@ export default function UnitDetailsPage() {
                             <Badge className={`text-base px-6 py-2 font-semibold shadow-sm ${statusColorClass}`}>
                                 {unit.status}
                             </Badge>
-                            <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold">
-                                        <Edit className="w-4 h-4 mr-2" /> Edit Unit
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Unit Details</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Unit Number</Label>
-                                            <Input
-                                                value={editForm.unit_number}
-                                                onChange={(e) => setEditForm({ ...editForm, unit_number: e.target.value })}
-                                                className="col-span-3"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Type</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
-                                                value={editForm.type}
-                                                onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                                            >
-                                                <option value="">Select Type</option>
-                                                <option value="1 Bedroom">1 Bedroom</option>
-                                                <option value="2 Bedroom">2 Bedroom</option>
-                                                <option value="3 Bedroom">3 Bedroom</option>
-                                                <option value="Shop">Shop</option>
-                                                <option value="Office">Office</option>
-                                            </select>
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Rent (KES)</Label>
-                                            <Input
-                                                value={editForm.price}
-                                                onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                                                className="col-span-3"
-                                                type="number"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label className="text-right">Status</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
-                                                value={editForm.status}
-                                                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                                            >
-                                                <option value="Vacant">Vacant</option>
-                                                <option value="Maintenance">Maintenance</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setOpenEdit(false)}>Cancel</Button>
-                                        <Button onClick={handleUpdate} disabled={submitting}>
-                                            {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                            Save Changes
+                            <div className="flex gap-2">
+                                <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+                                    <DialogTrigger asChild>
+                                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold">
+                                            <Edit className="w-4 h-4 mr-2" /> Edit Unit
                                         </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Edit Unit Details</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label className="text-right">Unit Number</Label>
+                                                <Input
+                                                    value={editForm.unit_number}
+                                                    onChange={(e) => setEditForm({ ...editForm, unit_number: e.target.value })}
+                                                    className="col-span-3"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label className="text-right">Type</Label>
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
+                                                    value={editForm.type}
+                                                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                                                >
+                                                    <option value="">Select Type</option>
+                                                    <option value="1 Bedroom">1 Bedroom</option>
+                                                    <option value="2 Bedroom">2 Bedroom</option>
+                                                    <option value="3 Bedroom">3 Bedroom</option>
+                                                    <option value="Shop">Shop</option>
+                                                    <option value="Office">Office</option>
+                                                </select>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label className="text-right">Rent (KES)</Label>
+                                                <Input
+                                                    value={editForm.price}
+                                                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                                                    className="col-span-3"
+                                                    type="number"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label className="text-right">Status</Label>
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
+                                                    value={editForm.status}
+                                                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                                                >
+                                                    <option value="Vacant">Vacant</option>
+                                                    <option value="Maintenance">Maintenance</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setOpenEdit(false)}>Cancel</Button>
+                                            <Button onClick={handleUpdate} disabled={submitting}>
+                                                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                                Save Changes
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+
+                                {user?.role === 'super_admin' && (
+                                    <Button
+                                        variant="destructive"
+                                        className="px-6 py-2 text-base font-semibold shadow-sm"
+                                        onClick={() => setUnitToDelete(true)}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" /> Delete Unit
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -345,9 +381,15 @@ export default function UnitDetailsPage() {
                                     </>
                                 ) : (
                                     <div className="text-center py-6">
-                                        <p className="text-slate-500 mb-4">Unit is currently vacant.</p>
-                                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push(`/tenants?property_id=${unit.property?.id}&unit_id=${unit.id}`)}>
-                                            Onboard New Tenant
+                                        <p className="text-slate-500 mb-4">
+                                            {isMaintenance ? "Unit is under maintenance." : "Unit is currently vacant."}
+                                        </p>
+                                        <Button
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                                            onClick={() => router.push(`/tenants?property_id=${unit.property?.id}&unit_id=${unit.id}`)}
+                                            disabled={isMaintenance}
+                                        >
+                                            {isMaintenance ? "Under Maintenance" : "Onboard New Tenant"}
                                         </Button>
                                     </div>
                                 )}
@@ -376,6 +418,35 @@ export default function UnitDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={unitToDelete} onOpenChange={setUnitToDelete}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-slate-600">
+                            This action cannot be undone. This will permanently delete the unit <strong>{unit.unit_number}</strong>
+                            and remove all associated data.
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setUnitToDelete(false)} disabled={submitting}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={(e: React.MouseEvent) => {
+                                e.preventDefault();
+                                handleDeleteUnit();
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            disabled={submitting}
+                        >
+                            {submitting ? "Deleting..." : "Delete Unit"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

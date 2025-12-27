@@ -40,6 +40,7 @@ export default function PropertiesPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
@@ -80,6 +81,12 @@ export default function PropertiesPage() {
 
     if (loading) return <div className="p-8">Loading properties...</div>;
 
+    const filteredProperties = properties.filter(property => {
+        const query = searchQuery.toLowerCase();
+        return property.name.toLowerCase().includes(query) ||
+            property.location.toLowerCase().includes(query);
+    });
+
     return (
         <div className="p-8 space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -101,71 +108,79 @@ export default function PropertiesPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
-                        placeholder="Search properties..."
-                        className="pl-8"
+                        placeholder="Search by name or location..."
+                        className="pl-8 h-10 border-slate-300 focus:border-indigo-500 rounded-lg shadow-sm"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {properties.map((property) => (
-                    <Card
-                        key={property.id}
-                        onClick={() => router.push(`/properties/${property.id}`)}
-                        className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200"
-                    >
-                        <div className="h-48 overflow-hidden relative">
-                            <img
-                                src={property.featured_image_url || property.images || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
-                                alt={property.name}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            <div className="absolute top-2 left-2">
-                                <Badge variant={property.occupied_units === property.total_units ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
-                                    {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
-                                </Badge>
+                {filteredProperties.length > 0 ? (
+                    filteredProperties.map((property) => (
+                        <Card
+                            key={property.id}
+                            onClick={() => router.push(`/properties/${property.id}`)}
+                            className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200"
+                        >
+                            <div className="h-48 overflow-hidden relative">
+                                <img
+                                    src={property.featured_image_url || property.images || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
+                                    alt={property.name}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute top-2 left-2">
+                                    <Badge variant={property.occupied_units === property.total_units ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
+                                        {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
+                                    </Badge>
+                                </div>
+                                {user?.role === 'super_admin' && (
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPropertyToDelete(property);
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </div>
-                            {user?.role === 'super_admin' && (
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setPropertyToDelete(property);
-                                    }}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </div>
-                        <CardHeader>
-                            <CardTitle className="flex justify-between items-start">
-                                <span>{property.name}</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 text-sm text-muted-foreground">
-                                <div className="flex items-center">
-                                    <MapPin className="mr-2 h-4 w-4 text-indigo-500" />
-                                    {property.location}
+                            <CardHeader>
+                                <CardTitle className="flex justify-between items-start">
+                                    <span>{property.name}</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2 text-sm text-muted-foreground">
+                                    <div className="flex items-center">
+                                        <MapPin className="mr-2 h-4 w-4 text-indigo-500" />
+                                        {property.location}
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Home className="mr-2 h-4 w-4 text-indigo-500" />
+                                        {property.units?.length || 0} Units Total
+                                    </div>
                                 </div>
-                                <div className="flex items-center">
-                                    <Home className="mr-2 h-4 w-4 text-indigo-500" />
-                                    {property.units?.length || 0} Units Total
+                                <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                                    <div className="text-xs font-medium text-slate-500">
+                                        Occupancy Rate
+                                    </div>
+                                    <div className="text-sm font-bold text-indigo-600">
+                                        {property.total_units > 0 ? Math.round(((property.occupied_units || 0) / property.total_units) * 100) : 0}%
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                                <div className="text-xs font-medium text-slate-500">
-                                    Occupancy Rate
-                                </div>
-                                <div className="text-sm font-bold text-indigo-600">
-                                    {property.total_units > 0 ? Math.round(((property.occupied_units || 0) / property.total_units) * 100) : 0}%
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : (
+                    <div className="col-span-full py-12 text-center text-muted-foreground">
+                        No properties found matching your search.
+                    </div>
+                )}
             </div>
 
 
