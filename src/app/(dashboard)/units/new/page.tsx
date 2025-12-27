@@ -40,6 +40,8 @@ const formSchema = z.object({
     property_id: z.string().min(1, "Please select a property."),
     type: z.string().min(1, "Please select a unit type."),
     price: z.string().min(1, "Price is required."),
+    deposit_1: z.string().optional(),
+    deposit_2: z.string().optional(),
     status: z.string().min(1, "Status is required."),
     image: z.string().optional(),
     images: z.array(z.union([z.string(), z.instanceof(File)])).optional(),
@@ -102,7 +104,9 @@ export default function AddUnitPage() {
             property_id: "",
             type: "",
             price: "",
-            status: "Available",
+            deposit_1: "",
+            deposit_2: "",
+            status: "Vacant",
             image: "",
             images: [],
             unit_prefix: "",
@@ -186,6 +190,8 @@ export default function AddUnitPage() {
                     type: values.type,
                     status: values.status,
                     price: values.price,
+                    deposit_1: values.deposit_1 ? parseFloat(values.deposit_1) : 0,
+                    deposit_2: values.deposit_2 ? parseFloat(values.deposit_2) : 0,
                     image: mainImage,
                     images: imageUrls,
                 });
@@ -207,16 +213,9 @@ export default function AddUnitPage() {
                         type: values.type,
                         status: values.status,
                         price: values.price,
+                        deposit_1: values.deposit_1 ? parseFloat(values.deposit_1) : 0,
+                        deposit_2: values.deposit_2 ? parseFloat(values.deposit_2) : 0,
                         image: mainImage,
-                        // Note: Bulk creation might not support per-unit images deep in the structure yet 
-                        // unless the backend bulk endpoint handles it. 
-                        // Assuming bulk endpoint just takes shared props or we only care about basics.
-                        // But wait, the user wants "uploaded with the creation of the unit".
-                        // If bulk, do we attach same images to ALL units? 
-                        // Let's assume yes or just leave it as is if backend bulk structure is simple.
-                        // The user request was about "adding unit images", singular process implies single add mostly,
-                        // but let's check backend. 
-                        // In bulkAddUnits, we push to `units` array. if we want images, we should add `images: imageUrls` there too.
                         images: imageUrls,
                     });
                 }
@@ -458,6 +457,41 @@ export default function AddUnitPage() {
                                                 </FormItem>
                                             )}
                                         />
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="deposit_1"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Security Deposit (1)</FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-2.5 text-sm text-muted-foreground font-semibold">Ksh</span>
+                                                                <Input type="number" placeholder="0.00" className="pl-12" {...field} />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="deposit_2"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Additional Deposit (2)</FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-2.5 text-sm text-muted-foreground font-semibold">Ksh</span>
+                                                                <Input type="number" placeholder="0.00" className="pl-12" {...field} />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* Image Upload */}

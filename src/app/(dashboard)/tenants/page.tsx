@@ -89,7 +89,9 @@ function TenantsContent() {
         start_date: "",
         rent_amount: "",
         deposit_amount: "",
-        deposit_2_amount: ""
+        deposit_2_amount: "",
+        include_deposit_1: false,
+        include_deposit_2: false
     });
     const [submitting, setSubmitting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -128,6 +130,10 @@ function TenantsContent() {
                     property_id: propertyId,
                     unit_id: unitId,
                     rent_amount: selectedUnit.price?.toString() || "",
+                    deposit_amount: selectedUnit.deposit_1?.toString() || "",
+                    deposit_2_amount: selectedUnit.deposit_2?.toString() || "",
+                    include_deposit_1: !!selectedUnit.deposit_1,
+                    include_deposit_2: !!selectedUnit.deposit_2,
                     start_date: new Date().toISOString().split('T')[0] // Default to today
                 }));
                 setOpen(true);
@@ -165,16 +171,27 @@ function TenantsContent() {
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
 
-            // Auto-fill rent if unit changes
+            // Auto-fill rent and deposits if unit changes
             if (name === 'unit_id') {
                 const selectedProperty = properties.find(p => p.id.toString() === prev.property_id);
                 const selectedUnit = selectedProperty?.units?.find((u: any) => u.id.toString() === value);
                 if (selectedUnit) {
                     newData.rent_amount = selectedUnit.price?.toString() || "";
+                    newData.deposit_amount = selectedUnit.deposit_1?.toString() || "";
+                    newData.deposit_2_amount = selectedUnit.deposit_2?.toString() || "";
+                    newData.include_deposit_1 = !!selectedUnit.deposit_1;
+                    newData.include_deposit_2 = !!selectedUnit.deposit_2;
                 }
             }
             return newData;
         });
+    };
+
+    const handleCheckboxToggle = (name: 'include_deposit_1' | 'include_deposit_2') => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: !prev[name]
+        }));
     };
 
     const handleRegisterTenant = async () => {
@@ -199,8 +216,8 @@ function TenantsContent() {
                 unit_id: formData.unit_id,
                 start_date: formData.start_date,
                 rent_amount: formData.rent_amount,
-                deposit_amount: formData.deposit_amount || null,
-                deposit_2_amount: formData.deposit_2_amount || null
+                deposit_amount: formData.include_deposit_1 ? (formData.deposit_amount || 0) : null,
+                deposit_2_amount: formData.include_deposit_2 ? (formData.deposit_2_amount || 0) : null
             };
 
             if (isEditing && editingTenantId) {
@@ -231,7 +248,8 @@ function TenantsContent() {
         setFormData({
             name: "", id_number: "", phone: "", email: "",
             property_id: "", unit_id: "", start_date: "", rent_amount: "",
-            deposit_amount: "", deposit_2_amount: ""
+            deposit_amount: "", deposit_2_amount: "",
+            include_deposit_1: false, include_deposit_2: false
         });
         setIsEditing(false);
         setEditingTenantId(null);
@@ -249,7 +267,9 @@ function TenantsContent() {
             start_date: lease?.start_date ? new Date(lease.start_date).toISOString().split('T')[0] : "",
             rent_amount: lease?.rent_amount?.toString() || "",
             deposit_amount: lease?.deposit_amount?.toString() || "",
-            deposit_2_amount: lease?.deposit_2_amount?.toString() || ""
+            deposit_2_amount: lease?.deposit_2_amount?.toString() || "",
+            include_deposit_1: !!lease?.deposit_amount,
+            include_deposit_2: !!lease?.deposit_2_amount
         });
         setIsEditing(true);
         setEditingTenantId(tenant.id);
@@ -482,28 +502,54 @@ function TenantsContent() {
                                                 />
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="deposit_amount" className="sm:text-right">Deposit 1 (KES)</Label>
-                                                <Input
-                                                    id="deposit_amount"
-                                                    name="deposit_amount"
-                                                    type="number"
-                                                    value={formData.deposit_amount}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Optional"
-                                                    className="sm:col-span-3"
-                                                />
+                                                <div className="sm:text-right">
+                                                    <Label htmlFor="include_deposit_1" className="flex items-center justify-end gap-2 cursor-pointer">
+                                                        <Input
+                                                            id="include_deposit_1"
+                                                            type="checkbox"
+                                                            className="w-4 h-4"
+                                                            checked={formData.include_deposit_1}
+                                                            onChange={() => handleCheckboxToggle('include_deposit_1')}
+                                                        />
+                                                        Include D1
+                                                    </Label>
+                                                </div>
+                                                <div className="sm:col-span-3 flex items-center gap-2">
+                                                    <Input
+                                                        disabled
+                                                        id="deposit_amount"
+                                                        name="deposit_amount"
+                                                        type="number"
+                                                        value={formData.deposit_amount}
+                                                        placeholder="KES 0"
+                                                        className="flex-1"
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="deposit_2_amount" className="sm:text-right">Deposit 2 (KES)</Label>
-                                                <Input
-                                                    id="deposit_2_amount"
-                                                    name="deposit_2_amount"
-                                                    type="number"
-                                                    value={formData.deposit_2_amount}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Optional"
-                                                    className="sm:col-span-3"
-                                                />
+                                                <div className="sm:text-right">
+                                                    <Label htmlFor="include_deposit_2" className="flex items-center justify-end gap-2 cursor-pointer">
+                                                        <Input
+                                                            id="include_deposit_2"
+                                                            type="checkbox"
+                                                            className="w-4 h-4"
+                                                            checked={formData.include_deposit_2}
+                                                            onChange={() => handleCheckboxToggle('include_deposit_2')}
+                                                        />
+                                                        Include D2
+                                                    </Label>
+                                                </div>
+                                                <div className="sm:col-span-3 flex items-center gap-2">
+                                                    <Input
+                                                        disabled
+                                                        id="deposit_2_amount"
+                                                        name="deposit_2_amount"
+                                                        type="number"
+                                                        value={formData.deposit_2_amount}
+                                                        placeholder="KES 0"
+                                                        className="flex-1"
+                                                    />
+                                                </div>
                                             </div>
                                         </>
                                     )}

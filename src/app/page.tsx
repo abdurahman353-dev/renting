@@ -293,13 +293,22 @@ export default function LandingPage() {
                                             <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white border-0 shadow-sm">
                                                 {availableUnits > 0 ? `${availableUnits} Available` : 'Fully Occupied'}
                                             </Badge>
-                                            {(property.min_rent || property.max_rent) && (
-                                                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
-                                                    KES {formatCurrency(String(property.min_rent || 0))}
-                                                    {property.max_rent && property.max_rent > (property.min_rent || 0) ? ` - ${formatCurrency(String(property.max_rent))}` : ''}
-                                                    <span className="text-sm font-normal opacity-90">/mo</span>
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
+                                                const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : (property.min_rent || 0);
+                                                const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : (property.max_rent || 0);
+
+                                                if (minRent || maxRent) {
+                                                    return (
+                                                        <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
+                                                            KES {formatCurrency(String(minRent))}
+                                                            {maxRent > minRent ? ` - ${formatCurrency(String(maxRent))}` : ''}
+                                                            <span className="text-sm font-normal opacity-90">/mo</span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                         </div>
                                         <div className="p-6">
                                             <h3 className="text-xl font-bold text-gray-900 mb-2 truncate">{property.name}</h3>

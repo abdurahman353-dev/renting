@@ -145,10 +145,16 @@ export default function PropertyViewPage() {
             ? [property.featured_image_url]
             : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop"];
 
-    const priceRange = property.min_rent && property.max_rent
-        ? `KES ${property.min_rent.toLocaleString()} - ${property.max_rent.toLocaleString()}`
-        : property.min_rent
-            ? `KES ${property.min_rent.toLocaleString()}`
+    const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
+    const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : 0;
+    const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : 0;
+
+    const priceRange = minRent && maxRent
+        ? minRent === maxRent
+            ? `KES ${minRent.toLocaleString()}`
+            : `KES ${minRent.toLocaleString()} - ${maxRent.toLocaleString()}`
+        : minRent
+            ? `KES ${minRent.toLocaleString()}`
             : "Contact for pricing";
 
     const occupiedUnits = property.units?.filter(u => u.status === 'occupied').length || 0;

@@ -28,6 +28,8 @@ interface BulkUnitModalProps {
 interface GeneratedUnit {
     unit_number: string;
     price: number;
+    deposit_1: number;
+    deposit_2: number;
     status: string;
     type: string;
 }
@@ -37,6 +39,8 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
     const [startNumber, setStartNumber] = useState(101);
     const [count, setCount] = useState(10);
     const [defaultPrice, setDefaultPrice] = useState(15000);
+    const [defaultDeposit1, setDefaultDeposit1] = useState(15000);
+    const [defaultDeposit2, setDefaultDeposit2] = useState(0);
     const [defaultType, setDefaultType] = useState("One Bedroom");
 
     const [generatedUnits, setGeneratedUnits] = useState<GeneratedUnit[]>([]);
@@ -49,6 +53,8 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
             units.push({
                 unit_number: `${prefix}${startNumber + i}`,
                 price: defaultPrice,
+                deposit_1: defaultDeposit1,
+                deposit_2: defaultDeposit2,
                 status: "vacant",
                 type: defaultType,
             });
@@ -126,6 +132,14 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                 <Label>Default Monthly Rent (KES)</Label>
                                 <Input type="number" value={defaultPrice} onChange={(e) => setDefaultPrice(Number(e.target.value))} />
                             </div>
+                            <div className="space-y-2">
+                                <Label>Default Deposit 1 (KES)</Label>
+                                <Input type="number" value={defaultDeposit1} onChange={(e) => setDefaultDeposit1(Number(e.target.value))} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Default Deposit 2 (KES)</Label>
+                                <Input type="number" value={defaultDeposit2} onChange={(e) => setDefaultDeposit2(Number(e.target.value))} />
+                            </div>
                         </div>
                     ) : (
                         <div className="flex-1 border rounded-md overflow-y-auto">
@@ -135,6 +149,8 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                         <TableHead>Unit Number</TableHead>
                                         <TableHead>Type</TableHead>
                                         <TableHead>Price (KES)</TableHead>
+                                        <TableHead>Deposit 1</TableHead>
+                                        <TableHead>Deposit 2</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -171,6 +187,22 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                                     type="number"
                                                     value={unit.price}
                                                     onChange={(e) => handleUnitChange(index, 'price', Number(e.target.value))}
+                                                    className="h-8 w-[100px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    value={unit.deposit_1}
+                                                    onChange={(e) => handleUnitChange(index, 'deposit_1', Number(e.target.value))}
+                                                    className="h-8 w-[100px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    value={unit.deposit_2}
+                                                    onChange={(e) => handleUnitChange(index, 'deposit_2', Number(e.target.value))}
                                                     className="h-8 w-[100px]"
                                                 />
                                             </TableCell>

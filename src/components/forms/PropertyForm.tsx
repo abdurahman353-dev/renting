@@ -45,8 +45,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
     const [formData, setFormData] = useState({
         name: "", location: "", full_address: "", city: "",
         state: "", postal_code: "", property_type: "", year_built: "",
-        floors: "", parking_spaces: "", pet_policy: "", min_rent: "",
-        max_rent: "", security_deposit: "", service_charge: "", base_price: "",
+        floors: "", parking_spaces: "", pet_policy: "",
         description: "", property_manager: "", status: "active",
         min_lease_period: "", payment_frequency_options: [] as string[],
         utilities_included: [] as string[], furnishing_options: "",
@@ -69,11 +68,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                 floors: initialData.floors?.toString() || "",
                 parking_spaces: initialData.parking_spaces?.toString() || "",
                 pet_policy: initialData.pet_policy || "",
-                min_rent: initialData.min_rent?.toString() || "",
-                max_rent: initialData.max_rent?.toString() || "",
-                security_deposit: initialData.security_deposit?.toString() || "",
-                service_charge: initialData.service_charge?.toString() || "",
-                base_price: initialData.base_price?.toString() || "",
                 description: initialData.description || "",
                 property_manager: initialData.property_manager || "",
                 status: initialData.status || "active",
@@ -233,11 +227,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                 year_built: formData.year_built ? parseInt(formData.year_built) : null,
                 floors: formData.floors ? parseInt(formData.floors) : null,
                 parking_spaces: formData.parking_spaces ? parseInt(formData.parking_spaces) : null,
-                min_rent: formData.min_rent ? parseFloat(formData.min_rent) : null,
-                max_rent: formData.max_rent ? parseFloat(formData.max_rent) : null,
-                security_deposit: formData.security_deposit ? parseFloat(formData.security_deposit) : null,
-                service_charge: formData.service_charge ? parseFloat(formData.service_charge) : null,
-                base_price: formData.base_price ? parseFloat(formData.base_price) : null,
                 images: imagePathList,
                 featured_image_url: featuredPath
             };
@@ -512,35 +501,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                 </CardContent>
             </Card>
 
-            {/* Financial Information */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Financial Information</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label>Min Rent</Label>
-                        <Input type="number" name="min_rent" value={formData.min_rent} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Max Rent</Label>
-                        <Input type="number" name="max_rent" value={formData.max_rent} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Deposit 1</Label>
-                        <Input type="number" name="security_deposit" value={formData.security_deposit} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Deposit 2</Label>
-                        <Input type="number" name="service_charge" value={formData.service_charge} onChange={handleInputChange} />
-                    </div>
-                    {/* <div className="space-y-2 md:col-span-2">
-                        <Label>Base Price (KES)</Label>
-                        <Input type="number" name="base_price" value={formData.base_price} onChange={handleInputChange} />
-                        <p className="text-xs text-muted-foreground">Default rent for auto-generated units.</p>
-                    </div> */}
-                </CardContent>
-            </Card>
 
             {/* Management & Owner */}
             <Card>

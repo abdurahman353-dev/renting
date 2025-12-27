@@ -160,10 +160,16 @@ export default function PropertyViewPage() {
             ? [property.featured_image_url]
             : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop"];
 
-    const priceRange = property.min_rent && property.max_rent
-        ? `KES ${property.min_rent.toLocaleString()} - ${property.max_rent.toLocaleString()}`
-        : property.min_rent
-            ? `KES ${property.min_rent.toLocaleString()}`
+    const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
+    const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : 0;
+    const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : 0;
+
+    const priceRange = minRent && maxRent
+        ? minRent === maxRent
+            ? `KES ${minRent.toLocaleString()}`
+            : `KES ${minRent.toLocaleString()} - ${maxRent.toLocaleString()}`
+        : minRent
+            ? `KES ${minRent.toLocaleString()}`
             : "Contact for pricing";
 
     const totalUnitsCount = property.units?.length || 0;
@@ -459,7 +465,7 @@ export default function PropertyViewPage() {
                                     <div className="space-y-1">
                                         <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Starting From</p>
                                         <p className="text-3xl font-extrabold text-blue-600">
-                                            KES {property.min_rent?.toLocaleString() || '0'}
+                                            KES {minRent.toLocaleString() || '0'}
                                             <span className="text-slate-400 text-base font-normal tracking-normal italic ml-1">/mo</span>
                                         </p>
                                     </div>

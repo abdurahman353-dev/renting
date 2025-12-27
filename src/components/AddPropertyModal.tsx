@@ -106,13 +106,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
         parking_spaces: "",
         pet_policy: "",
 
-        // Financial
-        min_rent: "",
-        max_rent: "",
-        security_deposit: "",
-        service_charge: "",
-        base_price: "",
-
         // Description
         description: "",
 
@@ -140,7 +133,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
         custom_amenity: ""
     });
 
-    const totalSteps = 8;
+    const totalSteps = 7;
 
     // Pre-fill form data when in edit mode
     useEffect(() => {
@@ -160,11 +153,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 description: propertyData.description || "",
                 amenities: propertyData.amenities ? propertyData.amenities.map((a: any) => a.name) : [],
                 custom_amenity: "",
-                min_rent: propertyData.min_rent?.toString() || "",
-                max_rent: propertyData.max_rent?.toString() || "",
-                security_deposit: propertyData.security_deposit?.toString() || "",
-                service_charge: propertyData.service_charge?.toString() || "",
-                base_price: propertyData.base_price?.toString() || "",
                 property_manager: propertyData.property_manager || "",
                 status: propertyData.status || "active",
                 min_lease_period: propertyData.min_lease_period || "",
@@ -281,13 +269,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 parking_spaces: formData.parking_spaces ? parseInt(formData.parking_spaces) : null,
                 pet_policy: formData.pet_policy,
 
-                // Financial
-                min_rent: formData.min_rent ? parseFloat(formData.min_rent) : null,
-                max_rent: formData.max_rent ? parseFloat(formData.max_rent) : null,
-                security_deposit: formData.security_deposit ? parseFloat(formData.security_deposit) : null,
-                service_charge: formData.service_charge ? parseFloat(formData.service_charge) : null,
-                base_price: formData.base_price ? parseFloat(formData.base_price) : null,
-
                 // Description
                 description: formData.description,
 
@@ -356,8 +337,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
         setFormData({
             name: "", location: "", full_address: "", city: "", state: "",
             postal_code: "", property_type: "", year_built: "", floors: "", parking_spaces: "",
-            pet_policy: "", min_rent: "", max_rent: "", security_deposit: "", service_charge: "",
-            base_price: "", description: "", property_manager: "", status: "active",
+            pet_policy: "", description: "", property_manager: "", status: "active",
             min_lease_period: "", payment_frequency_options: [], utilities_included: [],
             furnishing_options: "", owner_name: "", owner_contact: "", owner_email: "",
             owner_id: "", notes: "", amenities: [], custom_amenity: ""
@@ -388,16 +368,13 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
             case 4: // Description & Amenities - optional
                 return true;
 
-            case 5: // Financial - optional
+            case 5: // Management & Lease Terms - optional
                 return true;
 
-            case 6: // Management & Lease Terms - optional
+            case 6: // Owner Information - optional
                 return true;
 
-            case 7: // Owner Information - optional
-                return true;
-
-            case 8: // Review - optional
+            case 7: // Review - optional
                 return true;
 
             default:
@@ -702,78 +679,9 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                         </div>
                     )}
 
-                    {/* Step 5: Financial Information */}
-                    {currentStep === 5 && (
-                        <div className="space-y-4 animate-fadeIn">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4">Financial Information</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Rent (KES)</label>
-                                    <input
-                                        type="number"
-                                        name="min_rent"
-                                        value={formData.min_rent}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="25000"
-                                        min="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Rent (KES)</label>
-                                    <input
-                                        type="number"
-                                        name="max_rent"
-                                        value={formData.max_rent}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="50000"
-                                        min="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Security Deposit (KES)</label>
-                                    <input
-                                        type="number"
-                                        name="security_deposit"
-                                        value={formData.security_deposit}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="50000"
-                                        min="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Charge (KES)</label>
-                                    <input
-                                        type="number"
-                                        name="service_charge"
-                                        value={formData.service_charge}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="5000"
-                                        min="0"
-                                    />
-                                </div>
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Base Price for Units (KES)</label>
-                                    <input
-                                        type="number"
-                                        name="base_price"
-                                        value={formData.base_price}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="30000"
-                                        min="0"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">This will be the default rent for auto-generated units</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Step 6: Management & Lease Terms */}
-                    {currentStep === 6 && (
+                    {/* Step 5: Management & Lease Terms */}
+                    {currentStep === 5 && (
                         <div className="space-y-4 animate-fadeIn">
                             <h3 className="text-xl font-semibold text-gray-800 mb-4">Management & Lease Terms</h3>
                             <div className="grid grid-cols-2 gap-4">
@@ -866,8 +774,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                         </div>
                     )}
 
-                    {/* Step 7: Owner Information */}
-                    {currentStep === 7 && (
+                    {/* Step 6: Owner Information */}
+                    {currentStep === 6 && (
                         <div className="space-y-4 animate-fadeIn">
                             <h3 className="text-xl font-semibold text-gray-800 mb-4">Owner Information</h3>
                             <div className="grid grid-cols-2 gap-4">
@@ -919,8 +827,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                         </div>
                     )}
 
-                    {/* Step 8: Additional Information & Review */}
-                    {currentStep === 8 && (
+                    {/* Step 7: Additional Information & Review */}
+                    {currentStep === 7 && (
                         <div className="space-y-4 animate-fadeIn">
                             <h3 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h3>
                             <div>

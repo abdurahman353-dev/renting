@@ -117,7 +117,7 @@ export default function FinancePage() {
             ]);
 
             // Revenue report is a separate call that shouldn't block the main table loading
-            financeAPI.getRevenueReport().then(revRes => {
+            financeAPI.getRevenueReport().then((revRes: any) => {
                 const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
                 setStats(prev => ({
                     ...prev,
@@ -133,20 +133,20 @@ export default function FinancePage() {
 
             // Calculate pending amount from invoices
             const pendingAmount = invoiceData
-                .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
-                .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+                .filter((inv: Invoice) => inv.status === 'PENDING' || inv.status === 'PARTIAL')
+                .reduce((sum: number, inv: Invoice) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
 
             // Calculate arrears (overdue invoices)
             const today = new Date();
             const arrearsAmount = invoiceData
-                .filter(inv => {
+                .filter((inv: Invoice) => {
                     if (inv.status === 'PAID') return false;
                     const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
                     const dueDate = new Date(rawDate);
                     const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
                     return daysDiff > 30;
                 })
-                .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+                .reduce((sum: number, inv: Invoice) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
 
             setStats(prev => ({
                 ...prev,
