@@ -20,6 +20,7 @@ interface AuthContextType {
     hasRole: (roles: string | string[]) => boolean;
     isAdmin: () => boolean;
     isSuperAdmin: () => boolean;
+    updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,6 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return hasRole('super_admin');
     };
 
+    const updateUser = (userData: User) => {
+        authAPI.updateUser(userData);
+        setUser(userData);
+    };
+
     const value: AuthContextType = {
         user,
         loading,
@@ -110,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasRole,
         isAdmin,
         isSuperAdmin,
+        updateUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
