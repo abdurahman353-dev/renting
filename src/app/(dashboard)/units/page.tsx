@@ -20,10 +20,27 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Filter, Loader2, RefreshCw, Download } from "lucide-react";
+import { Search, Plus, Filter, Loader2, RefreshCw, Download, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { unitAPI, propertyAPI } from "@/data/apis";
+import { unitAPI, propertyAPI, authAPI } from "@/data/apis";
 import { toast } from "sonner"; // Add this import for toast notifications
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter
+} from "@/components/ui/dialog";
 
 export default function UnitsPage() {
     const router = useRouter();
@@ -31,6 +48,9 @@ export default function UnitsPage() {
     const [loading, setLoading] = useState(true);
     const [properties, setProperties] = useState<any[]>([]);
     const [showFilters, setShowFilters] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [unitToDelete, setUnitToDelete] = useState<any>(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Filter States
     const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +61,8 @@ export default function UnitsPage() {
     const [maxPrice, setMaxPrice] = useState("");
 
     useEffect(() => {
+        const currentUser = authAPI.getUser();
+        setUser(currentUser);
         fetchData();
     }, []);
 
@@ -57,6 +79,24 @@ export default function UnitsPage() {
             console.error("Failed to fetch data", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!unitToDelete) return;
+
+        setDeleting(true);
+        try {
+            await unitAPI.delete(unitToDelete.id);
+            toast.success("Unit deleted successfully");
+            setUnitToDelete(null);
+            fetchData();
+        } catch (error: any) {
+            console.error(error);
+            const message = error.response?.data?.message || "Failed to delete unit";
+            toast.error(message);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -285,14 +325,26 @@ export default function UnitsPage() {
                                             }
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                                                onClick={() => router.push(`/units/${unit.id}`)}
-                                            >
-                                                View
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                                    onClick={() => router.push(`/units/${unit.id}`)}
+                                                >
+                                                    View
+                                                </Button>
+                                                {user?.role === 'super_admin' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={() => setUnitToDelete(unit)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -301,6 +353,47 @@ export default function UnitsPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Dialog open={!!unitToDelete} onOpenChange={(open) => !open && setUnitToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        {unitToDelete?.active_lease?.tenant ? (
+                            <div className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3">
+                                <div className="p-2 bg-red-100 rounded-full">
+                                    <Trash2 className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="font-bold">A tenant is Assigned the unit</p>
+                                    <p className="text-sm">Cannot delete occupied units. Please end the lease first.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-slate-600">
+                                This action cannot be undone. This will permanently delete unit <strong>{unitToDelete?.unit_number}</strong>
+                                and remove all associated data.
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setUnitToDelete(null)} disabled={deleting}>
+                            Cancel
+                        </Button>
+                        {!unitToDelete?.active_lease?.tenant && (
+                            <Button
+                                variant="destructive"
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="bg-red-600 hover:bg-red-700"
+                            >
+                                {deleting ? "Deleting..." : "Delete Unit"}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

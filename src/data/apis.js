@@ -416,8 +416,8 @@ export const superAdminAPI = {
     },
 
     // Activity Logs
-    getActivityLogs: async () => {
-        const response = await apiClient.get('/super-admin/activity-logs');
+    getActivityLogs: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/activity-logs', { params });
         return response.data;
     },
 
