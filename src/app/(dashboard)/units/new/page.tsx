@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -91,6 +91,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function AddUnitPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const propertyIdParam = searchParams.get("property_id");
+
     const [loading, setLoading] = useState(false);
     const [properties, setProperties] = useState<any[]>([]);
     const [existingUnitNumbers, setExistingUnitNumbers] = useState<string[]>([]);
@@ -101,7 +104,7 @@ export default function AddUnitPage() {
         defaultValues: {
             mode: "single",
             unit_number: "",
-            property_id: "",
+            property_id: propertyIdParam || "",
             type: "",
             price: "",
             deposit_1: "",
@@ -133,12 +136,15 @@ export default function AddUnitPage() {
             try {
                 const data = await propertyAPI.getAll();
                 setProperties(data);
+                if (propertyIdParam) {
+                    form.setValue("property_id", propertyIdParam);
+                }
             } catch (error) {
                 console.error("Failed to fetch properties", error);
             }
         };
         fetchProperties();
-    }, []);
+    }, [propertyIdParam]);
 
     const selectedPropertyId = form.watch("property_id");
 
@@ -289,9 +295,13 @@ export default function AddUnitPage() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Property</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <Select
+                                                        onValueChange={field.onChange}
+                                                        value={field.value}
+                                                        disabled={!!propertyIdParam}
+                                                    >
                                                         <FormControl>
-                                                            <SelectTrigger>
+                                                            <SelectTrigger className={!!propertyIdParam ? "bg-slate-50 cursor-not-allowed" : ""}>
                                                                 <SelectValue placeholder="Select a property" />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -303,6 +313,11 @@ export default function AddUnitPage() {
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
+                                                    {propertyIdParam && (
+                                                        <FormDescription className="text-blue-600 font-medium">
+                                                            Property auto-selected from previous page.
+                                                        </FormDescription>
+                                                    )}
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

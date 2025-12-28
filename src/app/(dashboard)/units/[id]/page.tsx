@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogFooter
 } from "@/components/ui/dialog";
 import {
@@ -29,10 +26,12 @@ import {
     Trash2,
     Loader2,
     Sparkles,
-    TrendingUp
+    TrendingUp,
+    Upload,
+    Star
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { unitAPI, authAPI } from "@/data/apis";
+import { unitAPI, authAPI, mediaAPI } from "@/data/apis";
 import { toast } from "sonner";
 
 export default function UnitDetailsPage() {
@@ -40,19 +39,9 @@ export default function UnitDetailsPage() {
     const router = useRouter();
     const [unit, setUnit] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [openEdit, setOpenEdit] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [unitToDelete, setUnitToDelete] = useState(false);
-
-    // Edit Form State
-    const [editForm, setEditForm] = useState({
-        unit_number: "",
-        price: "",
-        type: "",
-        status: "",
-        features: ""
-    });
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
@@ -64,42 +53,11 @@ export default function UnitDetailsPage() {
         try {
             const data = await unitAPI.getById(params.id);
             setUnit(data);
-            setEditForm({
-                unit_number: data.unit_number || "",
-                price: data.price || "",
-                type: data.type || "",
-                status: data.status || "Available",
-                features: data.features || ""
-            });
         } catch (error) {
             console.error("Failed to fetch unit:", error);
             toast.error("Failed to load unit details");
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleUpdate = async () => {
-        setSubmitting(true);
-        try {
-            await unitAPI.update(params.id, editForm);
-            toast.success("Unit updated successfully");
-            setOpenEdit(false);
-            fetchUnit(); // Refresh data
-        } catch (error: any) {
-            console.error("Failed to update unit:", error);
-            if (error.response && error.response.status === 422) {
-                const errors = error.response.data.errors;
-                if (errors && errors.unit_number) {
-                    toast.error("Unit number already exists");
-                    return;
-                }
-                toast.error("Validation failed");
-            } else {
-                toast.error("Failed to update unit");
-            }
-        } finally {
-            setSubmitting(false);
         }
     };
 
@@ -215,70 +173,12 @@ export default function UnitDetailsPage() {
                                 {unit.status}
                             </Badge>
                             <div className="flex gap-2">
-                                <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                                    <DialogTrigger asChild>
-                                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold">
-                                            <Edit className="w-4 h-4 mr-2" /> Edit Unit
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Edit Unit Details</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label className="text-right">Unit Number</Label>
-                                                <Input
-                                                    value={editForm.unit_number}
-                                                    onChange={(e) => setEditForm({ ...editForm, unit_number: e.target.value })}
-                                                    className="col-span-3"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label className="text-right">Type</Label>
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
-                                                    value={editForm.type}
-                                                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                                                >
-                                                    <option value="">Select Type</option>
-                                                    <option value="1 Bedroom">1 Bedroom</option>
-                                                    <option value="2 Bedroom">2 Bedroom</option>
-                                                    <option value="3 Bedroom">3 Bedroom</option>
-                                                    <option value="Shop">Shop</option>
-                                                    <option value="Office">Office</option>
-                                                </select>
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label className="text-right">Rent (KES)</Label>
-                                                <Input
-                                                    value={editForm.price}
-                                                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                                                    className="col-span-3"
-                                                    type="number"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label className="text-right">Status</Label>
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
-                                                    value={editForm.status}
-                                                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                                                >
-                                                    <option value="Vacant">Vacant</option>
-                                                    <option value="Maintenance">Maintenance</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button variant="outline" onClick={() => setOpenEdit(false)}>Cancel</Button>
-                                            <Button onClick={handleUpdate} disabled={submitting}>
-                                                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                                Save Changes
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                                <Button
+                                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 py-2 text-base font-semibold"
+                                    onClick={() => router.push(`/units/${params.id}/edit`)}
+                                >
+                                    <Edit className="w-4 h-4 mr-2" /> Edit Unit
+                                </Button>
 
                                 {user?.role === 'super_admin' && (
                                     <Button
@@ -309,6 +209,10 @@ export default function UnitDetailsPage() {
                                 <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                     <span className="text-slate-600 font-medium">Property</span>
                                     <span className="font-semibold text-slate-900">{unit.property?.name || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
+                                    <span className="text-slate-600 font-medium">Floor</span>
+                                    <span className="font-semibold text-slate-900">{unit.floor || "N/A"}</span>
                                 </div>
                                 {unit.features && (
                                     <div className="col-span-2 py-4 px-4 bg-slate-50 rounded-lg">
@@ -397,7 +301,7 @@ export default function UnitDetailsPage() {
                         </Card>
 
                         {/* Quick Actions */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
+                        {/* <Card className="bg-white shadow-sm border border-slate-200">
                             <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
                                 <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
                                     <TrendingUp className="w-5 h-5 text-slate-500" /> Actions
@@ -414,7 +318,7 @@ export default function UnitDetailsPage() {
                                     <DollarSign className="w-4 h-4 mr-2" /> Record Payment
                                 </Button>
                             </CardContent>
-                        </Card>
+                        </Card> */}
                     </div>
                 </div>
             </div>

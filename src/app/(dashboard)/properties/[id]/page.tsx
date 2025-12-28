@@ -157,7 +157,10 @@ export default function PropertyViewPage() {
             ? `KES ${minRent.toLocaleString()}`
             : "Contact for pricing";
 
-    const occupiedUnits = property.units?.filter(u => u.status === 'occupied').length || 0;
+    const occupiedUnits = property.units?.filter(u => u.status?.toLowerCase() === 'occupied').length || 0;
+    const vacantUnits = property.units?.filter(u => u.status?.toLowerCase() === 'vacant').length || 0;
+    const maintenanceUnits = property.units?.filter(u => u.status?.toLowerCase() === 'maintenance').length || 0;
+
     const occupancyRate = property.total_units > 0
         ? Math.round((occupiedUnits / property.total_units) * 100)
         : 0;
@@ -387,7 +390,7 @@ export default function PropertyViewPage() {
                                             </Button>
                                             <Button
                                                 variant="outline"
-                                                onClick={() => router.push("/units/new")}
+                                                onClick={() => router.push(`/units/new?property_id=${property.id}`)}
                                                 size="sm"
                                                 className="bg-blue-600 text-white border-0 hover:bg-blue-700"
                                             >
@@ -473,7 +476,22 @@ export default function PropertyViewPage() {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-slate-100">
                                     <span className="text-slate-600 font-medium">Occupancy</span>
-                                    <span className="font-bold text-slate-900 text-lg">{occupancyRate}%</span>
+                                    <div className="text-right">
+                                        <p className="font-bold text-slate-900 text-lg">{occupancyRate}%</p>
+                                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                                            {occupiedUnits} Occupied / {property.total_units} Total
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-tighter mb-1">Vacant</p>
+                                        <p className="text-xl font-extrabold text-emerald-700">{vacantUnits}</p>
+                                    </div>
+                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter mb-1">Repair</p>
+                                        <p className="text-xl font-extrabold text-slate-700">{maintenanceUnits}</p>
+                                    </div>
                                 </div>
                                 {property.security_deposit && (
                                     <div className="flex justify-between items-center py-3 border-b border-slate-100">
@@ -482,11 +500,12 @@ export default function PropertyViewPage() {
                                     </div>
                                 )}
                                 <div className="pt-4 space-y-3">
-                                    <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
+                                    <Button onClick={() => router.push(`/tenants?property_id=${property.id}`)} className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
                                         Manage Tenants
                                     </Button>
                                     <Button
                                         variant="outline"
+                                        onClick={() => router.push(`/reports/property`)}
                                         className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-2"
                                     >
                                         Financial Report

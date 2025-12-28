@@ -49,7 +49,6 @@ import { toast } from "sonner";
 const paymentSchema = z.object({
     amount: z.string().min(1, "Amount is required"),
     method: z.string().min(1, "Payment method is required"),
-    type: z.string().min(1, "Payment Type is required"),
     reference: z.string().optional(),
 });
 
@@ -107,7 +106,6 @@ export default function CashierPage() {
         defaultValues: {
             amount: "",
             method: "Cash",
-            type: "",
             reference: "",
         },
     });
@@ -136,17 +134,6 @@ export default function CashierPage() {
                 // Prefill amount with invoice balance
                 const balance = invoice.amount - invoice.paid_amount;
                 form.setValue("amount", balance.toString());
-
-                // Auto-select payment type based on invoice type
-                if (invoice.type === "deposit") {
-                    if (invoice.description?.includes("Deposit 1")) {
-                        form.setValue("type", "deposit_1");
-                    } else if (invoice.description?.includes("Deposit 2")) {
-                        form.setValue("type", "deposit_2");
-                    }
-                } else if (invoice.type === "rent") {
-                    form.setValue("type", "monthly_rent");
-                }
             }
         } catch (error) {
             console.error("Failed to fetch invoice:", error);
@@ -272,7 +259,6 @@ export default function CashierPage() {
                 tenant_id: selectedTenant.id,
                 amount: parseFloat(values.amount),
                 method: values.method,
-                type: values.type,
                 reference: values.reference,
                 invoice_ids: selectedInvoices, // Pass selected invoice IDs
             };
@@ -296,7 +282,6 @@ export default function CashierPage() {
             form.reset({
                 amount: "",
                 method: "Cash",
-                type: "",
                 reference: ""
             });
             setSelectedInvoices([]);
@@ -585,28 +570,6 @@ export default function CashierPage() {
                                                 )}
                                             />
                                         </div>
-                                        <FormField
-                                            control={form.control}
-                                            name="type"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Payment Type</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-11">
-                                                                <SelectValue placeholder="Select type" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="deposit_1">Deposit 1</SelectItem>
-                                                            <SelectItem value="deposit_2">Deposit 2</SelectItem>
-                                                            <SelectItem value="monthly_rent">Monthly Rent</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
 
                                         <FormField
                                             control={form.control}

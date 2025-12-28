@@ -91,8 +91,8 @@ export default function TenantDetailsPage() {
                             <div className="flex items-center gap-3 mb-1">
                                 <h1 className="text-3xl font-bold text-slate-900">{tenant.name}</h1>
                                 <Badge className={`text-xs px-3 py-0.5 rounded-full ${tenant.status === 'ACTIVE'
-                                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-100 border-0'
+                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-100 border-0'
                                     }`}>
                                     {tenant.status || 'Active'}
                                 </Badge>
@@ -113,9 +113,9 @@ export default function TenantDetailsPage() {
                         <Button variant="outline" onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
                             <TrendingUp className="mr-2 h-4 w-4" /> Financial Statement
                         </Button>
-                        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push(`/finance/cashier?tenant_id=${tenant.id}`)}>
+                        {/* <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push(`/finance/cashier?tenant_id=${tenant.id}`)}>
                             <CreditCard className="mr-2 h-4 w-4" /> Record Payment
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
 

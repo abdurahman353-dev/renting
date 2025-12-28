@@ -95,6 +95,7 @@ export default function PropertyViewPage() {
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
     const [galleryOpen, setGalleryOpen] = useState(false);
     const [galleryIndex, setGalleryIndex] = useState(0);
+    const [activeTab, setActiveTab] = useState("overview");
 
     const fetchProperty = async () => {
         try {
@@ -297,7 +298,7 @@ export default function PropertyViewPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-slate-900">
                         {/* Left Column - Main Content */}
                         <div className="lg:col-span-2 space-y-6">
-                            <Tabs defaultValue="overview" className="w-full">
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                                 <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1.5 rounded-2xl h-14">
                                     <TabsTrigger
                                         value="overview"
@@ -475,10 +476,10 @@ export default function PropertyViewPage() {
                                             <span className="text-slate-600 font-bold">Security Deposit</span>
                                             <span className="font-bold text-slate-900">KES {property.security_deposit?.toLocaleString() ?? '1 Mon Rent'}</span>
                                         </div>
-                                        <div className="flex justify-between items-center py-2">
+                                        {/* <div className="flex justify-between items-center py-2">
                                             <span className="text-slate-600 font-bold">Service Charge</span>
                                             <span className="font-bold text-slate-900">KES {property.service_charge?.toLocaleString() ?? 'Included'}</span>
-                                        </div>
+                                        </div> */}
                                         <div className="flex justify-between items-center py-2">
                                             <span className="text-slate-600 font-bold">Total Units</span>
                                             <span className="font-bold text-slate-900">{totalUnitsCount} Units</span>
@@ -487,14 +488,14 @@ export default function PropertyViewPage() {
 
                                     <div className="pt-6 space-y-3">
                                         <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-extrabold h-14 rounded-2xl shadow-md shadow-blue-100 transition-all">
-                                            Apply to Rent
+                                            View Units
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             variant="outline"
                                             className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold h-14 rounded-2xl"
                                         >
                                             Schedule Viewing
-                                        </Button>
+                                        </Button> */}
                                     </div>
                                 </CardContent>
                             </Card>

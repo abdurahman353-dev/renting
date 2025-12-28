@@ -80,7 +80,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                 owner_email: initialData.owner_email || "",
                 owner_id: initialData.owner_id || "",
                 notes: initialData.notes || "",
-                amenities: initialData.amenities ? initialData.amenities.map((a: any) => a.name) : [],
+                amenities: initialData.amenities ? initialData.amenities.map((a: any) => a.amenity_name || a.name || a.amenities).filter(Boolean) : [],
                 custom_amenity: ""
             });
 

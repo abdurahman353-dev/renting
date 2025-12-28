@@ -12,9 +12,13 @@ import {
     MapPin,
     Wifi,
     Shield,
+    Zap,
+    Star,
+    Mail,
     ArrowRight,
     Building2,
-    Loader2
+    Loader2,
+    CheckCircle2
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -37,37 +41,93 @@ interface Property {
 
 export default function AllPropertiesPage() {
     const router = useRouter();
-    const [properties, setProperties] = useState<Property[]>([]);
+    const [allProperties, setAllProperties] = useState<Property[]>([]);
+    const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+
+    // Filter states
+    const [searchLocation, setSearchLocation] = useState('');
+    const [searchType, setSearchType] = useState('Property Type');
+    const [searchMinPrice, setSearchMinPrice] = useState('');
+    const [searchMaxPrice, setSearchMaxPrice] = useState('');
+
+    // Dynamic Filter Options
+    const [locationOptions, setLocationOptions] = useState<string[]>([]);
+    const [typeOptions, setTypeOptions] = useState<string[]>([]);
 
     useEffect(() => {
         fetchProperties();
+        fetchSearchOptions();
     }, []);
 
+    const fetchSearchOptions = async () => {
+        try {
+            const options = await publicAPI.getSearchOptions();
+            if (options) {
+                if (options.locations) setLocationOptions(options.locations);
+                if (options.types) setTypeOptions(options.types);
+            }
+        } catch (error) {
+            console.error("Failed to fetch search options", error);
+        }
+    };
+
     const fetchProperties = async () => {
+        setLoading(true);
         try {
             const response = await publicAPI.getProperties();
 
-            let data: Property[] = [];
+            let propertiesData: Property[] = [];
             if (Array.isArray(response)) {
-                data = response;
+                propertiesData = response;
             } else if (response && typeof response === 'object') {
-                data = response.data || response.properties || [];
+                propertiesData = response.data || response.properties || response.results || [];
             }
 
-            setProperties(data);
+            setAllProperties(propertiesData);
+            setFilteredProperties(propertiesData);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
+            setAllProperties([]);
+            setFilteredProperties([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredProperties = properties.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleSearch = async () => {
+        setLoading(true);
+        try {
+            const filters: any = {};
+            if (searchLocation) filters.location = searchLocation;
+            if (searchType !== 'Property Type') filters.type = searchType;
+            if (searchMinPrice) filters.min_price = searchMinPrice;
+            if (searchMaxPrice) filters.max_price = searchMaxPrice;
+
+            const response = await publicAPI.getProperties(filters);
+
+            let propertiesData: Property[] = [];
+            if (Array.isArray(response)) {
+                propertiesData = response;
+            } else if (response && typeof response === 'object') {
+                propertiesData = response.data || response.properties || response.results || [];
+            }
+
+            setFilteredProperties(propertiesData);
+        } catch (error) {
+            console.error("Search failed", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const clearFilters = () => {
+        setSearchLocation('');
+        setSearchType('Property Type');
+        setSearchMinPrice('');
+        setSearchMaxPrice('');
+        setFilteredProperties(allProperties);
+    };
 
     return (
         <div className="min-h-screen bg-white">
@@ -76,30 +136,84 @@ export default function AllPropertiesPage() {
             <main className="pt-32 pb-20">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-12">
-                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                            All Available Properties
+                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+                            Find Your Perfect <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                Available Home
+                            </span>
                         </h1>
                         <p className="text-gray-500 max-w-2xl mx-auto">
-                            Discover our full range of premium residential and commercial spaces.
+                            Discover our full range of premium residential and commercial spaces with advanced search tools.
                         </p>
                     </div>
 
-                    {/* Search/Filter Bar */}
-                    <div className="max-w-2xl mx-auto mb-16 relative">
-                        <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name or location..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-slate-900 shadow-sm"
-                        />
+                    {/* Advanced Search Bar Component */}
+                    <div className="max-w-5xl mx-auto bg-white p-4 rounded-2xl shadow-xl border border-gray-100 mb-20 flex flex-col md:flex-row gap-4 items-end md:items-center">
+                        <div className="flex-1 w-full relative">
+                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Location</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <select
+                                    value={searchLocation}
+                                    onChange={(e) => setSearchLocation(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
+                                >
+                                    <option value="">Any Location</option>
+                                    {locationOptions.map((loc, i) => (
+                                        <option key={i} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex-1 w-full relative">
+                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Property Type</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <select
+                                    value={searchType}
+                                    onChange={(e) => setSearchType(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
+                                >
+                                    <option>Property Type</option>
+                                    <option value="1 Bedroom">1 Bedroom</option>
+                                    <option value="2 Bedroom">2 Bedroom</option>
+                                    <option value="3 Bedroom">3 Bedroom</option>
+                                    <option value="Shop">Shop</option>
+                                    <option value="Office">Office</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex-1 w-full relative">
+                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Price Range (KES)</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min"
+                                    value={searchMinPrice}
+                                    onChange={(e) => setSearchMinPrice(e.target.value)}
+                                    className="w-1/2 px-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max"
+                                    value={searchMaxPrice}
+                                    onChange={(e) => setSearchMaxPrice(e.target.value)}
+                                    className="w-1/2 px-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
+                                />
+                            </div>
+                        </div>
+                        <Button
+                            onClick={handleSearch}
+                            className="w-full md:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-lg shadow-lg shadow-blue-600/25 transition-all active:scale-95 mt-4 md:mt-6"
+                        >
+                            Search
+                        </Button>
                     </div>
 
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20">
                             <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
-                            <p className="text-gray-500 font-medium">Loading properties...</p>
+                            <p className="text-gray-500 font-medium">Updating listings...</p>
                         </div>
                     ) : (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -161,17 +275,17 @@ export default function AllPropertiesPage() {
                                 })
                             ) : (
                                 <div className="col-span-full py-20 text-center">
-                                    <div className="p-6 bg-gray-50 rounded-full inline-block mb-4">
-                                        <Building2 className="h-12 w-12 text-gray-300" />
+                                    <div className="p-6 bg-gray-50 rounded-3xl inline-block mb-4">
+                                        <Search className="h-12 w-12 text-blue-200" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">No matching properties</h3>
-                                    <p className="text-gray-500">Try adjusting your search terms to find what you're looking for.</p>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Matching Properties</h3>
+                                    <p className="text-gray-500">We couldn't find any properties matching your search criteria.</p>
                                     <Button
                                         variant="outline"
-                                        className="mt-6"
-                                        onClick={() => setSearchTerm('')}
+                                        className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50 h-11 px-8 font-semibold rounded-xl"
+                                        onClick={clearFilters}
                                     >
-                                        Clear Search
+                                        Reset All Filters
                                     </Button>
                                 </div>
                             )}
