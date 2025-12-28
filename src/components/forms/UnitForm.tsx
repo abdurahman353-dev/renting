@@ -38,6 +38,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
     });
 
     const [images, setImages] = useState<any[]>([]);
+    const [localSubmitting, setLocalSubmitting] = useState(false);
 
     useEffect(() => {
         if (initialData) {
@@ -121,6 +122,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLocalSubmitting(true);
 
         try {
             // 1. Upload new images
@@ -144,6 +146,8 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
         } catch (error) {
             console.error("Form submission error:", error);
             toast.error("An error occurred. Please try again.");
+        } finally {
+            setLocalSubmitting(false);
         }
     };
 
@@ -377,9 +381,9 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                 <Button
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 min-w-[150px]"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || localSubmitting}
                 >
-                    {isSubmitting ? (
+                    {(isSubmitting || localSubmitting) ? (
                         <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Saving...

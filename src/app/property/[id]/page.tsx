@@ -487,7 +487,10 @@ export default function PropertyViewPage() {
                                     </div>
 
                                     <div className="pt-6 space-y-3">
-                                        <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 font-extrabold h-14 rounded-2xl shadow-md shadow-blue-100 transition-all">
+                                        <Button
+                                            className="w-full bg-blue-600 text-white hover:bg-blue-700 font-extrabold h-14 rounded-2xl shadow-md shadow-blue-100 transition-all"
+                                            onClick={() => setActiveTab("units")}
+                                        >
                                             View Units
                                         </Button>
                                         {/* <Button
