@@ -97,7 +97,7 @@ export default function PropertiesPage() {
 
                 <Button
                     onClick={() => router.push('/properties/new')}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
                 >
                     <Plus className="mr-2 h-4 w-4" /> Add Property
                 </Button>
