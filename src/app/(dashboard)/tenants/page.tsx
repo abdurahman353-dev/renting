@@ -188,10 +188,25 @@ function TenantsContent() {
     };
 
     const handleCheckboxToggle = (name: 'include_deposit_1' | 'include_deposit_2') => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: !prev[name]
-        }));
+        setFormData(prev => {
+            const nextVal = !prev[name];
+            const newData = { ...prev, [name]: nextVal };
+
+            // If we are checking it, and the amount is 0/empty, try to fill it from the unit
+            if (nextVal) {
+                const depositField = name === 'include_deposit_1' ? 'deposit_amount' : 'deposit_2_amount';
+                const currentAmount = parseFloat(prev[depositField] || '0');
+                if (currentAmount <= 0) {
+                    const selectedProperty = properties.find(p => p.id.toString() === prev.property_id);
+                    const selectedUnit = selectedProperty?.units?.find((u: any) => u.id.toString() === prev.unit_id);
+                    if (selectedUnit) {
+                        const unitDepositField = name === 'include_deposit_1' ? 'deposit_1' : 'deposit_2';
+                        newData[depositField] = selectedUnit[unitDepositField]?.toString() || "0";
+                    }
+                }
+            }
+            return newData;
+        });
     };
 
     const handleRegisterTenant = async () => {
@@ -257,6 +272,19 @@ function TenantsContent() {
 
     const handleEditClick = (tenant: any) => {
         const lease = tenant.leases?.[0];
+
+        // Find property and unit from the properties array to get original deposit values as fallback
+        const selectedProperty = properties.find(p => p.id === tenant.property?.id);
+        const selectedUnit = selectedProperty?.units?.find((u: any) => u.id === tenant.unit?.id);
+
+        const d1 = (lease?.deposit_amount && Number(lease.deposit_amount) > 0)
+            ? lease.deposit_amount.toString()
+            : (selectedUnit?.deposit_1?.toString() || "0");
+
+        const d2 = (lease?.deposit_2_amount && Number(lease.deposit_2_amount) > 0)
+            ? lease.deposit_2_amount.toString()
+            : (selectedUnit?.deposit_2?.toString() || "0");
+
         setFormData({
             name: tenant.name,
             id_number: tenant.id_number || "",
@@ -265,11 +293,11 @@ function TenantsContent() {
             property_id: tenant.property?.id?.toString() || "",
             unit_id: tenant.unit?.id?.toString() || "",
             start_date: lease?.start_date ? new Date(lease.start_date).toISOString().split('T')[0] : "",
-            rent_amount: lease?.rent_amount?.toString() || "",
-            deposit_amount: lease?.deposit_amount?.toString() || "",
-            deposit_2_amount: lease?.deposit_2_amount?.toString() || "",
-            include_deposit_1: !!lease?.deposit_amount,
-            include_deposit_2: !!lease?.deposit_2_amount
+            rent_amount: lease?.rent_amount?.toString() || selectedUnit?.price?.toString() || "",
+            deposit_amount: d1,
+            deposit_2_amount: d2,
+            include_deposit_1: !!(lease?.deposit_amount && Number(lease.deposit_amount) > 0),
+            include_deposit_2: !!(lease?.deposit_2_amount && Number(lease.deposit_2_amount) > 0)
         });
         setIsEditing(true);
         setEditingTenantId(tenant.id);
