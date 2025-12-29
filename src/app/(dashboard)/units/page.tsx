@@ -23,17 +23,7 @@ import {
 import { Search, Plus, Filter, Loader2, RefreshCw, Download, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { unitAPI, propertyAPI, authAPI } from "@/data/apis";
-import { toast } from "sonner"; // Add this import for toast notifications
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -136,13 +126,11 @@ export default function UnitsPage() {
     };
 
     const handleExport = () => {
-        // Fixed: Use filteredUnits instead of undefined reportData
         if (!filteredUnits || filteredUnits.length === 0) {
             toast.error("No data to export");
             return;
         }
 
-        // CSV Generation - Fixed to use actual unit data structure
         const headers = ["Unit Number", "Property Name", "Type", "Status", "Price", "Tenant Name", "Contact"];
         const rows = filteredUnits.map((unit: any) => [
             `"${unit.unit_number}"`,
