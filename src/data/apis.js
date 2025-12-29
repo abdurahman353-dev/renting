@@ -51,14 +51,14 @@ apiClient.interceptors.response.use(
 export const authAPI = {
     login: async (email, password) => {
         const response = await apiClient.post('/auth/login', { email, password });
-        const { token, user } = response.data;
+        const { token, user, must_change_password } = response.data;
 
         // Store token and user data
         const isSecure = process.env.NODE_ENV === 'production';
         Cookies.set('admin_token', token, { expires: 7, secure: isSecure, sameSite: 'lax' });
         sessionStorage.setItem('admin_user', JSON.stringify(user));
 
-        return { token, user };
+        return { token, user, must_change_password };
     },
 
     logout: async () => {

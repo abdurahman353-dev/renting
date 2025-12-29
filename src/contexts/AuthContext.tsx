@@ -9,6 +9,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    must_change_password: boolean;
 }
 
 interface AuthContextType {
@@ -40,7 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const isAuth = authAPI.isAuthenticated();
             if (isAuth) {
                 const userData = authAPI.getUser();
-                setUser(userData);
+                if (userData) {
+                    setUser(userData as User);
+                }
             } else {
                 setUser(null);
             }
@@ -55,11 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string) => {
         try {
             setLoading(true);
-            const { user: userData } = await authAPI.login(email, password);
-            setUser(userData);
+            const response: any = await authAPI.login(email, password);
+            const { user: userData, must_change_password } = response;
+            const userWithFlag = { ...userData, must_change_password: !!must_change_password };
+            setUser(userWithFlag);
 
-            // Use replace instead of push to prevent back navigation
-            router.replace('/dashboard');
+            if (userWithFlag.must_change_password) {
+                router.replace('/profile?change_password=true');
+            } else {
+                router.replace('/dashboard');
+            }
 
             // Clear browser history to prevent back button
             if (typeof window !== 'undefined') {

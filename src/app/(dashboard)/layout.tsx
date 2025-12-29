@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { isAuthenticated, hasRole, loading } = useAuth();
+    const { isAuthenticated, hasRole, loading, user } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -27,8 +27,14 @@ export default function DashboardLayout({
                 router.replace('/login?error=unauthorized');
                 return;
             }
+
+            // Force password change if required
+            if (user?.must_change_password && window.location.pathname !== '/profile') {
+                router.replace('/profile?change_password=true');
+                return;
+            }
         }
-    }, [isAuthenticated, hasRole, loading, router]);
+    }, [isAuthenticated, hasRole, loading, router, user]);
 
     // Show loading state while checking authentication
     if (loading) {

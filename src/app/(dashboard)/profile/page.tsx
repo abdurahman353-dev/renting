@@ -1,6 +1,9 @@
-"use client";
-import { useState } from "react";
+"use client"
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { User as UserIcon, Mail, Shield, Hash, Edit, Check, X, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +15,13 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [success, setSuccess] = useState("");
+
+    const searchParams = useSearchParams();
+    const shouldChangePassword = searchParams.get('change_password') === 'true' || user?.must_change_password;
 
     const [formData, setFormData] = useState({
         name: "",
@@ -21,6 +30,12 @@ export default function ProfilePage() {
         password: "",
         password_confirmation: ""
     });
+
+    useEffect(() => {
+        if (shouldChangePassword && !isEditing) {
+            startEditing();
+        }
+    }, [shouldChangePassword]);
 
     if (!user) {
         return null;
@@ -102,6 +117,19 @@ export default function ProfilePage() {
                     Manage your account settings and update your password securely.
                 </p>
             </div>
+
+            {/* Warning Banner for Forced Password Change */}
+            {user.must_change_password && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+                        <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-amber-900">Immediate Action Required: Change Your Password</h3>
+                        <p className="text-sm text-amber-700">For security reasons, you must change your temporary password before you can access the system dashboard.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Main Profile Card */}
             <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
@@ -218,23 +246,43 @@ export default function ProfilePage() {
                                     <div className="grid gap-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="password">New Password</Label>
-                                            <Input
-                                                id="password"
-                                                type="password"
-                                                placeholder="Leave blank to keep current"
-                                                value={formData.password}
-                                                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    id="password"
+                                                    type={showNewPassword ? "text" : "password"}
+                                                    placeholder="Leave blank to keep current"
+                                                    value={formData.password}
+                                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                                    className="pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                                                >
+                                                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="password_confirmation">Confirm New Password</Label>
-                                            <Input
-                                                id="password_confirmation"
-                                                type="password"
-                                                placeholder="Confirm new password"
-                                                value={formData.password_confirmation}
-                                                onChange={e => setFormData({ ...formData, password_confirmation: e.target.value })}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    id="password_confirmation"
+                                                    type={showConfirmPassword ? "text" : "password"}
+                                                    placeholder="Confirm new password"
+                                                    value={formData.password_confirmation}
+                                                    onChange={e => setFormData({ ...formData, password_confirmation: e.target.value })}
+                                                    className="pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                                                >
+                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -245,15 +293,24 @@ export default function ProfilePage() {
                                     </h3>
                                     <div className="grid gap-2">
                                         <Label htmlFor="current_password">Current Password (Required to save)</Label>
-                                        <Input
-                                            id="current_password"
-                                            type="password"
-                                            placeholder="Enter your current password"
-                                            value={formData.current_password}
-                                            onChange={e => setFormData({ ...formData, current_password: e.target.value })}
-                                            required
-                                            className="bg-white"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="current_password"
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                placeholder="Enter your current password"
+                                                value={formData.current_password}
+                                                onChange={e => setFormData({ ...formData, current_password: e.target.value })}
+                                                required
+                                                className="bg-white pr-10"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                                            >
+                                                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
                                         <p className="text-xs text-muted-foreground">For your security, you must enter your current password to make changes.</p>
                                     </div>
                                 </div>
