@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2 } from "lucide-react";
+import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2, Activity, Shield, AlertTriangle, Info } from "lucide-react";
 import { dashboardAPI } from "@/data/apis";
 import {
   AreaChart,
@@ -33,6 +33,8 @@ interface ActivityItem {
   description: string;
   amount?: number;
   created_at: string;
+  severity?: string;
+  user?: string;
 }
 
 interface ChartData {
@@ -300,34 +302,72 @@ export default function DashboardPage() {
                   <p className="text-slate-400 font-medium">No recent activity found</p>
                 </div>
               ) : (
-                activities.map((item) => (
-                  <div key={item.id} className="flex items-start group relative pb-2">
-                    <div className="mt-1 relative z-10">
-                      <div className="h-10 w-10 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300">
-                        {item.title.includes('Payment') ? <DollarSign className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-                      </div>
-                    </div>
+                activities.map((item) => {
+                  // Determine icon and color based on severity or action type
+                  const getSeverityConfig = (severity?: string, title?: string) => {
+                    if (severity === 'Critical') return { icon: AlertTriangle, color: 'red' };
+                    if (severity === 'Warning') return { icon: AlertCircle, color: 'amber' };
+                    if (title?.includes('Login') || title?.includes('Logout')) return { icon: Shield, color: 'blue' };
+                    if (title?.includes('Payment')) return { icon: DollarSign, color: 'emerald' };
+                    if (title?.includes('Admin') || title?.includes('Create') || title?.includes('Update')) return { icon: Users, color: 'violet' };
+                    return { icon: Activity, color: 'slate' };
+                  };
 
-                    <div className="ml-4 space-y-1 flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                          {item.title}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                          {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </p>
-                      </div>
-                      <p className="text-xs text-slate-500 font-medium line-clamp-1">
-                        {item.description}
-                      </p>
-                      {item.amount && (
-                        <div className="inline-block mt-1 font-extrabold text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                          +KES {item.amount.toLocaleString()}
+                  const config = getSeverityConfig(item.severity, item.title);
+                  const Icon = config.icon;
+                  const colorClass = {
+                    red: 'bg-red-50 text-red-600 border-red-100 group-hover:bg-red-600',
+                    amber: 'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-600',
+                    blue: 'bg-blue-50 text-blue-600 border-blue-100 group-hover:bg-blue-600',
+                    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600',
+                    violet: 'bg-violet-50 text-violet-600 border-violet-100 group-hover:bg-violet-600',
+                    slate: 'bg-slate-50 text-slate-600 border-slate-100 group-hover:bg-slate-600',
+                  }[config.color];
+
+                  return (
+                    <div key={item.id} className="flex items-start group relative pb-2">
+                      <div className="mt-1 relative z-10">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${colorClass} group-hover:text-white`}>
+                          <Icon className="h-5 w-5" />
                         </div>
-                      )}
+                      </div>
+
+                      <div className="ml-4 space-y-1 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                            {item.title}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium line-clamp-1">
+                          {item.description}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {item.user && (
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                              by {item.user}
+                            </span>
+                          )}
+                          {item.severity && item.severity !== 'Normal' && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.severity === 'Critical' ? 'bg-red-100 text-red-600' :
+                                item.severity === 'Warning' ? 'bg-amber-100 text-amber-600' :
+                                  'bg-blue-100 text-blue-600'
+                              }`}>
+                              {item.severity}
+                            </span>
+                          )}
+                        </div>
+                        {item.amount && (
+                          <div className="inline-block mt-1 font-extrabold text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            +KES {item.amount.toLocaleString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </CardContent>
