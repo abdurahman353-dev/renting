@@ -63,7 +63,8 @@ export default function UnitDetailsPage() {
 
     const fetchUnit = async () => {
         try {
-            const data = await publicAPI.getUnit(params.id);
+            const response = await publicAPI.getUnit(params.id);
+            const data = response.data;
             setUnit(data);
             setEditForm({
                 unit_number: data.unit_number || "",
