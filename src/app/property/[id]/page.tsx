@@ -99,8 +99,8 @@ export default function PropertyViewPage() {
 
     const fetchProperty = async () => {
         try {
-            const data = await publicAPI.getProperty(params.id);
-            setProperty(data);
+            const response = await publicAPI.getProperty(params.id);
+            setProperty(response.data);
         } catch (error) {
             console.error("Failed to fetch property:", error);
         } finally {
