@@ -207,6 +207,14 @@ export default function UnitDetailsPage() {
                                     <span className="font-bold text-slate-900 text-lg">{Number(unit.price).toLocaleString()} KES</span>
                                 </div>
                                 <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
+                                    <span className="text-slate-600 font-medium">Deposit 1</span>
+                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_1 || 0).toLocaleString()} KES</span>
+                                </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
+                                    <span className="text-slate-600 font-medium">Deposit 2</span>
+                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_2 || 0).toLocaleString()} KES</span>
+                                </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
                                     <span className="text-slate-600 font-medium">Property</span>
                                     <span className="font-semibold text-slate-900">{unit.property?.name || "N/A"}</span>
                                 </div>

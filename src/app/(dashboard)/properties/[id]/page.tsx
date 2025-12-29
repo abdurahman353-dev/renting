@@ -499,7 +499,7 @@ export default function PropertyViewPage() {
                                         <span className="font-bold text-slate-900 text-lg">KES {property.security_deposit.toLocaleString()}</span>
                                     </div>
                                 )}
-                                <div className="pt-4 space-y-3">
+                                {/* <div className="pt-4 space-y-3">
                                     <Button onClick={() => router.push(`/tenants?property_id=${property.id}`)} className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2">
                                         Manage Tenants
                                     </Button>
@@ -510,7 +510,7 @@ export default function PropertyViewPage() {
                                     >
                                         Financial Report
                                     </Button>
-                                </div>
+                                </div> */}
                             </CardContent>
                         </Card>
 

@@ -31,6 +31,8 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
         property_id: "",
         type: "",
         price: "",
+        deposit_1: "",
+        deposit_2: "",
         status: "Available",
         features: "",
         size: "",
@@ -47,6 +49,8 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                 property_id: initialData.property_id || "",
                 type: initialData.type || "",
                 price: initialData.price || "",
+                deposit_1: initialData.deposit_1 || "",
+                deposit_2: initialData.deposit_2 || "",
                 status: initialData.status || "Available",
                 features: initialData.features || "",
                 size: initialData.size || "",
@@ -185,7 +189,6 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 value={formData.unit_number}
                                 onChange={handleInputChange}
                                 placeholder="e.g. A1, 102"
-                                disabled
                                 required
                             />
                         </div>
@@ -221,6 +224,30 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 name="price"
                                 type="number"
                                 value={formData.price}
+                                onChange={handleInputChange}
+                                placeholder="e.g. 25000"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="deposit_1">Deposit 1</Label>
+                            <Input
+                                id="deposit_1"
+                                name="deposit_1"
+                                type="number"
+                                value={formData.deposit_1}
+                                onChange={handleInputChange}
+                                placeholder="e.g. 10000"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="deposit_2">Deposit 2</Label>
+                            <Input
+                                id="deposit_2"
+                                name="deposit_2"
+                                type="number"
+                                value={formData.deposit_2}
                                 onChange={handleInputChange}
                                 placeholder="e.g. 25000"
                                 required

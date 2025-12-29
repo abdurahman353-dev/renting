@@ -221,6 +221,14 @@ export default function UnitDetailsPage() {
                                     <span className="text-slate-600 font-medium">Property</span>
                                     <span className="font-semibold text-slate-900">{unit.property?.name || "N/A"}</span>
                                 </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
+                                    <span className="text-slate-600 font-medium">Deposit 1</span>
+                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_1 || 0).toLocaleString()} KES</span>
+                                </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
+                                    <span className="text-slate-600 font-medium">Deposit 2</span>
+                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_2 || 0).toLocaleString()} KES</span>
+                                </div>
                                 {unit.features && (
                                     <div className="col-span-2 py-4 px-4 bg-slate-50 rounded-lg">
                                         <span className="block text-slate-600 font-medium mb-2">Features</span>
@@ -267,9 +275,9 @@ export default function UnitDetailsPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 pt-6">
-                                <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
+                                {/* <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
                                     <EyeIcon className="w-4 h-4 mr-2" /> Request Viewing
-                                </Button>
+                                </Button> */}
                                 {/* <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
                                     <Wrench className="w-4 h-4 mr-2" /> Schedule Maintenance
                                 </Button> */}

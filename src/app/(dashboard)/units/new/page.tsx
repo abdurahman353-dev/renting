@@ -445,7 +445,7 @@ export default function AddUnitPage() {
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
-                                                                <SelectItem value="Occupied">Occupied</SelectItem>
+                                                                {/* <SelectItem value="Occupied">Occupied</SelectItem> */}
                                                                 <SelectItem value="Vacant">Vacant</SelectItem>
                                                                 <SelectItem value="Maintenance">Maintenance</SelectItem>
                                                             </SelectContent>
