@@ -28,6 +28,7 @@ import {
     Shield,
     Users,
     ArrowLeft,
+    ArrowRight,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -161,7 +162,7 @@ export default function PropertyViewPage() {
             ? [property.featured_image_url]
             : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop"];
 
-    const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
+    const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p) && p > 0) || [];
     const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : 0;
     const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : 0;
 
@@ -174,7 +175,10 @@ export default function PropertyViewPage() {
             : "Contact for pricing";
 
     const totalUnitsCount = property.units?.length || 0;
-    const occupiedUnits = property.units?.filter(u => u.status === 'occupied').length || 0;
+    const occupiedUnits = property.units?.filter(u => u.status?.toLowerCase() === 'occupied').length || 0;
+    const vacantUnits = property.units?.filter(u => u.status?.toLowerCase() === 'vacant' || u.status?.toLowerCase() === 'available').length || 0;
+    const repairUnits = property.units?.filter(u => u.status?.toLowerCase() === 'maintenance' || u.status?.toLowerCase() === 'repair' || u.status?.toLowerCase() === 'under maintenance').length || 0;
+
     const occupancyRate = totalUnitsCount > 0
         ? Math.round((occupiedUnits / totalUnitsCount) * 100)
         : 0;
@@ -298,7 +302,7 @@ export default function PropertyViewPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-slate-900">
                         {/* Left Column - Main Content */}
                         <div className="lg:col-span-2 space-y-6">
-                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <Tabs id="property-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
                                 <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1.5 rounded-2xl h-14">
                                     <TabsTrigger
                                         value="overview"
@@ -456,49 +460,79 @@ export default function PropertyViewPage() {
                         <div className="space-y-6">
                             {/* Rental Summary Card */}
                             <Card className="bg-white shadow-lg border border-slate-100 rounded-3xl overflow-hidden sticky top-32">
-                                <CardHeader className="bg-blue-600 text-white py-6">
-                                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                        <TrendingUp className="w-5 h-5" />
-                                        Leasing Information
+                                <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-6">
+                                    <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+                                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                                        Property Summary
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-5 pt-8 pb-8">
-                                    <div className="space-y-1">
-                                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Starting From</p>
-                                        <p className="text-3xl font-extrabold text-blue-600">
-                                            KES {minRent.toLocaleString() || '0'}
-                                            <span className="text-slate-400 text-base font-normal tracking-normal italic ml-1">/mo</span>
-                                        </p>
+                                <CardContent className="space-y-6 pt-8 pb-8">
+                                    {/* Price Range */}
+                                    <div className="flex justify-between items-center py-2 px-1 border-b border-slate-50 pb-6">
+                                        <span className="text-slate-500 text-lg font-semibold">Price Range</span>
+                                        <span className="text-xl font-extrabold text-slate-900">
+                                            {priceRange}
+                                        </span>
                                     </div>
 
-                                    <div className="space-y-4 pt-4">
-                                        <div className="flex justify-between items-center py-2">
-                                            <span className="text-slate-600 font-bold">Security Deposit</span>
-                                            <span className="font-bold text-slate-900">KES {property.security_deposit?.toLocaleString() ?? '1 Mon Rent'}</span>
+                                    {/* Total Units */}
+                                    <div className="flex justify-between items-center py-2 px-1 border-b border-slate-50 pb-6">
+                                        <span className="text-slate-500 text-lg font-semibold">Total Units</span>
+                                        <span className="text-xl font-extrabold text-slate-900">{totalUnitsCount}</span>
+                                    </div>
+
+                                    {/* Occupancy */}
+                                    <div className="py-2 px-1 border-b border-slate-50 pb-6">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-slate-500 text-lg font-semibold">Occupancy</span>
+                                            <span className="text-xl font-extrabold text-slate-900">{occupancyRate}%</span>
                                         </div>
-                                        {/* <div className="flex justify-between items-center py-2">
-                                            <span className="text-slate-600 font-bold">Service Charge</span>
-                                            <span className="font-bold text-slate-900">KES {property.service_charge?.toLocaleString() ?? 'Included'}</span>
-                                        </div> */}
-                                        <div className="flex justify-between items-center py-2">
-                                            <span className="text-slate-600 font-bold">Total Units</span>
-                                            <span className="font-bold text-slate-900">{totalUnitsCount} Units</span>
+                                        <div className="text-right">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {occupiedUnits} OCCUPIED / {totalUnitsCount} TOTAL
+                                            </span>
                                         </div>
                                     </div>
 
-                                    <div className="pt-6 space-y-3">
+                                    {/* Status Boxes */}
+                                    <div className="grid grid-cols-3 gap-3 pt-2">
+                                        <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 text-center transition-all hover:shadow-md group">
+                                            <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-1">Vacant</p>
+                                            <p className="text-2xl font-black text-emerald-700">{vacantUnits}</p>
+                                        </div>
+                                        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center transition-all hover:shadow-md group">
+                                            <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Repair</p>
+                                            <p className="text-2xl font-black text-slate-700">{repairUnits}</p>
+                                        </div>
+                                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-center transition-all hover:shadow-md group">
+                                            <p className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider mb-1">Occupied</p>
+                                            <p className="text-2xl font-black text-blue-700">{occupiedUnits}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-6">
                                         <Button
-                                            className="w-full bg-blue-600 text-white hover:bg-blue-700 font-extrabold h-14 rounded-2xl shadow-md shadow-blue-100 transition-all"
-                                            onClick={() => setActiveTab("units")}
+                                            className="w-full bg-blue-600 text-white hover:bg-blue-700 font-bold h-12 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] group flex items-center justify-center gap-2"
+                                            onClick={() => {
+                                                setActiveTab("units");
+                                                const element = document.getElementById('property-tabs');
+                                                if (element) {
+                                                    const offset = 100; // offset for navbar
+                                                    const bodyRect = document.body.getBoundingClientRect().top;
+                                                    const elementRect = element.getBoundingClientRect().top;
+                                                    const elementPosition = elementRect - bodyRect;
+                                                    const offsetPosition = elementPosition - offset;
+
+                                                    window.scrollTo({
+                                                        top: offsetPosition,
+                                                        behavior: 'smooth'
+                                                    });
+                                                }
+                                            }}
                                         >
-                                            View Units
+                                            View All Units
+                                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                                         </Button>
-                                        {/* <Button
-                                            variant="outline"
-                                            className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold h-14 rounded-2xl"
-                                        >
-                                            Schedule Viewing
-                                        </Button> */}
                                     </div>
                                 </CardContent>
                             </Card>
