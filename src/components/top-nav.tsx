@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Menu, LogOut, Settings, User, Check, Info, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
+import { Bell, Menu, LogOut, Settings, User, Check, Info, AlertTriangle, CheckCircle, XCircle, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { useState, useRef, useEffect } from "react"
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
@@ -94,6 +94,17 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
         }
     };
 
+    const extractDetails = (message: string) => {
+        const phone = message.match(/Phone:\s*([^\n\r]+)/i)?.[1].trim();
+        const subject = message.match(/Subject:\s*([^\n\r]+)/i)?.[1].trim();
+        const from = message.match(/From:\s*([^\n\r]+)/i)?.[1].trim();
+        // The message is after the last \n\n
+        const parts = message.split('\n\n');
+        const content = parts.length > 1 ? parts[parts.length - 1].trim() : '';
+
+        return { phone, subject, from, content };
+    };
+
     return (
         <div className="h-16 border-b border-border bg-card flex items-center justify-between px-6 z-40 relative">
             {/* Left */}
@@ -117,7 +128,10 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                     >
                         <Bell className="w-5 h-5 text-muted-foreground" />
                         {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-card" />
+                            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                            </span>
                         )}
                     </button>
 
@@ -155,10 +169,32 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                                                         <p className="font-medium text-foreground">{notif.title}</p>
                                                     )}
                                                     <p className="text-muted-foreground whitespace-pre-wrap text-xs leading-relaxed">{notif.message}</p>
-                                                    <p className="text-[10px] text-slate-400">{formatDate(notif.created_at)}</p>
+
+                                                    {(() => {
+                                                        const details = extractDetails(notif.message);
+                                                        if (!details.phone) return null;
+
+                                                        const waText = `Hello ${details.from || ''}, I'm responding to your inquiry about "${details.subject || 'RentSys'}" via RentSys. \n\nYour message: "${details.content || ''}"`;
+                                                        const waUrl = `https://wa.me/${details.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
+
+                                                        return (
+                                                            <a
+                                                                href={waUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-all w-fit group"
+                                                            >
+                                                                <MessageCircle className="w-3.5 h-3.5" />
+                                                                Continue chatting on WhatsApp
+                                                            </a>
+                                                        );
+                                                    })()}
+
+                                                    <p className="text-[10px] text-slate-400 pt-1">{formatDate(notif.created_at)}</p>
                                                 </div>
                                                 {!notif.read_at && (
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                                                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0 animate-pulse" />
                                                 )}
                                             </div>
                                         </div>

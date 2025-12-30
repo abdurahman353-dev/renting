@@ -26,6 +26,7 @@ export default function ContactPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone: '',
         subject: '',
         message: ''
     });
@@ -56,7 +57,7 @@ export default function ContactPage() {
             await publicAPI.submitContactForm(formData);
             setIsSubmitted(true);
             toast.success('Message sent successfully! We will get back to you soon.');
-            setFormData({ name: '', email: '', subject: '', message: '' });
+            setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } catch (error) {
             toast.error('Failed to send message. Please try again later.');
         } finally {
@@ -181,6 +182,18 @@ export default function ContactPage() {
                                                         required
                                                     />
                                                 </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="phone" className="text-slate-700 font-bold">Phone Number (Required for WhatsApp)</Label>
+                                                <Input
+                                                    id="phone"
+                                                    type="tel"
+                                                    placeholder="+254 7XX XXX XXX"
+                                                    className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
+                                                    value={formData.phone}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="subject" className="text-slate-700 font-bold">Subject</Label>
