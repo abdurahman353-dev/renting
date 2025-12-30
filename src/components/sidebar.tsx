@@ -104,6 +104,12 @@ const superAdminRoutes: SidebarRoute[] = [
     href: "/admins",
     color: "text-pink-700",
   },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: "/settings",
+    color: "text-slate-400",
+  },
 ]
 
 interface SidebarProps {

@@ -51,15 +51,19 @@ interface Payment {
 
 export default function FinancePage() {
     const router = useRouter();
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [payments, setPayments] = useState<Payment[]>([]);
-    const [loading, setLoading] = useState(true);
-
     const [stats, setStats] = useState({
         revenue: 0,
+        totalInvoiced: 0,
         pending: 0,
         arrears: 0
     });
+
+    const [loading, setLoading] = useState(true);
+
+    const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
+    const [allPayments, setAllPayments] = useState<Payment[]>([]);
+    const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+    const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
     const [properties, setProperties] = useState<any[]>([]);
     const [units, setUnits] = useState<any[]>([]);
@@ -101,13 +105,8 @@ export default function FinancePage() {
     const fetchData = async () => {
         setLoading(true);
         try {
+            // Fetch all invoices and payments for the selected year (or all time if year is empty)
             const params = {
-                ...filters,
-                property_id: filters.property_id !== 'all' ? filters.property_id : undefined,
-                unit_id: filters.unit_id !== 'all' ? filters.unit_id : undefined,
-                status: filters.status !== 'all' ? filters.status : undefined,
-                tenant_id: filters.tenant_id !== 'all' ? filters.tenant_id : undefined,
-                month: filters.month || undefined,
                 year: filters.year || undefined
             };
 
@@ -116,7 +115,16 @@ export default function FinancePage() {
                 financeAPI.getPayments(params),
             ]);
 
-            // Revenue report is a separate call that shouldn't block the main table loading
+            const invoiceData = Array.isArray(invRes) ? invRes : (invRes.data || []);
+            const paymentData = Array.isArray(payRes) ? payRes : (payRes.data || []);
+
+            setAllInvoices(invoiceData);
+            setAllPayments(paymentData);
+
+            // Initial filter call
+            applyFilters(invoiceData, paymentData);
+
+            // Revenue report remains a separate call
             financeAPI.getRevenueReport().then((revRes: any) => {
                 const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
                 setStats(prev => ({
@@ -125,47 +133,80 @@ export default function FinancePage() {
                 }));
             }).catch(console.error);
 
-            const invoiceData = Array.isArray(invRes) ? invRes : (invRes.data || []);
-            const paymentData = Array.isArray(payRes) ? payRes : (payRes.data || []);
-
-            setInvoices(invoiceData);
-            setPayments(paymentData);
-
-            // Calculate pending amount from invoices
-            const pendingAmount = invoiceData
-                .filter((inv: Invoice) => inv.status === 'PENDING' || inv.status === 'PARTIAL')
-                .reduce((sum: number, inv: Invoice) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-
-            // Calculate arrears (overdue invoices)
-            const today = new Date();
-            const arrearsAmount = invoiceData
-                .filter((inv: Invoice) => {
-                    if (inv.status === 'PAID') return false;
-                    const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
-                    const dueDate = new Date(rawDate);
-                    const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                    return daysDiff > 30;
-                })
-                .reduce((sum: number, inv: Invoice) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-
-            setStats(prev => ({
-                ...prev,
-                pending: pendingAmount,
-                arrears: arrearsAmount
-            }));
         } catch (error) {
             console.error("Failed to fetch finance data:", error);
-            setInvoices([]);
-            setPayments([]);
+            setAllInvoices([]);
+            setAllPayments([]);
         } finally {
             setLoading(false);
         }
     };
 
+    const applyFilters = (invList: Invoice[], payList: Payment[]) => {
+        let filteredInv = [...invList];
+        let filteredPay = [...payList];
+
+        if (filters.property_id !== 'all') {
+            filteredInv = filteredInv.filter(inv => inv.property_name && properties.find(p => p.id.toString() === filters.property_id)?.name === inv.property_name);
+            // Note: Payment models might need property linking to filter correctly here if not in tenant_name
+        }
+
+        if (filters.unit_id !== 'all') {
+            filteredInv = filteredInv.filter(inv => inv.unit_number === units.find(u => u.id.toString() === filters.unit_id)?.unit_number);
+        }
+
+        if (filters.status !== 'all') {
+            filteredInv = filteredInv.filter(inv => inv.status === filters.status);
+        }
+
+        if (filters.month) {
+            filteredInv = filteredInv.filter(inv => {
+                const date = new Date(inv.created_at || inv.date);
+                return (date.getMonth() + 1).toString() === filters.month;
+            });
+            filteredPay = filteredPay.filter(pay => {
+                const date = new Date(pay.created_at || pay.date);
+                return (date.getMonth() + 1).toString() === filters.month;
+            });
+        }
+
+        setFilteredInvoices(filteredInv);
+        setFilteredPayments(filteredPay);
+
+        // Recalculate stats based on filtered data for better feedback
+        const totalInvoiced = filteredInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
+        const pendingAmount = filteredInv
+            .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
+            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+
+        const today = new Date();
+        const arrearsAmount = filteredInv
+            .filter(inv => {
+                if (inv.status === 'PAID') return false;
+                const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
+                const dueDate = new Date(rawDate);
+                const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                return daysDiff > 30;
+            })
+            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
+
+        setStats(prev => ({
+            ...prev,
+            totalInvoiced,
+            pending: pendingAmount,
+            arrears: arrearsAmount
+        }));
+    };
+
     useEffect(() => {
-        // Initial fetch only, subsequent controlled by refresh button in filter
         fetchData();
-    }, []); // Only on mount
+    }, [filters.year]); // Re-fetch only when year changes
+
+    useEffect(() => {
+        if (!loading) {
+            applyFilters(allInvoices, allPayments);
+        }
+    }, [filters.property_id, filters.unit_id, filters.status, filters.month]);
 
     const onFilterChange = (newFilters: any) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
@@ -185,7 +226,7 @@ export default function FinancePage() {
     const handleExport = () => {
         // Simple CSV Export of current view
         const headers = ["ID", "Tenant", "Unit", "Property", "Amount", "Paid", "Status", "Date"];
-        const rows = invoices.map(inv => [
+        const rows = filteredInvoices.map((inv: Invoice) => [
             inv.id,
             inv.tenant_name || inv.tenant || 'Unknown',
             inv.unit_number || inv.unit || 'N/A',
@@ -198,7 +239,7 @@ export default function FinancePage() {
 
         let csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
-            + rows.map(e => e.join(",")).join("\n");
+            + rows.map((e: any[]) => e.join(",")).join("\n");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -209,7 +250,7 @@ export default function FinancePage() {
         document.body.removeChild(link);
     };
 
-    if (loading && invoices.length === 0) return <div className="p-8">Loading finance data...</div>;
+    if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
     return (
         <div className="p-8 space-y-8">
@@ -310,11 +351,11 @@ export default function FinancePage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {invoices.length === 0 ? (
+                                {filteredInvoices.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
                                     </TableRow>
-                                ) : invoices.map((inv) => (
+                                ) : filteredInvoices.map((inv) => (
                                     <TableRow key={inv.id}>
                                         <TableCell className="font-medium">{inv.invoice_number}</TableCell>
                                         <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
@@ -372,11 +413,11 @@ export default function FinancePage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {payments.length === 0 ? (
+                                {filteredPayments.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
                                     </TableRow>
-                                ) : payments.map((pay) => (
+                                ) : filteredPayments.map((pay) => (
                                     <TableRow key={pay.id}>
                                         <TableCell className="font-medium">{pay.id}</TableCell>
                                         <TableCell>{pay.tenant_name || pay.tenant}</TableCell>

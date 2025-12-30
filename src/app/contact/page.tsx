@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LandingNavbar } from '@/components/landing-navbar';
 import { LandingFooter } from '@/components/landing-footer';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,25 @@ export default function ContactPage() {
         subject: '',
         message: ''
     });
+    const [settings, setSettings] = useState<any>({
+        company_phone: '+254 700 000 000',
+        company_email: 'hello@rentsys.com',
+        company_address: 'RentSys Plaza, 4th Floor',
+        company_office_hours: 'Mon-Fri from 8am to 6pm',
+        company_response_time: "We'll respond within 24 hours"
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data) setSettings((prev: any) => ({ ...prev, ...data }));
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -77,8 +96,8 @@ export default function ContactPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Call Us</h3>
-                                            <p className="text-slate-600 font-medium">+254 700 000 000</p>
-                                            <p className="text-slate-500 text-sm mt-1">Mon-Fri from 8am to 6pm</p>
+                                            <p className="text-slate-600 font-medium">{settings.company_phone}</p>
+                                            <p className="text-slate-500 text-sm mt-1">{settings.company_office_hours}</p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -92,8 +111,8 @@ export default function ContactPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Email Us</h3>
-                                            <p className="text-slate-600 font-medium">hello@rentsys.com</p>
-                                            <p className="text-slate-500 text-sm mt-1">We'll respond within 24 hours</p>
+                                            <p className="text-slate-600 font-medium">{settings.company_email}</p>
+                                            <p className="text-slate-500 text-sm mt-1">{settings.company_response_time}</p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -107,8 +126,8 @@ export default function ContactPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Our Office</h3>
-                                            <p className="text-slate-600 font-medium">RentSys Plaza, 4th Floor</p>
-                                            <p className="text-slate-500 text-sm mt-1">Nairobi, Kenya</p>
+                                            <p className="text-slate-600 font-medium">{settings.company_address}</p>
+                                            <p className="text-slate-500 text-sm mt-1">Contact for directions</p>
                                         </div>
                                     </div>
                                 </CardContent>

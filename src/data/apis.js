@@ -493,6 +493,11 @@ export const publicAPI = {
         const response = await axios.post(`${API_BASE_URL}/public/contact`, data);
         return response.data;
     },
+
+    getSettings: async () => {
+        const response = await axios.get(`${API_BASE_URL}/public/settings`);
+        return response.data;
+    },
 };
 
 // ============================================================================
