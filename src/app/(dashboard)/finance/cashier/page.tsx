@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { tenantAPI, financeAPI } from "@/data/apis";
 import { toast } from "sonner";
+import MpesaPaymentModal from "@/components/MpesaPaymentModal";
 
 // Zod Schema for Payment Form
 const paymentSchema = z.object({
@@ -100,6 +101,7 @@ export default function CashierPage() {
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
     const [selectedInvoices, setSelectedInvoices] = useState<number[]>([]);
     const [loadingInvoice, setLoadingInvoice] = useState(false);
+    const [isMpesaModalOpen, setIsMpesaModalOpen] = useState(false);
 
     const form = useForm<z.infer<typeof paymentSchema>>({
         resolver: zodResolver(paymentSchema),
@@ -588,7 +590,16 @@ export default function CashierPage() {
                                             )}
                                         />
 
-                                        <div className="flex justify-end pt-4">
+                                        <div className="flex justify-end pt-4 gap-3">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="lg"
+                                                onClick={() => setIsMpesaModalOpen(true)}
+                                                className="border-green-600 text-green-700 hover:bg-green-50"
+                                            >
+                                                Pay via M-Pesa
+                                            </Button>
                                             <Button
                                                 type="submit"
                                                 size="lg"
@@ -718,6 +729,22 @@ export default function CashierPage() {
                     )}
                 </div>
             </div>
+            {selectedTenant && (
+                <MpesaPaymentModal
+                    isOpen={isMpesaModalOpen}
+                    onClose={() => setIsMpesaModalOpen(false)}
+                    tenant={selectedTenant}
+                    amount={calculateSelectedTotal()}
+                    invoiceId={selectedInvoices.length === 1 ? selectedInvoices[0] : undefined}
+                    onSuccess={() => {
+                        setIsMpesaModalOpen(false);
+                        if (selectedTenant) {
+                            fetchPendingInvoices(selectedTenant.id);
+                            fetchPaymentHistory(selectedTenant.id);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
