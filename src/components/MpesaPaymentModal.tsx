@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Loader2, CheckCircle, XCircle, Phone } from 'lucide-react';
 
 interface MpesaPaymentModalProps {
@@ -32,6 +32,13 @@ export default function MpesaPaymentModal({
     const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
     const [message, setMessage] = useState('');
     const [checkoutRequestId, setCheckoutRequestId] = useState('');
+
+    // Update phone number when tenant changes
+    useEffect(() => {
+        if (tenant?.phone) {
+            setPhoneNumber(tenant.phone);
+        }
+    }, [tenant]);
 
     if (!isOpen) return null;
 
@@ -157,15 +164,21 @@ export default function MpesaPaymentModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div
+            className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 backdrop-blur-sm"
+            onClick={handleClose}
+        >
+            <div
+                className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 text-zinc-100"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b">
-                    <h2 className="text-xl font-semibold text-gray-900">M-Pesa Payment</h2>
+                <div className="flex items-center justify-between p-6 border-b border-gray-300">
+                    <h2 className="text-xl font-semibold text-black">M-Pesa Payment</h2>
                     {!loading && (
                         <button
                             onClick={handleClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-gray-400 hover:text-black transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -177,68 +190,66 @@ export default function MpesaPaymentModal({
                     {status === 'idle' && (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tenant
+                                <label className="block text-sm font-medium text-black mb-1">
+                                    Tenant Name
                                 </label>
                                 <input
                                     type="text"
                                     value={tenant.name}
                                     disabled
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                                    className="w-full cursor-not-allowed px-3 py-2 border border-gray-300 rounded-lg bg-zinc-200 text-black"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Phone Number <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 w-5 h-5" />
                                     <input
                                         type="tel"
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
                                         placeholder="0712345678 or 254712345678"
                                         required
-                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     />
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-zinc-500 mt-1">
                                     Enter phone number in format: 0712345678 or 254712345678
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Amount (KES) <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
                                     value={paymentAmount}
-                                    onChange={(e) => setPaymentAmount(e.target.value)}
-                                    min="1"
-                                    step="0.01"
-                                    required
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled
+                                    readOnly
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-black cursor-not-allowed"
                                 />
                             </div>
 
                             {invoiceNumber && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-black mb-1">
                                         Invoice Number
                                     </label>
                                     <input
                                         type="text"
                                         value={invoiceNumber}
                                         disabled
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-black cursor-not-allowed"
                                     />
                                 </div>
                             )}
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <p className="text-sm text-blue-800">
+                            <div className="bg-blue-700/20 border border-blue-900/50 rounded-lg p-4">
+                                <p className="text-sm text-blue-500">
                                     <strong>Note:</strong> The customer will receive an M-Pesa prompt on their phone.
                                     They need to enter their M-Pesa PIN to complete the payment.
                                 </p>
@@ -256,13 +267,13 @@ export default function MpesaPaymentModal({
 
                     {status === 'pending' && (
                         <div className="text-center py-8">
-                            <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            <Loader2 className="w-16 h-16 text-blue-500 animate-spin mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-white mb-2">
                                 Waiting for Payment
                             </h3>
-                            <p className="text-gray-600">{message}</p>
-                            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                <p className="text-sm text-yellow-800">
+                            <p className="text-zinc-400">{message}</p>
+                            <div className="mt-4 bg-yellow-900/20 border border-yellow-900/50 rounded-lg p-4">
+                                <p className="text-sm text-yellow-500">
                                     Customer should check their phone for M-Pesa prompt and enter PIN.
                                     This may take a few moments...
                                 </p>
@@ -272,21 +283,21 @@ export default function MpesaPaymentModal({
 
                     {status === 'success' && (
                         <div className="text-center py-8">
-                            <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-white mb-2">
                                 Payment Successful!
                             </h3>
-                            <p className="text-gray-600">{message}</p>
+                            <p className="text-zinc-400">{message}</p>
                         </div>
                     )}
 
                     {status === 'failed' && (
                         <div className="text-center py-8">
-                            <XCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-white mb-2">
                                 Payment Failed
                             </h3>
-                            <p className="text-gray-600 mb-4">{message}</p>
+                            <p className="text-zinc-400 mb-4">{message}</p>
                             <button
                                 onClick={() => {
                                     setStatus('idle');

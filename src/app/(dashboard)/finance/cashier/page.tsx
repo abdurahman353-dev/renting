@@ -595,7 +595,13 @@ export default function CashierPage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="lg"
-                                                onClick={() => setIsMpesaModalOpen(true)}
+                                                onClick={() => {
+                                                    if (selectedInvoices.length === 0) {
+                                                        toast.error("Please select at least one invoice to pay");
+                                                        return;
+                                                    }
+                                                    setIsMpesaModalOpen(true);
+                                                }}
                                                 className="border-green-600 text-green-700 hover:bg-green-50"
                                             >
                                                 Pay via M-Pesa
@@ -729,7 +735,7 @@ export default function CashierPage() {
                     )}
                 </div>
             </div>
-            {selectedTenant && (
+            {selectedTenant && isMpesaModalOpen && (
                 <MpesaPaymentModal
                     isOpen={isMpesaModalOpen}
                     onClose={() => setIsMpesaModalOpen(false)}
