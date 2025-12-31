@@ -66,6 +66,10 @@ const defaultRoutes: SidebarRoute[] = [
       {
         label: "Finances",
         href: "/finance"
+      },
+      {
+        label: "Transactions",
+        href: "/finance/transactions"
       }
     ]
   },
