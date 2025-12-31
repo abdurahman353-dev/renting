@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Loader2, Phone, DollarSign, Calendar, CheckCircle, XCircle, Clock, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -35,16 +36,30 @@ export default function MpesaTransactionsPage() {
     const [transactions, setTransactions] = useState<MpesaTransaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'unreconciled' | 'reconciled'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
-        fetchTransactions();
-    }, [filter]);
+        // Debounce search to avoid too many requests
+        const timeoutId = setTimeout(() => {
+            fetchTransactions();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [filter, searchQuery, startDate, endDate]);
 
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const reconciledParam = filter === 'unreconciled' ? 'false' : filter === 'reconciled' ? 'true' : '';
-            const url = `http://localhost:8000/api/mpesa/transactions${reconciledParam ? `?reconciled=${reconciledParam}` : ''}`;
+            const params = new URLSearchParams();
+
+            if (filter === 'unreconciled') params.append('reconciled', 'false');
+            if (filter === 'reconciled') params.append('reconciled', 'true');
+            if (searchQuery) params.append('search', searchQuery);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            const url = `http://localhost:8000/api/mpesa/transactions?${params.toString()}`;
 
             const response = await fetch(url, {
                 headers: {
@@ -145,25 +160,68 @@ export default function MpesaTransactionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2">
-                <Button
-                    variant={filter === 'all' ? 'default' : 'outline'}
-                    onClick={() => setFilter('all')}
-                >
-                    All
-                </Button>
-                <Button
-                    variant={filter === 'unreconciled' ? 'default' : 'outline'}
-                    onClick={() => setFilter('unreconciled')}
-                >
-                    Unreconciled
-                </Button>
-                <Button
-                    variant={filter === 'reconciled' ? 'default' : 'outline'}
-                    onClick={() => setFilter('reconciled')}
-                >
-                    Reconciled
-                </Button>
+            <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
+                <div className="flex gap-2">
+                    <Button
+                        variant={filter === 'all' ? 'default' : 'outline'}
+                        onClick={() => setFilter('all')}
+                    >
+                        All
+                    </Button>
+                    <Button
+                        variant={filter === 'unreconciled' ? 'default' : 'outline'}
+                        onClick={() => setFilter('unreconciled')}
+                    >
+                        Unreconciled
+                    </Button>
+                    <Button
+                        variant={filter === 'reconciled' ? 'default' : 'outline'}
+                        onClick={() => setFilter('reconciled')}
+                    >
+                        Reconciled
+                    </Button>
+                </div>
+
+                <div className="flex gap-2 items-center w-full md:w-auto">
+                    <div className="grid gap-1.5">
+                        <Input
+                            placeholder="Search tenant, phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-[200px]"
+                        />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-[150px]"
+                        />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-[150px]"
+                        />
+                    </div>
+                    {(searchQuery || startDate || endDate) && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setStartDate('');
+                                setEndDate('');
+                            }}
+                            title="Clear filters"
+                        >
+                            <XCircle className="w-4 h-4 text-slate-500" />
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Transactions List */}
