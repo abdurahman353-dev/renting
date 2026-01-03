@@ -55,13 +55,12 @@ export default function PropertyReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Total Deposits", "Amount Paid", "Balance"];
+        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.name}"`,
             row.total_units,
             row.occupied_units,
             row.vacant_units,
-            row.total_deposits || 0,
             row.amount_paid,
             row.balance
         ]);
@@ -178,7 +177,6 @@ export default function PropertyReportPage() {
                                 <th className="px-6 py-3 text-center">Total Units</th>
                                 <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
                                 <th className="px-6 py-3 text-center text-slate-400">Vacant Units</th>
-                                {/* <th className="px-6 py-3 text-right">Deposits</th> */}
                                 <th className="px-6 py-3 text-right">Amount Paid</th>
                                 <th className="px-6 py-3 text-right">Balance</th>
                             </tr>
@@ -195,9 +193,6 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-center">{row.total_units}</td>
                                         <td className="px-6 py-4 text-center font-medium text-emerald-600 bg-emerald-50 rounded-lg">{row.occupied_units}</td>
                                         <td className="px-6 py-4 text-center text-slate-500">{row.vacant_units}</td>
-                                        {/* <td className="px-6 py-4 text-right font-medium text-blue-600">
-                                            {Number(row.total_deposits || 0).toLocaleString()}
-                                        </td> */}
                                         <td className="px-6 py-4 text-right font-medium text-slate-700">
                                             {Number(row.amount_paid).toLocaleString()}
                                         </td>

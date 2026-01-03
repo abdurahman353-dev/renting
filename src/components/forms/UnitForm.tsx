@@ -44,10 +44,17 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
 
     useEffect(() => {
         if (initialData) {
+            // Normalize unit type
+            let normalizedType = initialData.type || "";
+            if (normalizedType === "One Bedroom") normalizedType = "1 Bedroom";
+            if (normalizedType === "Two Bedroom") normalizedType = "2 Bedroom";
+            if (normalizedType === "Three Bedroom") normalizedType = "3 Bedroom";
+            if (normalizedType === "Four Bedroom") normalizedType = "4 Bedroom";
+
             setFormData({
                 unit_number: initialData.unit_number || "",
                 property_id: initialData.property_id || "",
-                type: initialData.type || "",
+                type: normalizedType,
                 price: initialData.price || "",
                 deposit_1: initialData.deposit_1 || "",
                 deposit_2: initialData.deposit_2 || "",
@@ -212,11 +219,15 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 <option value="Penthouse">Penthouse</option>
                                 <option value="Shop">Shop</option>
                                 <option value="Office">Office</option>
+                                <option value="One Bedroom">One Bedroom</option>
+                                <option value="Two Bedroom">Two Bedroom</option>
+                                <option value="Three Bedroom">Three Bedroom</option>
+                                <option value="Four Bedroom">Four Bedroom</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="price">Monthly Rent (KES)</Label>
                             <Input
@@ -230,7 +241,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="deposit_1">Deposit 1</Label>
+                            <Label htmlFor="deposit_1">Deposit 1 (KES)</Label>
                             <Input
                                 id="deposit_1"
                                 name="deposit_1"
@@ -242,7 +253,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="deposit_2">Deposit 2</Label>
+                            <Label htmlFor="deposit_2">Deposit 2 (KES)</Label>
                             <Input
                                 id="deposit_2"
                                 name="deposit_2"
@@ -264,7 +275,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 required
                             >
                                 <option value="Available">Vacant</option>
-                                {/* <option value="Reserved">Reserved</option> */}
+                                <option value="Occupied">Occupied</option>
                                 <option value="Maintenance">Maintenance</option>
                             </select>
                         </div>

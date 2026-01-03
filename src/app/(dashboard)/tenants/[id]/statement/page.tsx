@@ -63,6 +63,24 @@ export default function TenantStatementPage() {
         window.print();
     };
 
+    const handleDownloadPDF = async () => {
+        try {
+            const response = await api.get(`/tenants/${params.id}/statement/download`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Statement_${tenant?.name || 'Tenant'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Failed to download PDF:", error);
+            alert("Failed to generate PDF. Please try again.");
+        }
+    };
+
     if (loading) {
         return <div className="p-8 text-center text-muted-foreground">Loading statement...</div>;
     }
@@ -81,7 +99,7 @@ export default function TenantStatementPage() {
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" /> Print
                     </Button>
-                    <Button>
+                    <Button onClick={handleDownloadPDF}>
                         <Download className="mr-2 h-4 w-4" /> PDF
                     </Button>
                 </div>
@@ -125,12 +143,6 @@ export default function TenantStatementPage() {
                                 <TableRow key={index}>
                                     <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
-                                        {/* <span className={`px-2 py-1 rounded-full text-xs font-semibold mr-2 ${txn.type === 'INVOICE'
-                                            ? 'bg-orange-100 text-orange-700'
-                                            : 'bg-green-100 text-green-700'
-                                            }`}>
-                                            {txn.type}
-                                        </span> */}
                                         {txn.description}
                                     </TableCell>
                                     <TableCell className="text-right font-mono text-xs">{txn.reference}</TableCell>
@@ -142,10 +154,15 @@ export default function TenantStatementPage() {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            <TableRow className="bg-slate-50 border-t-2 border-slate-200">
-                                <TableCell colSpan={4} className="text-right font-bold text-lg uppercase">Closing Balance</TableCell>
-                                <TableCell className={`text-right font-bold text-lg ${closingBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                    KES {closingBalance.toLocaleString()}
+                            <TableRow className="border-t-2 border-slate-900 bg-slate-50/50">
+                                <TableCell colSpan={4} className="text-right font-black text-slate-900 uppercase tracking-wider">Total Balance</TableCell>
+                                <TableCell className="text-right">
+                                    <div className={`text-sm font-bold ${closingBalance < 0 ? 'text-red-600' : (closingBalance > 0 ? 'text-green-600' : 'text-slate-900')}`}>
+                                        {closingBalance > 0 ? '+' : ''} KES {closingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </div>
+                                    <div className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                                        {closingBalance < 0 ? 'Pending Amount' : (closingBalance > 0 ? 'Outstanding Credit' : 'Account Balanced')}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         </TableBody>
@@ -154,22 +171,31 @@ export default function TenantStatementPage() {
             </Card>
             <style jsx global>{`
                 @media print {
-                   body * {
-                     visibility: hidden;
+                   @page {
+                       size: auto;
+                       margin: 10mm;
                    }
-                   #printable-statement, #printable-statement * {
-                     visibility: visible;
-                   }
-                   #printable-statement {
-                     position: absolute;
-                     left: 0;
-                     top: 0;
-                     width: 100%;
-                     border: none;
-                     box-shadow: none;
+                   body {
+                       background: #fff !important;
                    }
                    .print\\:hidden {
-                     display: none;
+                       display: none !important;
+                   }
+                   body * {
+                       visibility: hidden;
+                   }
+                   #printable-statement, #printable-statement * {
+                       visibility: visible;
+                   }
+                   #printable-statement {
+                       position: absolute;
+                       left: 0;
+                       top: 0;
+                       width: 100%;
+                       margin: 0;
+                       padding: 0;
+                       border: none !important;
+                       box-shadow: none !important;
                    }
                 }
              `}</style>
