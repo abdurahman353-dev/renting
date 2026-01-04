@@ -304,50 +304,6 @@ function TenantsContent() {
         setOpen(true);
     };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Filter units based on selected property - only show units that are NOT occupied and NOT under maintenance
     const selectedProperty = properties.find(p => p.id.toString() === formData.property_id);
     const availableUnits = selectedProperty?.units?.filter((u: any) => {

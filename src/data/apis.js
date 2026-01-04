@@ -294,6 +294,10 @@ export const financeAPI = {
         const response = await apiClient.get('/finance/reports/unit', { params });
         return response.data;
     },
+    getTransactions: async (params = {}) => {
+        const response = await apiClient.get('/mpesa/transactions', { params });
+        return response.data;
+    },
 };
 
 // ============================================================================

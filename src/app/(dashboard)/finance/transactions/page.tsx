@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Phone, DollarSign, Calendar, CheckCircle, XCircle, Clock, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { financeAPI } from '@/data/apis';
 
 interface MpesaTransaction {
     id: number;
@@ -30,6 +31,7 @@ interface MpesaTransaction {
         invoice_number: string;
     };
     created_at: string;
+    checkout_request_id?: string;
 }
 
 export default function MpesaTransactionsPage() {
@@ -59,13 +61,14 @@ export default function MpesaTransactionsPage() {
             if (startDate) params.append('start_date', startDate);
             if (endDate) params.append('end_date', endDate);
 
-            const url = `http://localhost:8000/api/mpesa/transactions?${params.toString()}`;
+            // const url = `http://localhost:8000/api/mpesa/transactions?${params.toString()}`;
 
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
+            // const response = await fetch(url, {
+            //     headers: {
+            //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            //     },
+            // });
+            const response = await financeAPI.getTransactions(params.toString());
 
             if (response.ok) {
                 const data = await response.json();
@@ -121,11 +124,42 @@ export default function MpesaTransactionsPage() {
     return (
         <div className="p-8 space-y-6">
             {/* Header */}
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight">M-Pesa Transactions</h2>
-                <p className="text-muted-foreground mt-2">
-                    View and manage M-Pesa payment transactions
-                </p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">M-Pesa Transactions</h2>
+                    <p className="text-muted-foreground mt-2">
+                        View and manage M-Pesa payment transactions
+                    </p>
+                </div>
+                <Button
+                    variant="outline"
+                    onClick={async () => {
+                        toast.loading('Registering C2B URLs...');
+                        try {
+                            const response = await fetch('http://localhost:8000/api/mpesa/register-c2b-urls', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                },
+                            });
+                            const result = await response.json();
+                            if (response.ok) {
+                                toast.success('C2B URLs Registered Successfully!');
+                                toast.info('Safaricom will now send transactions to your backend.');
+                            } else {
+                                toast.error(result.message || 'Registration failed');
+                            }
+                        } catch (error) {
+                            toast.error('Failed to register URLs');
+                        } finally {
+                            toast.dismiss();
+                        }
+                    }}
+                    title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
+                >
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Connect C2B / Register URLs
+                </Button>
             </div>
 
             {/* Stats Cards */}
@@ -259,7 +293,12 @@ export default function MpesaTransactionsPage() {
                                                     <p className="font-semibold text-lg">
                                                         {transaction.transaction_id || 'Pending...'}
                                                     </p>
-                                                    {getStatusBadge(transaction.status)}
+                                                    <div className="flex gap-2">
+                                                        {getStatusBadge(transaction.status)}
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {transaction.checkout_request_id ? 'STK Push' : 'C2B / Paybill'}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
                                             </div>
 

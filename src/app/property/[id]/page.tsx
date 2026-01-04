@@ -40,6 +40,7 @@ import { LandingFooter } from "@/components/landing-footer";
 import { formatText, formatTextType, formatCurrency } from "@/lib/utils";
 import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 import Link from "next/link";
+import { toast } from "sonner";
 
 // Enhanced icon mapping with vibrant colors
 // Simplified professional icon mapping
@@ -92,6 +93,7 @@ export default function PropertyViewPage() {
     const router = useRouter();
     const [property, setProperty] = useState<Property | null>(null);
     const [loading, setLoading] = useState(true);
+    const [settings, setSettings] = useState<any>();
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
     const [galleryOpen, setGalleryOpen] = useState(false);
@@ -109,10 +111,22 @@ export default function PropertyViewPage() {
         }
     };
 
+    const fetchSettings = async () => {
+        try {
+            const data = await publicAPI.getSettings();
+            setSettings(data)
+        } catch (error) {
+            toast.warning('error fetching');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (params.id) {
             fetchProperty();
         }
+        fetchSettings();
     }, [params.id]);
 
     const handleEditSuccess = () => {
@@ -380,7 +394,7 @@ export default function PropertyViewPage() {
                                                                     <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
                                                                 </div>
                                                                 <span className="text-slate-700 font-bold text-sm">
-                                                                    {amenity.amenity_name || amenity.amenities}
+                                                                    {amenity.name || amenity.amenities}
                                                                 </span>
                                                             </div>
                                                         );
@@ -459,7 +473,7 @@ export default function PropertyViewPage() {
                         {/* Right Column - Sidebar */}
                         <div className="space-y-6">
                             {/* Rental Summary Card */}
-                            <Card className="bg-white shadow-lg border border-slate-100 rounded-3xl overflow-hidden sticky top-32">
+                            <Card className="bg-white shadow-lg border border-slate-100 rounded-3xl overflow-hidden">
                                 <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-6">
                                     <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
                                         <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -549,15 +563,15 @@ export default function PropertyViewPage() {
                                             <Building2 className="w-6 h-6 text-blue-600" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900">RentSys Real Estate</p>
+                                            <p className="font-bold text-slate-900">{settings?.company_name}</p>
                                             <p className="text-xs text-slate-500 font-bold">verified Agency</p>
                                         </div>
                                     </div>
                                     <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
-                                        <Phone className="w-4 h-4 mr-3" /> +254 700 000 000
+                                        <Phone className="w-4 h-4 mr-3" /> {settings?.company_phone}
                                     </Button>
                                     <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
-                                        <Mail className="w-4 h-4 mr-3" /> sales@rentsys.com
+                                        <Mail className="w-4 h-4 mr-3" /> {settings?.company_email}
                                     </Button>
                                 </div>
                             </Card>
