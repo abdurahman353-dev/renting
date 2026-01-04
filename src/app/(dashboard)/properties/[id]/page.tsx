@@ -351,7 +351,7 @@ export default function PropertyViewPage() {
                                         <CardContent className="pt-6">
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 {property.amenities.map((amenity: any, index: number) => {
-                                                    const amenityConfig = AMENITY_ICONS[amenity.amenity_name] || {
+                                                    const amenityConfig = AMENITY_ICONS[amenity.amenity_icon] || {
                                                         icon: Home,
                                                         color: "text-slate-600",
                                                         bgColor: "bg-slate-100"
@@ -364,7 +364,7 @@ export default function PropertyViewPage() {
                                                         >
                                                             <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
                                                             <span className="text-slate-700 font-medium text-sm">
-                                                                {amenity.amenities}
+                                                                {amenity.amenity_name}
                                                             </span>
                                                         </div>
                                                     );

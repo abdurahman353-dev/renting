@@ -269,15 +269,21 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                             <select
                                 id="status"
                                 name="status"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
                                 value={formData.status}
                                 onChange={handleInputChange}
+                                disabled={initialData?.status === 'occupied' && (initialData?.active_lease || initialData?.activeLease)}
                                 required
                             >
-                                <option value="Available">Vacant</option>
-                                <option value="Occupied">Occupied</option>
-                                <option value="Maintenance">Maintenance</option>
+                                <option value="available">Vacant</option>
+                                <option value="occupied">Occupied</option>
+                                <option value="maintenance">Maintenance</option>
                             </select>
+                            {initialData?.status === 'occupied' && (initialData?.active_lease || initialData?.activeLease) && (
+                                <p className="text-[0.8rem] text-muted-foreground">
+                                    Status is locked because the unit is currently occupied by a tenant.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

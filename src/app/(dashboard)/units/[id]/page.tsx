@@ -281,14 +281,14 @@ export default function UnitDetailsPage() {
                                         </div>
                                         <div className="space-y-3 pt-2">
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Lease Start</span>
-                                                <span className="font-medium text-slate-900">{lease.start_date}</span>
+                                                <span className="text-slate-500">Id Number</span>
+                                                <span className="font-medium text-slate-900">{tenant.id_number}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Lease End</span>
-                                                <span className="font-medium text-slate-900">{lease.end_date || "N/A"}</span>
+                                                <span className="text-slate-500">Moved in on</span>
+                                                <span className="font-medium text-slate-900">{lease.start_date || "N/A"}</span>
                                             </div>
-                                            <Button variant="outline" className="w-full mt-4">View Full Profile</Button>
+                                            <Button onClick={() => router.push(`/tenants/${tenant.id}`)} variant="outline" className="w-full mt-4">View Full Profile</Button>
                                         </div>
                                     </>
                                 ) : (
