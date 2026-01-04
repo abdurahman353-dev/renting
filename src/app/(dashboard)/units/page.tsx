@@ -37,7 +37,7 @@ export default function UnitsPage() {
     const [units, setUnits] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [properties, setProperties] = useState<any[]>([]);
-    const [showFilters, setShowFilters] = useState(false);
+    const [showFilters, setShowFilters] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [unitToDelete, setUnitToDelete] = useState<any>(null);
     const [deleting, setDeleting] = useState(false);
@@ -56,8 +56,8 @@ export default function UnitsPage() {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchData = async (isInitial = true) => {
+        if (isInitial) setLoading(true);
         try {
             const [unitsData, propertiesData] = await Promise.all([
                 unitAPI.getAll(),
@@ -117,11 +117,15 @@ export default function UnitsPage() {
 
     const getStatusColor = (status: string) => {
         switch (status?.toLowerCase()) {
-            case "available": return "bg-green-50 text-green-700 border-green-200";
-            case "occupied": return "bg-blue-50 text-blue-700 border-blue-200";
-            case "vacant": return "bg-yellow-50 text-yellow-700 border-yellow-200";
-            case "maintenance": return "bg-red-50 text-red-700 border-red-200";
-            default: return "bg-slate-100 text-slate-700";
+            case 'available':
+            case 'vacant':
+                return "bg-green-100 text-green-700 border-green-200";
+            case 'occupied':
+                return "bg-blue-100 text-blue-700 border-blue-200";
+            case 'maintenance':
+                return "bg-red-100 text-red-700 border-red-200";
+            default:
+                return "bg-slate-100 text-slate-700 border-slate-200";
         }
     };
 
@@ -131,13 +135,15 @@ export default function UnitsPage() {
             return;
         }
 
-        const headers = ["Unit Number", "Property Name", "Type", "Status", "Price", "Tenant Name", "Contact"];
+        const headers = ["Unit Number", "Property Name", "Type", "Status", "Price", "Deposit 1", "Deposit 2", "Tenant Name", "Contact"];
         const rows = filteredUnits.map((unit: any) => [
             `"${unit.unit_number}"`,
             `"${unit.property?.name || 'N/A'}"`,
             `"${unit.type || 'N/A'}"`,
             `"${unit.status || 'N/A'}"`,
             unit.price || 0,
+            unit.deposit_1 || 0,
+            unit.deposit_2 || 0,
             `"${unit.active_lease?.tenant?.name || 'N/A'}"`,
             `"${unit.active_lease?.tenant?.phone || 'N/A'}"`
         ]);
@@ -197,7 +203,7 @@ export default function UnitsPage() {
                             >
                                 <Filter className="mr-2 h-4 w-4" /> Filters
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={fetchData} title="Refresh Data">
+                            <Button variant="ghost" size="icon" onClick={() => fetchData(false)} title="Refresh Data">
                                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
@@ -227,6 +233,11 @@ export default function UnitsPage() {
                                     <SelectItem value="1 Bedroom">1 Bedroom</SelectItem>
                                     <SelectItem value="2 Bedroom">2 Bedroom</SelectItem>
                                     <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
+                                    <SelectItem value="4 Bedroom">4 Bedroom</SelectItem>
+                                    <SelectItem value="One Bedroom">One Bedroom</SelectItem>
+                                    <SelectItem value="Two Bedroom">Two Bedroom</SelectItem>
+                                    <SelectItem value="Three Bedroom">Three Bedroom</SelectItem>
+                                    <SelectItem value="Four Bedroom">Four Bedroom</SelectItem>
                                     <SelectItem value="Penthouse">Penthouse</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -268,6 +279,8 @@ export default function UnitsPage() {
                                 <TableHead className="font-semibold">Type</TableHead>
                                 <TableHead className="font-semibold">Status</TableHead>
                                 <TableHead className="font-semibold">Price</TableHead>
+                                <TableHead className="font-semibold">Deposit 1</TableHead>
+                                <TableHead className="font-semibold">Deposit 2</TableHead>
                                 <TableHead className="font-semibold">Tenant</TableHead>
                                 <TableHead className="font-semibold">Contact</TableHead>
                                 <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -300,6 +313,8 @@ export default function UnitsPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="font-medium text-slate-900">{formatCurrency(unit.price)}</TableCell>
+                                        <TableCell className="text-slate-600">{formatCurrency(unit.deposit_1 || 0)}</TableCell>
+                                        <TableCell className="text-slate-600">{formatCurrency(unit.deposit_2 || 0)}</TableCell>
                                         <TableCell className="text-slate-600">
                                             {unit.active_lease?.tenant
                                                 ? unit.active_lease.tenant.name

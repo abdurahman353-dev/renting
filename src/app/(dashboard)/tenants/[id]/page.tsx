@@ -211,9 +211,23 @@ export default function TenantDetailsPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-4">
-                                            <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                                                <span className="text-slate-500 font-medium">Security Deposit</span>
-                                                <span className="text-slate-900 font-semibold">KES {Number(currentLease.deposit_amount).toLocaleString()}</span>
+                                            <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                                                <span className="text-slate-500 font-medium pt-1">Security Deposit</span>
+                                                <div className="text-right">
+                                                    <div className="text-slate-900 font-semibold">
+                                                        KES {((Number(currentLease.deposit_amount) || 0) + (Number(currentLease.deposit_2_amount) || 0)).toLocaleString()}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-500 font-medium">
+                                                        {(() => {
+                                                            const d1 = Number(currentLease.deposit_amount) || 0;
+                                                            const d2 = Number(currentLease.deposit_2_amount) || 0;
+                                                            if (d1 > 0 && d2 > 0) return `(1st & 2nd Deposit: ${d1.toLocaleString()} + ${d2.toLocaleString()})`;
+                                                            if (d1 > 0) return `(1st Deposit: ${d1.toLocaleString()})`;
+                                                            if (d2 > 0) return `(2nd Deposit: ${d2.toLocaleString()})`;
+                                                            return "(No Deposit)";
+                                                        })()}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between items-center py-2 border-b border-slate-50">
                                                 <span className="text-slate-500 font-medium">Rent Cycle</span>
