@@ -167,7 +167,22 @@ function TenantsContent() {
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+        let { name, value } = e.target;
+
+        if (name === 'id_number') {
+            value = value.replace(/\D/g, '');
+            if (value.length > 9) {
+                value = value.slice(0, 9);
+            }
+        }
+
+        if (name === 'phone') {
+            value = value.replace(/\D/g, '');
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+        }
+
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
 
@@ -212,6 +227,16 @@ function TenantsContent() {
     const handleRegisterTenant = async () => {
         if (!formData.name || !formData.id_number || !formData.phone) {
             alert("Please fill in all required fields (Name, ID Number, Phone)");
+            return;
+        }
+
+        if (formData.id_number.length < 8) {
+            alert("ID Number must be between 8 and 9 digits");
+            return;
+        }
+
+        if (formData.phone.length !== 10) {
+            alert("Phone number must be exactly 10 digits");
             return;
         }
 
