@@ -1,12 +1,14 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { financeAPI } from "@/data/apis";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 
 interface Invoice {
     id: number;
@@ -38,6 +40,8 @@ export default function InvoiceViewPage() {
     const router = useRouter();
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
+    const componentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchInvoice = async () => {
@@ -56,8 +60,55 @@ export default function InvoiceViewPage() {
         }
     }, [params.id]);
 
-    const handleDownload = () => {
-        window.print();
+    const handleDownload = async () => {
+        if (!componentRef.current) return;
+        setDownloading(true);
+
+        try {
+            // Clone the element to render it off-screen without scroll constraints
+            const element = componentRef.current;
+            const clone = element.cloneNode(true) as HTMLElement;
+
+            // Set styles to ensure full visibility and A5 Landscape width (210mm approx 794px at 96dpi)
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '0';
+            clone.style.width = '794px';
+            clone.style.height = 'auto';
+            clone.style.overflow = 'visible';
+
+            // Append to body to render
+            document.body.appendChild(clone);
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+
+            // Cleanup
+            document.body.removeChild(clone);
+
+            const imgData = canvas.toDataURL("image/png");
+
+            // A5 Landscape: 210mm x 148mm
+            const pdf = new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a5"
+            });
+
+            const imgWidth = 210; // A5 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+            pdf.save(`Invoice_${invoice?.invoice_number || 'Details'}.pdf`);
+        } catch (error) {
+            console.error("Failed to generate PDF:", error);
+            alert("Failed to download PDF");
+        } finally {
+            setDownloading(false);
+        }
     };
 
     if (loading) {
@@ -92,133 +143,124 @@ export default function InvoiceViewPage() {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back
                     </Button>
-                    <Button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Invoice
+                    <Button
+                        onClick={handleDownload}
+                        className="bg-blue-600 hover:bg-blue-700"
+                        disabled={downloading}
+                    >
+                        {downloading ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                            <Download className="h-4 w-4 mr-2" />
+                        )}
+                        {downloading ? "Generating..." : "Download PDF"}
                     </Button>
                 </div>
 
                 {/* Invoice Card */}
-                <Card className="pt-0">
-                    <CardHeader className="border-b bg-slate-200 text-black rounded-t-lg h-full">
-                        <div className="flex justify-between items-start mt-4 mb-2">
-                            <div>
-                                <CardTitle className="text-2xl font-bold">INVOICE</CardTitle>
-                                <p className="text-black-100">#{invoice.invoice_number}</p>
-                            </div>
-                            <Badge className={statusColors[invoice.status as keyof typeof statusColors] || "bg-slate-100 text-slate-700 mt-4 mb-2"}>
-                                {invoice.status}
-                            </Badge>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="p-8 space-y-8">
-                        {/* Header Info */}
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <h3 className="text-sm font-semibold text-slate-500 mb-2">BILLED TO</h3>
-                                <p className="font-bold text-lg">Name: {invoice.tenant.name}</p>
-                                {invoice.tenant.email && <p className="text-slate-600">Email: {invoice.tenant.email}</p>}
-                                {invoice.tenant.id_number && <p className="text-slate-600">DI No: {invoice.tenant.id_number}</p>}
-                                {invoice.tenant.phone && <p className="text-slate-600">Phone: {invoice.tenant.phone}</p>}
-                            </div>
-                            <div className="text-right">
-                                <h3 className="text-sm font-semibold text-slate-500 mb-2">INVOICE DETAILS</h3>
-                                <div className="space-y-1">
-                                    <p className="text-slate-700"><span className="font-semibold">Date:</span> {new Date(invoice.created_at).toLocaleDateString()}</p>
-                                    {invoice.due_date && <p className="text-slate-700"><span className="font-semibold">Due Date:</span> {new Date(invoice.due_date).toLocaleDateString()}</p>}
-                                    <p className="text-slate-700"><span className="font-semibold">Period:</span> {invoice.month_year || `${invoice.month}/${invoice.year}`}</p>
+                <div ref={componentRef} className="bg-white">
+                    <Card className="pt-0 shadow-lg border-none">
+                        <CardHeader className="border-b bg-slate-200 text-black rounded-t-lg h-full">
+                            <div className="flex justify-between items-start mt-4 mb-2">
+                                <div>
+                                    <CardTitle className="text-2xl font-bold">INVOICE</CardTitle>
+                                    <p className="text-black-100">#{invoice.invoice_number}</p>
                                 </div>
+                                <Badge className={statusColors[invoice.status as keyof typeof statusColors] || "bg-slate-100 text-slate-700 mt-4 mb-2"}>
+                                    {invoice.status}
+                                </Badge>
                             </div>
-                        </div>
+                        </CardHeader>
 
-                        {/* Property Details */}
-                        <div className="bg-slate-50 p-4 rounded-lg">
-                            <h3 className="text-sm font-semibold text-slate-500 mb-2">PROPERTY DETAILS</h3>
-                            <p className="font-semibold text-slate-900">{invoice.property_name}</p>
-                            <p className="text-slate-600">Unit: {invoice.unit_number}</p>
-                        </div>
-
-                        {/* Invoice Items */}
-                        <div>
-                            <h3 className="text-sm font-semibold text-slate-500 mb-4">INVOICE ITEMS</h3>
-                            <table className="w-full">
-                                <thead className="border-b-2 border-slate-200">
-                                    <tr>
-                                        <th className="text-left py-3 text-slate-700">Description</th>
-                                        <th className="text-right py-3 text-slate-700">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td className="py-4">
-                                            <p className="font-medium">{invoice.type.charAt(0).toUpperCase() + invoice.type.slice(1)}</p>
-                                            {invoice.description && <p className="text-sm text-slate-600">{invoice.description}</p>}
-                                        </td>
-                                        <td className="text-right font-semibold">KES {invoice.amount.toLocaleString()}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Totals */}
-                        <div className="border-t-2 border-slate-200 pt-4">
-                            <div className="flex justify-end space-y-2">
-                                <div className="w-64 space-y-2">
-                                    <div className="flex justify-between text-slate-700">
-                                        <span>Subtotal:</span>
-                                        <span>KES {invoice.amount.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-700">
-                                        <span>Paid:</span>
-                                        <span className="text-green-600">KES {invoice.paid_amount.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xl font-bold border-t-2 border-slate-300 pt-2">
-                                        <span>Balance Due:</span>
-                                        <span className="text-blue-600">KES {(invoice.amount - invoice.paid_amount).toLocaleString()}</span>
+                        <CardContent className="p-8 space-y-8 bg-white">
+                            {/* Header Info */}
+                            <div className="grid grid-cols-2 gap-8">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-500 mb-2">BILLED TO</h3>
+                                    <p className="font-bold text-lg">Name: {invoice.tenant.name}</p>
+                                    {invoice.tenant.email && <p className="text-slate-600">Email: {invoice.tenant.email}</p>}
+                                    {invoice.tenant.id_number && <p className="text-slate-600">DI No: {invoice.tenant.id_number}</p>}
+                                    {invoice.tenant.phone && <p className="text-slate-600">Phone: {invoice.tenant.phone}</p>}
+                                </div>
+                                <div className="text-right">
+                                    <h3 className="text-sm font-semibold text-slate-500 mb-2">INVOICE DETAILS</h3>
+                                    <div className="space-y-1">
+                                        <p className="text-slate-700"><span className="font-semibold">Date:</span> {new Date(invoice.created_at).toLocaleDateString()}</p>
+                                        {invoice.due_date && <p className="text-slate-700"><span className="font-semibold">Due Date:</span> {new Date(invoice.due_date).toLocaleDateString()}</p>}
+                                        <p className="text-slate-700"><span className="font-semibold">Period:</span> {invoice.month_year || `${invoice.month}/${invoice.year}`}</p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Payment History */}
-                        {/* {invoice.payments && invoice.payments.length > 0 && (
-                            <div className="border-t border-slate-200 pt-6">
-                                <h3 className="text-sm font-semibold text-slate-500 mb-4">PAYMENT HISTORY</h3>
-                                <div className="space-y-2">
-                                    {invoice.payments.map((payment) => (
-                                        <div key={payment.id} className="flex justify-between items-center p-3 bg-slate-50 rounded">
-                                            <div>
-                                                <p className="font-medium">{payment.method}</p>
-                                                <p className="text-sm text-slate-600">{new Date(payment.date).toLocaleDateString()}</p>
-                                                {payment.reference && <p className="text-xs text-slate-500">{payment.reference}</p>}
-                                            </div>
-                                            <p className="font-semibold text-green-600">KES {payment.amount.toLocaleString()}</p>
+                            {/* Property Details */}
+                            <div className="bg-slate-50 p-4 rounded-lg">
+                                <h3 className="text-sm font-semibold text-slate-500 mb-2">PROPERTY DETAILS</h3>
+                                <p className="font-semibold text-slate-900">{invoice.property_name}</p>
+                                <p className="text-slate-600">Unit: {invoice.unit_number}</p>
+                            </div>
+
+                            {/* Invoice Items */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-500 mb-4">INVOICE ITEMS</h3>
+                                <table className="w-full">
+                                    <thead className="border-b-2 border-slate-200">
+                                        <tr>
+                                            <th className="text-left py-3 text-slate-700">Description</th>
+                                            <th className="text-right py-3 text-slate-700">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="py-4">
+                                                <p className="font-medium">{invoice.type.charAt(0).toUpperCase() + invoice.type.slice(1)}</p>
+                                                {invoice.description && <p className="text-sm text-slate-600">{invoice.description}</p>}
+                                            </td>
+                                            <td className="text-right font-semibold">KES {invoice.amount.toLocaleString()}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Totals */}
+                            <div className="border-t-2 border-slate-200 pt-4">
+                                <div className="flex justify-end space-y-2">
+                                    <div className="w-64 space-y-2">
+                                        <div className="flex justify-between text-slate-700">
+                                            <span>Subtotal:</span>
+                                            <span>KES {invoice.amount.toLocaleString()}</span>
                                         </div>
-                                    ))}
+                                        <div className="flex justify-between text-slate-700">
+                                            <span>Paid:</span>
+                                            <span className="text-green-600">KES {invoice.paid_amount.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xl font-bold border-t-2 border-slate-300 pt-2">
+                                            <span>Balance Due:</span>
+                                            <span className="text-blue-600">KES {(invoice.amount - invoice.paid_amount).toLocaleString()}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        )} */}
 
-                        {/* Footer */}
-                        <div className="text-center text-sm text-slate-500 border-t border-slate-200 pt-6">
-                            <p>Thank you for your business!</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                            {/* Footer */}
+                            <div className="text-center text-sm text-slate-500 border-t border-slate-200 pt-6">
+                                <p>Thank you for your business!</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Print Styles */}
+                <style jsx global>{`
+                    @media print {
+                        body {
+                            background: white;
+                        }
+                        .print\\:hidden {
+                            display: none !important;
+                        }
+                    }
+                `}</style>
             </div>
-
-            {/* Print Styles */}
-            <style jsx global>{`
-                @media print {
-                    body {
-                        background: white;
-                    }
-                    .print\\:hidden {
-                        display: none !important;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

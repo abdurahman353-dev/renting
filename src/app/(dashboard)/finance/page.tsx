@@ -250,7 +250,7 @@ export default function FinancePage() {
         document.body.removeChild(link);
     };
 
-    if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
+    // if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
     return (
         <div className="p-8 space-y-8">
@@ -276,9 +276,11 @@ export default function FinancePage() {
             </div>
 
             {/* Advanced Filters */}
+            {/* Advanced Filters */}
             <FilterComponent
                 properties={properties}
                 units={units}
+                currentFilters={filters}
                 onFilterChange={onFilterChange}
                 onRefresh={fetchData}
             />

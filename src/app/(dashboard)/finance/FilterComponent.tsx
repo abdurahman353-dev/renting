@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Filter } from "lucide-react";
 
 interface FilterComponentProps {
     properties: any[];
     units: any[];
+    currentFilters: {
+        property_id: string;
+        unit_id: string;
+        status: string;
+        month: string;
+        year: string;
+    };
     onFilterChange: (filters: any) => void;
     onRefresh: () => void;
 }
 
-export default function FilterComponent({ properties, units, onFilterChange, onRefresh }: FilterComponentProps) {
-    const [selectedProperty, setSelectedProperty] = useState("all");
-    const [selectedUnit, setSelectedUnit] = useState("all");
-    const [selectedStatus, setSelectedStatus] = useState("all");
-    const [selectedMonth, setSelectedMonth] = useState("");
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-
+export default function FilterComponent({ properties, units, currentFilters, onFilterChange, onRefresh }: FilterComponentProps) {
     // Generate month options
     const months = [
         { value: "1", label: "January" },
@@ -37,26 +37,9 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
     const years = Array.from({ length: currentYear - 2020 + 2 }, (_, i) => (currentYear + 1 - i).toString());
 
     // Filter units based on selected property
-    const filteredUnits = selectedProperty !== "all"
-        ? units.filter((u: any) => u.property_id.toString() === selectedProperty)
+    const filteredUnits = currentFilters.property_id !== "all"
+        ? units.filter((u: any) => u.property_id.toString() === currentFilters.property_id)
         : [];
-
-    useEffect(() => {
-        onFilterChange({
-            property_id: selectedProperty,
-            unit_id: selectedUnit,
-            status: selectedStatus,
-            month: selectedMonth,
-            year: selectedYear
-        });
-    }, [selectedProperty, selectedUnit, selectedStatus, selectedMonth, selectedYear]);
-
-    // Reset unit when property changes
-    useEffect(() => {
-        if (selectedProperty === "all") {
-            setSelectedUnit("all");
-        }
-    }, [selectedProperty]);
 
     return (
         <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap items-center gap-3">
@@ -70,10 +53,12 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Property</span>
                 <select
                     className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
-                    value={selectedProperty}
+                    value={currentFilters.property_id}
                     onChange={(e) => {
-                        setSelectedProperty(e.target.value);
-                        setSelectedUnit("all"); // Reset unit on property change
+                        onFilterChange({
+                            property_id: e.target.value,
+                            unit_id: "all" // Reset unit on property change
+                        });
                     }}
                 >
                     <option value="all">All Properties</option>
@@ -84,13 +69,13 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
             </div>
 
             {/* Unit Filter */}
-            <div className={`flex flex-col gap-1 min-w-[120px] transition-opacity duration-300 ${selectedProperty === 'all' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`flex flex-col gap-1 min-w-[120px] transition-opacity duration-300 ${currentFilters.property_id === 'all' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Unit</span>
                 <select
                     className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
-                    value={selectedUnit}
-                    onChange={(e) => setSelectedUnit(e.target.value)}
-                    disabled={selectedProperty === 'all'}
+                    value={currentFilters.unit_id}
+                    onChange={(e) => onFilterChange({ unit_id: e.target.value })}
+                    disabled={currentFilters.property_id === 'all'}
                 >
                     <option value="all">All Units</option>
                     {filteredUnits.length > 0 ? (
@@ -108,8 +93,8 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Status</span>
                 <select
                     className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    value={currentFilters.status}
+                    onChange={(e) => onFilterChange({ status: e.target.value })}
                 >
                     <option value="all">All Statuses</option>
                     <option value="PAID">Paid</option>
@@ -124,8 +109,8 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Month</span>
                 <select
                     className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    value={currentFilters.month}
+                    onChange={(e) => onFilterChange({ month: e.target.value })}
                 >
                     <option value="">All Year</option>
                     {months.map((m) => (
@@ -139,8 +124,8 @@ export default function FilterComponent({ properties, units, onFilterChange, onR
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Year</span>
                 <select
                     className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
+                    value={currentFilters.year}
+                    onChange={(e) => onFilterChange({ year: e.target.value })}
                 >
                     <option value="">All Time</option>
                     {years.map((y) => (
