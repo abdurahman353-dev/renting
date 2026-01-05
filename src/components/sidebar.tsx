@@ -148,7 +148,7 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="px-3 py-2 flex-1 overflow-y-auto">
+        <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar">
           <Link href="/dashboard" className="flex items-center pl-3 mb-14">
             <div className="relative w-8 h-8 mr-4">
               {/* Logo placeholder */}
