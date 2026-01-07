@@ -298,6 +298,14 @@ export const financeAPI = {
         const response = await apiClient.get('/mpesa/transactions', { params });
         return response.data;
     },
+    registerC2BUrls: async () => {
+        const response = await apiClient.post('/payments-adapter/register-c2b-urls');
+        return response.data;
+    },
+    reconcileTransaction: async (data) => {
+        const response = await apiClient.post('/mpesa/reconcile', data);
+        return response.data;
+    },
 };
 
 // ============================================================================

@@ -9,6 +9,7 @@ import { Loader2, Phone, DollarSign, Calendar, CheckCircle, XCircle, Clock, Link
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { financeAPI } from '@/data/apis';
+import ReconcileModal from '@/components/ReconcileModal';
 
 interface MpesaTransaction {
     id: number;
@@ -41,6 +42,13 @@ export default function MpesaTransactionsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
+    const [selectedTransaction, setSelectedTransaction] = useState<MpesaTransaction | null>(null);
+
+    const handleReconcileClick = (transaction: MpesaTransaction) => {
+        setSelectedTransaction(transaction);
+        setIsReconcileModalOpen(true);
+    };
 
     useEffect(() => {
         // Debounce search to avoid too many requests
@@ -53,28 +61,21 @@ export default function MpesaTransactionsPage() {
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
+            const params: any = {};
 
-            if (filter === 'unreconciled') params.append('reconciled', 'false');
-            if (filter === 'reconciled') params.append('reconciled', 'true');
-            if (searchQuery) params.append('search', searchQuery);
-            if (startDate) params.append('start_date', startDate);
-            if (endDate) params.append('end_date', endDate);
+            if (filter === 'unreconciled') params.reconciled = 'false';
+            if (filter === 'reconciled') params.reconciled = 'true';
+            if (searchQuery) params.search = searchQuery;
+            if (startDate) params.start_date = startDate;
+            if (endDate) params.end_date = endDate;
 
-            // const url = `http://localhost:8000/api/mpesa/transactions?${params.toString()}`;
+            const response = await financeAPI.getTransactions(params);
 
-            // const response = await fetch(url, {
-            //     headers: {
-            //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            //     },
-            // });
-            const response = await financeAPI.getTransactions(params.toString());
-
-            if (response.ok) {
-                const data = await response.json();
-                setTransactions(data);
-            } else {
-                toast.error('Failed to fetch M-Pesa transactions');
+            // Handle Laravel paginated response
+            if (response && response.data) {
+                setTransactions(response.data);
+            } else if (Array.isArray(response)) {
+                setTransactions(response);
             }
         } catch (error) {
             console.error('Error fetching transactions:', error);
@@ -118,7 +119,7 @@ export default function MpesaTransactionsPage() {
         total: transactions.length,
         unreconciled: transactions.filter(t => t.status === 'SUCCESS' && !t.payment).length,
         reconciled: transactions.filter(t => t.status === 'RECONCILED' || t.payment).length,
-        totalAmount: transactions.reduce((sum, t) => sum + (t.status === 'SUCCESS' ? t.amount : 0), 0),
+        totalAmount: transactions.reduce((sum, t) => sum + (t.status === 'SUCCESS' ? Number(t.amount) : 0), 0),
     };
 
     return (
@@ -134,25 +135,17 @@ export default function MpesaTransactionsPage() {
                 <Button
                     variant="outline"
                     onClick={async () => {
-                        toast.loading('Registering C2B URLs...');
+                        const loadingToast = toast.loading('Registering C2B URLs...');
                         try {
-                            const response = await fetch('http://localhost:8000/api/mpesa/register-c2b-urls', {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                                },
-                            });
-                            const result = await response.json();
-                            if (response.ok) {
-                                toast.success('C2B URLs Registered Successfully!');
-                                toast.info('Safaricom will now send transactions to your backend.');
-                            } else {
-                                toast.error(result.message || 'Registration failed');
-                            }
-                        } catch (error) {
-                            toast.error('Failed to register URLs');
+                            const result = await financeAPI.registerC2BUrls();
+                            toast.success('C2B URLs Registered Successfully!');
+                            toast.info('Safaricom will now send transactions to your backend.');
+                        } catch (error: any) {
+                            console.error('Registration error:', error);
+                            const errorMessage = error.response?.data?.message || 'Registration failed';
+                            toast.error(errorMessage);
                         } finally {
-                            toast.dismiss();
+                            toast.dismiss(loadingToast);
                         }
                     }}
                     title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
@@ -365,10 +358,7 @@ export default function MpesaTransactionsPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => {
-                                                    // Navigate to reconciliation or open modal
-                                                    toast.info('Manual reconciliation feature coming soon');
-                                                }}
+                                                onClick={() => handleReconcileClick(transaction)}
                                             >
                                                 Reconcile
                                             </Button>
@@ -380,6 +370,18 @@ export default function MpesaTransactionsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {selectedTransaction && (
+                <ReconcileModal
+                    isOpen={isReconcileModalOpen}
+                    onClose={() => {
+                        setIsReconcileModalOpen(false);
+                        setSelectedTransaction(null);
+                    }}
+                    transaction={selectedTransaction}
+                    onSuccess={fetchTransactions}
+                />
+            )}
         </div>
     );
 }
