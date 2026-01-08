@@ -235,6 +235,11 @@ export const tenantAPI = {
         const response = await apiClient.post(`/tenants/${tenantId}/toggle-status`, data);
         return response.data;
     },
+
+    sendBalanceReminders: async () => {
+        const response = await apiClient.post('/tenants/send-reminders');
+        return response.data;
+    },
 };
 
 // ============================================================================

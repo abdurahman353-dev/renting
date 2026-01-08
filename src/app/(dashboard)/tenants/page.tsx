@@ -94,8 +94,25 @@ function TenantsContent() {
         include_deposit_2: false
     });
     const [submitting, setSubmitting] = useState(false);
+    const [sendingReminders, setSendingReminders] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingTenantId, setEditingTenantId] = useState<number | null>(null);
+
+    const handleSendReminders = async () => {
+        if (!confirm("Are you sure you want to send balance reminders to all tenants with outstanding balances?")) return;
+
+        setSendingReminders(true);
+        try {
+            await tenantAPI.sendBalanceReminders();
+            toast.success("Balance reminders sent successfully");
+        } catch (error: any) {
+            console.error("Failed to send reminders:", error);
+            const msg = error?.response?.data?.message || "Failed to send reminders";
+            toast.error(msg);
+        } finally {
+            setSendingReminders(false);
+        }
+    };
 
 
 
@@ -388,196 +405,208 @@ function TenantsContent() {
                     <p className="text-muted-foreground">Manage tenant profiles and lease agreements.</p>
                 </div>
 
-                <Dialog open={open} onOpenChange={(val) => {
-                    setOpen(val);
-                    if (!val) resetForm();
-                }}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
-                            resetForm();
-                            setOpen(true);
-                        }}>
-                            <Plus className="mr-2 h-4 w-4" /> Register Tenant
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>{isEditing ? "Edit Tenant" : "Register New Tenant"}</DialogTitle>
-                            <DialogDescription>
-                                {isEditing ? "Update tenant profile details." : "Create a new tenant profile."}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                <Label htmlFor="name" className="sm:text-right">Name *</Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="John Doe"
-                                    className="sm:col-span-3"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                <Label htmlFor="id_number" className="sm:text-right">ID No *</Label>
-                                <Input
-                                    id="id_number"
-                                    name="id_number"
-                                    value={formData.id_number}
-                                    onChange={handleInputChange}
-                                    placeholder="National ID / Passport"
-                                    className="sm:col-span-3"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                <Label htmlFor="phone" className="sm:text-right">Phone *</Label>
-                                <Input
-                                    id="phone"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    placeholder="07..."
-                                    className="sm:col-span-3"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                <Label htmlFor="email" className="sm:text-right">Email</Label>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder="Optional"
-                                    className="sm:col-span-3"
-                                />
-                            </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleSendReminders}
+                        disabled={sendingReminders}
+                        className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                    >
+                        {sendingReminders ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                        Send Reminders
+                    </Button>
 
-                            <div className="border-t pt-4 mt-2">
-                                <p className="text-sm font-medium text-muted-foreground mb-4">Unit Assignment (Optional)</p>
-                                <div className="grid gap-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="property_id" className="sm:text-right">Property</Label>
-                                        <select
-                                            id="property_id"
-                                            name="property_id"
-                                            value={formData.property_id}
-                                            onChange={handleInputChange}
-                                            className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <option value="">Select Property...</option>
-                                            {properties.map((p: any) => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="unit_id" className="sm:text-right">Unit</Label>
-                                        <select
-                                            id="unit_id"
-                                            name="unit_id"
-                                            value={formData.unit_id}
-                                            onChange={handleInputChange}
-                                            disabled={!formData.property_id}
-                                            className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <option value="">Select Unit...</option>
-                                            {availableUnits.map((u: any) => (
-                                                <option key={u.id} value={u.id}>Unit {u.unit_number} (KES {u.price})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {formData.unit_id && (
-                                        <>
-                                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="start_date" className="sm:text-right">Start Date</Label>
-                                                <Input
-                                                    id="start_date"
-                                                    name="start_date"
-                                                    type="date"
-                                                    value={formData.start_date}
-                                                    onChange={handleInputChange}
-                                                    className="sm:col-span-3"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="rent_amount" className="sm:text-right">Rent (KES)</Label>
-                                                <Input
-                                                    disabled
-                                                    id="rent_amount"
-                                                    name="rent_amount"
-                                                    type="number"
-                                                    value={formData.rent_amount}
-                                                    onChange={handleInputChange}
-                                                    className="sm:col-span-3"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <div className="sm:text-right">
-                                                    <Label htmlFor="include_deposit_1" className="flex items-center justify-end gap-2 cursor-pointer">
-                                                        <Input
-                                                            id="include_deposit_1"
-                                                            type="checkbox"
-                                                            className="w-4 h-4"
-                                                            checked={formData.include_deposit_1}
-                                                            onChange={() => handleCheckboxToggle('include_deposit_1')}
-                                                        />
-                                                        Include D1
-                                                    </Label>
-                                                </div>
-                                                <div className="sm:col-span-3 flex items-center gap-2">
-                                                    <Input
-                                                        disabled
-                                                        id="deposit_amount"
-                                                        name="deposit_amount"
-                                                        type="number"
-                                                        value={formData.deposit_amount}
-                                                        placeholder="KES 0"
-                                                        className="flex-1"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                <div className="sm:text-right">
-                                                    <Label htmlFor="include_deposit_2" className="flex items-center justify-end gap-2 cursor-pointer">
-                                                        <Input
-                                                            id="include_deposit_2"
-                                                            type="checkbox"
-                                                            className="w-4 h-4"
-                                                            checked={formData.include_deposit_2}
-                                                            onChange={() => handleCheckboxToggle('include_deposit_2')}
-                                                        />
-                                                        Include D2
-                                                    </Label>
-                                                </div>
-                                                <div className="sm:col-span-3 flex items-center gap-2">
-                                                    <Input
-                                                        disabled
-                                                        id="deposit_2_amount"
-                                                        name="deposit_2_amount"
-                                                        type="number"
-                                                        value={formData.deposit_2_amount}
-                                                        placeholder="KES 0"
-                                                        className="flex-1"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                            <Button onClick={handleRegisterTenant} disabled={submitting}>
-                                {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isEditing ? "Update" : "Register"}
+                    <Dialog open={open} onOpenChange={(val) => {
+                        setOpen(val);
+                        if (!val) resetForm();
+                    }}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+                                resetForm();
+                                setOpen(true);
+                            }}>
+                                <Plus className="mr-2 h-4 w-4" /> Register Tenant
                             </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>{isEditing ? "Edit Tenant" : "Register New Tenant"}</DialogTitle>
+                                <DialogDescription>
+                                    {isEditing ? "Update tenant profile details." : "Create a new tenant profile."}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="name" className="sm:text-right">Name *</Label>
+                                    <Input
+                                        id="name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        placeholder="John Doe"
+                                        className="sm:col-span-3"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="id_number" className="sm:text-right">ID No *</Label>
+                                    <Input
+                                        id="id_number"
+                                        name="id_number"
+                                        value={formData.id_number}
+                                        onChange={handleInputChange}
+                                        placeholder="National ID / Passport"
+                                        className="sm:col-span-3"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="phone" className="sm:text-right">Phone *</Label>
+                                    <Input
+                                        id="phone"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleInputChange}
+                                        placeholder="07..."
+                                        className="sm:col-span-3"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="email" className="sm:text-right">Email</Label>
+                                    <Input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="Optional"
+                                        className="sm:col-span-3"
+                                    />
+                                </div>
+
+                                <div className="border-t pt-4 mt-2">
+                                    <p className="text-sm font-medium text-muted-foreground mb-4">Unit Assignment (Optional)</p>
+                                    <div className="grid gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="property_id" className="sm:text-right">Property</Label>
+                                            <select
+                                                id="property_id"
+                                                name="property_id"
+                                                value={formData.property_id}
+                                                onChange={handleInputChange}
+                                                className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Select Property...</option>
+                                                {properties.map((p: any) => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="unit_id" className="sm:text-right">Unit</Label>
+                                            <select
+                                                id="unit_id"
+                                                name="unit_id"
+                                                value={formData.unit_id}
+                                                onChange={handleInputChange}
+                                                disabled={!formData.property_id}
+                                                className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Select Unit...</option>
+                                                {availableUnits.map((u: any) => (
+                                                    <option key={u.id} value={u.id}>Unit {u.unit_number} (KES {u.price})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {formData.unit_id && (
+                                            <>
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="start_date" className="sm:text-right">Start Date</Label>
+                                                    <Input
+                                                        id="start_date"
+                                                        name="start_date"
+                                                        type="date"
+                                                        value={formData.start_date}
+                                                        onChange={handleInputChange}
+                                                        className="sm:col-span-3"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="rent_amount" className="sm:text-right">Rent (KES)</Label>
+                                                    <Input
+                                                        disabled
+                                                        id="rent_amount"
+                                                        name="rent_amount"
+                                                        type="number"
+                                                        value={formData.rent_amount}
+                                                        onChange={handleInputChange}
+                                                        className="sm:col-span-3"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                    <div className="sm:text-right">
+                                                        <Label htmlFor="include_deposit_1" className="flex items-center justify-end gap-2 cursor-pointer">
+                                                            <Input
+                                                                id="include_deposit_1"
+                                                                type="checkbox"
+                                                                className="w-4 h-4"
+                                                                checked={formData.include_deposit_1}
+                                                                onChange={() => handleCheckboxToggle('include_deposit_1')}
+                                                            />
+                                                            Include D1
+                                                        </Label>
+                                                    </div>
+                                                    <div className="sm:col-span-3 flex items-center gap-2">
+                                                        <Input
+                                                            disabled
+                                                            id="deposit_amount"
+                                                            name="deposit_amount"
+                                                            type="number"
+                                                            value={formData.deposit_amount}
+                                                            placeholder="KES 0"
+                                                            className="flex-1"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                    <div className="sm:text-right">
+                                                        <Label htmlFor="include_deposit_2" className="flex items-center justify-end gap-2 cursor-pointer">
+                                                            <Input
+                                                                id="include_deposit_2"
+                                                                type="checkbox"
+                                                                className="w-4 h-4"
+                                                                checked={formData.include_deposit_2}
+                                                                onChange={() => handleCheckboxToggle('include_deposit_2')}
+                                                            />
+                                                            Include D2
+                                                        </Label>
+                                                    </div>
+                                                    <div className="sm:col-span-3 flex items-center gap-2">
+                                                        <Input
+                                                            disabled
+                                                            id="deposit_2_amount"
+                                                            name="deposit_2_amount"
+                                                            type="number"
+                                                            value={formData.deposit_2_amount}
+                                                            placeholder="KES 0"
+                                                            className="flex-1"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                                <Button onClick={handleRegisterTenant} disabled={submitting}>
+                                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {isEditing ? "Update" : "Register"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             {/* Professional Search and Filters */}
