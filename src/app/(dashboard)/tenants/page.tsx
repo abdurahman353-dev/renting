@@ -810,7 +810,7 @@ function TenantsContent() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className={`text-right font-medium ${tenant.balance < 0 ? "text-red-600" :
-                                        tenant.balance > 0 ? "text-green-600" : ""
+                                        tenant.balance >= 0 ? "text-green-600" : ""
                                         }`}>
                                         {tenant.balance === 0 ? "Cleared" :
                                             tenant.balance < 0 ? (tenant.balance ?? 0).toLocaleString() :

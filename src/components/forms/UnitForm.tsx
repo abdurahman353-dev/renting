@@ -46,15 +46,14 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
         if (initialData) {
             // Normalize unit type
             let normalizedType = initialData.type || "";
-            if (normalizedType === "One Bedroom") normalizedType = "1 Bedroom";
-            if (normalizedType === "Two Bedroom") normalizedType = "2 Bedroom";
-            if (normalizedType === "Three Bedroom") normalizedType = "3 Bedroom";
-            if (normalizedType === "Four Bedroom") normalizedType = "3 Bedroom"; // Map 4 bed to 3 bed or keeping as is? User didn't specify 4 bed, I'll map to closest or keep just in case of error. Let's map strict.
-            if (normalizedType === "Studio" || normalizedType === "Bedsitter" || normalizedType === "Penthouse") normalizedType = "1 Bedroom"; // Fallback or keep as is? User said remove them. I'll just map specific text ones.
-            // Actually, keep mapped simple:
-            if (["One Bedroom", "Studio", "Bedsitter"].includes(normalizedType)) normalizedType = "1 Bedroom";
-            if (["Two Bedroom"].includes(normalizedType)) normalizedType = "2 Bedroom";
-            if (["Three Bedroom", "Four Bedroom", "Penthouse"].includes(normalizedType)) normalizedType = "3 Bedroom";
+            const t = normalizedType.toLowerCase();
+            if (t.includes('one') || t === '1 bedroom') normalizedType = "1 Bedroom";
+            else if (t.includes('two') || t === '2 bedroom') normalizedType = "2 Bedroom";
+            else if (t.includes('three') || t === '3 bedroom') normalizedType = "3 Bedroom";
+            else if (t.includes('shop')) normalizedType = "Shop";
+            else if (t.includes('office')) normalizedType = "Office";
+            else if (t === 'studio' || t === 'bedsitter') normalizedType = "1 Bedroom";
+            else if (t === 'penthouse') normalizedType = "3 Bedroom";
 
             setFormData({
                 unit_number: initialData.unit_number || "",

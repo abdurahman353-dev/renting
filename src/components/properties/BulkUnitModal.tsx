@@ -121,9 +121,9 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="One Bedroom">One Bedroom</SelectItem>
-                                        <SelectItem value="Two Bedroom">Two Bedroom</SelectItem>
-                                        <SelectItem value="Three Bedroom">Three Bedroom</SelectItem>
+                                        <SelectItem value="1 Bedroom">1 Bedroom</SelectItem>
+                                        <SelectItem value="2 Bedroom">2 Bedroom</SelectItem>
+                                        <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
                                         <SelectItem value="Shop">Shop</SelectItem>
                                         <SelectItem value="Office">Office</SelectItem>
                                     </SelectContent>
@@ -176,9 +176,9 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="One Bedroom">1 Bed</SelectItem>
-                                                        <SelectItem value="Two Bedroom">2 Bed</SelectItem>
-                                                        <SelectItem value="Three Bedroom">3 Bed</SelectItem>
+                                                        <SelectItem value="1 Bedroom">1 Bedroom</SelectItem>
+                                                        <SelectItem value="2 Bedroom">2 Bedroom</SelectItem>
+                                                        <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
                                                         <SelectItem value="Shop">Shop</SelectItem>
                                                         <SelectItem value="Office">Office</SelectItem>
                                                     </SelectContent>

@@ -39,6 +39,14 @@ export default function SettingsPage() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Final validation for phone
+        const phone = settings.company_phone || '';
+        if (phone.length !== 10 || !phone.startsWith('07')) {
+            toast.error('Phone number must be exactly 10 digits and start with 07');
+            return;
+        }
+
         setSaving(true);
         try {
             const payload = Object.keys(settings).map(key => ({
@@ -57,6 +65,12 @@ export default function SettingsPage() {
     };
 
     const handleChange = (key: string, value: string) => {
+        if (key === 'company_phone') {
+            // Only allow digits and limit to 10
+            const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+            setSettings((prev: any) => ({ ...prev, [key]: digitsOnly }));
+            return;
+        }
         setSettings((prev: any) => ({ ...prev, [key]: value }));
     };
 
@@ -167,7 +181,15 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end items-center gap-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => router.push('/dashboard')}
+                        className="h-11 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm rounded-xl transition-all"
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         type="submit"
                         disabled={saving}

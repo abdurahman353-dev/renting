@@ -33,8 +33,8 @@ export default function FilterComponent({ properties, units, currentFilters, onF
     ];
 
     // Generate year options
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 2020 + 2 }, (_, i) => (currentYear + 1 - i).toString());
+    // Starting from 2036 down to 2026
+    const years = Array.from({ length: 11 }, (_, i) => (2036 - i).toString());
 
     // Filter units based on selected property
     const filteredUnits = currentFilters.property_id !== "all"
@@ -99,8 +99,6 @@ export default function FilterComponent({ properties, units, currentFilters, onF
                     <option value="all">All Statuses</option>
                     <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
-                    <option value="PARTIAL">Partial</option>
-                    <option value="OVERDUE">Overdue</option>
                 </select>
             </div>
 

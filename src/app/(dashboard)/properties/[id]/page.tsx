@@ -89,6 +89,17 @@ export default function PropertyViewPage() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
+    const normalizeUnitType = (type: string) => {
+        if (!type) return 'N/A';
+        const t = type.toLowerCase();
+        if (t.includes('one') || t === '1 bedroom') return '1 Bedroom';
+        if (t.includes('two') || t === '2 bedroom') return '2 Bedroom';
+        if (t.includes('three') || t === '3 bedroom') return '3 Bedroom';
+        if (t.includes('shop')) return 'Shop';
+        if (t.includes('office')) return 'Office';
+        return type;
+    };
+
     const fetchProperty = async () => {
         try {
             const data = await propertyAPI.getById(params.id);
@@ -426,7 +437,8 @@ export default function PropertyViewPage() {
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow className="bg-slate-50">
-                                                            <TableHead className="font-semibold text-slate-700">Unit</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Unit #</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Type</TableHead>
                                                             <TableHead className="font-semibold text-slate-700">Status</TableHead>
                                                             <TableHead className="font-semibold text-slate-700">Monthly Rent</TableHead>
                                                             <TableHead className="font-semibold text-slate-700">Deposit 1</TableHead>
@@ -439,6 +451,9 @@ export default function PropertyViewPage() {
                                                             <TableRow key={unit.id} className="hover:bg-blue-50/50 transition-colors">
                                                                 <TableCell className="font-bold text-slate-900">
                                                                     {unit.unit_number}
+                                                                </TableCell>
+                                                                <TableCell className="font-medium text-slate-600">
+                                                                    {normalizeUnitType(unit.type)}
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <Badge

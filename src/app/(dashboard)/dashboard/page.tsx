@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2, Activity, Shield, AlertTriangle, Info } from "lucide-react";
@@ -43,6 +44,7 @@ interface ChartData {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     revenue: 0, revenueGrowth: 0,
     activeTenants: 0, tenantsGrowth: 0,
@@ -54,6 +56,7 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
+  const [chartView, setChartView] = useState<'Monthly' | 'Yearly'>('Monthly');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +81,22 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  const getAggregatedData = () => {
+    if (chartView === 'Monthly') return chartData;
+
+    // Aggregate by year
+    const yearlyMap: { [key: string]: number } = {};
+    chartData.forEach(item => {
+      const year = item.month.split(' ').pop() || item.month;
+      yearlyMap[year] = (yearlyMap[year] || 0) + item.revenue;
+    });
+
+    return Object.keys(yearlyMap).map(year => ({
+      month: year,
+      revenue: yearlyMap[year]
+    }));
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -98,7 +117,7 @@ export default function DashboardPage() {
           </h2>
           <p className="text-slate-500 mt-1">Welcome back! Here's what's happening today.</p>
         </div>
-        <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex items-center gap-2 px-4">
+        <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex items-center gap-2 px-4" onClick={() => router.push('/dashboard')}>
           <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
           <span className="text-sm font-medium text-slate-600">Live Updates</span>
         </div>
@@ -202,8 +221,18 @@ export default function DashboardPage() {
               <p className="text-sm text-slate-400 mt-1 font-medium">Real-time performance insights</p>
             </div>
             <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
-              <div className="px-3 py-1 bg-white rounded-md shadow-sm text-xs font-bold text-blue-600">Yearly</div>
-              <div className="px-3 py-1 text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-600">Monthly</div>
+              <div
+                onClick={() => setChartView('Yearly')}
+                className={`px-3 py-1 rounded-md shadow-sm text-xs font-bold cursor-pointer transition-all ${chartView === 'Yearly' ? 'bg-white text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Yearly
+              </div>
+              <div
+                onClick={() => setChartView('Monthly')}
+                className={`px-3 py-1 rounded-md shadow-sm text-xs font-bold cursor-pointer transition-all ${chartView === 'Monthly' ? 'bg-white text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Monthly
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
@@ -218,7 +247,7 @@ export default function DashboardPage() {
                 </div>
               ) : chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <AreaChart data={getAggregatedData()} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
@@ -352,8 +381,8 @@ export default function DashboardPage() {
                           )}
                           {item.severity && item.severity !== 'Normal' && (
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.severity === 'Critical' ? 'bg-red-100 text-red-600' :
-                                item.severity === 'Warning' ? 'bg-amber-100 text-amber-600' :
-                                  'bg-blue-100 text-blue-600'
+                              item.severity === 'Warning' ? 'bg-amber-100 text-amber-600' :
+                                'bg-blue-100 text-blue-600'
                               }`}>
                               {item.severity}
                             </span>
