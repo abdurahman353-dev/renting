@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { superAdminAPI } from '@/data/apis';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 import { Save, Building2, Phone, Mail, MapPin, Clock, Timer } from 'lucide-react';
 
 export default function SettingsPage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState<any>({});
@@ -45,6 +47,8 @@ export default function SettingsPage() {
             }));
             await superAdminAPI.updateSettings({ settings: payload });
             toast.success('Settings updated successfully');
+            // Instant redirect to Contact page as requested
+            router.push('/contact');
         } catch (error) {
             toast.error('Failed to update settings');
         } finally {
@@ -167,16 +171,16 @@ export default function SettingsPage() {
                     <Button
                         type="submit"
                         disabled={saving}
-                        className="h-16 px-10 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl shadow-xl shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-50"
+                        className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50"
                     >
                         {saving ? (
-                            <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Saving Changes...
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Saving...
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3">
-                                <Save className="w-6 h-6" />
+                            <div className="flex items-center gap-2">
+                                <Save className="w-4 h-4" />
                                 Save All Settings
                             </div>
                         )}

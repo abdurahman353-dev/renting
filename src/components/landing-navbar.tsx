@@ -1,10 +1,28 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
+import { publicAPI } from "@/data/apis";
 
 export function LandingNavbar() {
+    const [companyName, setCompanyName] = useState('RentSys');
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data && data.company_name) {
+                    setCompanyName(data.company_name);
+                }
+            } catch (error) {
+                console.error("Failed to fetch navbar settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     return (
         <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -13,7 +31,7 @@ export function LandingNavbar() {
                         <Building2 className="h-5 w-5" />
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                        RentSys
+                        {companyName}
                     </span>
                 </Link>
 
