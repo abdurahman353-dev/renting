@@ -32,6 +32,17 @@ import {
     DialogFooter
 } from "@/components/ui/dialog";
 
+const normalizeType = (type: string | null | undefined): string => {
+    if (!type) return "";
+    const t = type.toLowerCase().trim();
+    if (t === "one bedroom" || t === "1 bedroom" || t === "studio" || t === "bedsitter") return "1 Bedroom";
+    if (t === "two bedroom" || t === "2 bedroom") return "2 Bedroom";
+    if (t === "three bedroom" || t === "3 bedroom" || t === "four bedroom" || t === "penthouse") return "3 Bedroom";
+    if (t === "shop") return "Shop";
+    if (t === "office") return "Office";
+    return type;
+};
+
 export default function UnitsPage() {
     const router = useRouter();
     const [units, setUnits] = useState<any[]>([]);
@@ -97,7 +108,7 @@ export default function UnitsPage() {
             (unit.active_lease?.tenant?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesProperty = selectedProperty === "all" || unit.property_id.toString() === selectedProperty;
-        const matchesType = selectedType === "all" || unit.type === selectedType;
+        const matchesType = selectedType === "all" || normalizeType(unit.type) === selectedType;
         const matchesStatus = selectedStatus === "all" || unit.status?.toLowerCase() === selectedStatus.toLowerCase();
 
         const price = parseFloat(unit.price);
@@ -229,16 +240,11 @@ export default function UnitsPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Types</SelectItem>
-                                    <SelectItem value="Studio">Studio</SelectItem>
                                     <SelectItem value="1 Bedroom">1 Bedroom</SelectItem>
                                     <SelectItem value="2 Bedroom">2 Bedroom</SelectItem>
                                     <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
-                                    <SelectItem value="4 Bedroom">4 Bedroom</SelectItem>
-                                    <SelectItem value="One Bedroom">One Bedroom</SelectItem>
-                                    <SelectItem value="Two Bedroom">Two Bedroom</SelectItem>
-                                    <SelectItem value="Three Bedroom">Three Bedroom</SelectItem>
-                                    <SelectItem value="Four Bedroom">Four Bedroom</SelectItem>
-                                    <SelectItem value="Penthouse">Penthouse</SelectItem>
+                                    <SelectItem value="Shop">Shop</SelectItem>
+                                    <SelectItem value="Office">Office</SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -306,7 +312,7 @@ export default function UnitsPage() {
                                     <TableRow key={unit.id} className="hover:bg-slate-50/50 transition-colors">
                                         <TableCell className="font-medium text-slate-900">{unit.unit_number}</TableCell>
                                         <TableCell className="text-slate-600">{unit.property?.name}</TableCell>
-                                        <TableCell className="text-slate-600">{unit.type}</TableCell>
+                                        <TableCell className="text-slate-600">{normalizeType(unit.type)}</TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={getStatusColor(unit.status)}>
                                                 {unit.status}

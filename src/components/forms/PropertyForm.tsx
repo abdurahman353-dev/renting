@@ -497,6 +497,29 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                                 }
                             }}>Add</Button>
                         </div>
+
+                        {/* Selected Amenities Tags */}
+                        {formData.amenities.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
+                                {formData.amenities.map((amenity, index) => (
+                                    <div key={`${amenity}-${index}`} className="flex items-center gap-1 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
+                                        <span>{amenity}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    amenities: prev.amenities.filter((_, i) => i !== index)
+                                                }));
+                                            }}
+                                            className="hover:text-red-600 transition-colors ml-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

@@ -42,6 +42,17 @@ import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 import Link from "next/link";
 import { toast } from "sonner";
 
+const normalizeType = (type: string | null | undefined): string => {
+    if (!type) return "";
+    const t = type.toLowerCase().trim();
+    if (t === "one bedroom" || t === "1 bedroom" || t === "studio" || t === "bedsitter") return "1 Bedroom";
+    if (t === "two bedroom" || t === "2 bedroom") return "2 Bedroom";
+    if (t === "three bedroom" || t === "3 bedroom" || t === "four bedroom" || t === "penthouse") return "3 Bedroom";
+    if (t === "shop") return "Shop";
+    if (t === "office") return "Office";
+    return type;
+};
+
 // Enhanced icon mapping with vibrant colors
 // Simplified professional icon mapping
 const AMENITY_ICONS: Record<string, { icon: any; color: string; bgColor: string }> = {
@@ -379,12 +390,32 @@ export default function PropertyViewPage() {
                                             <CardContent className="pt-8 pb-8">
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 font-slate-900">
                                                     {property.amenities.map((amenity: any, index: number) => {
-                                                        const amenityConfig = AMENITY_ICONS[amenity.amenity_name] || {
-                                                            icon: Home,
-                                                            color: "text-blue-600",
-                                                            bgColor: "bg-blue-50/50"
+                                                        const name = (amenity.name || amenity.amenities || amenity.amenity_name || "").toString();
+
+                                                        // Helper to find icon
+                                                        const getIcon = (n: string) => {
+                                                            // 1. Direct match
+                                                            if (AMENITY_ICONS[n]) return AMENITY_ICONS[n];
+
+                                                            // 2. Fuzzy match
+                                                            const lower = n.toLowerCase();
+                                                            if (lower.includes('wifi') || lower.includes('internet')) return AMENITY_ICONS['High-Speed WiFi'];
+                                                            if (lower.includes('park') || lower.includes('garage')) return AMENITY_ICONS['Covered Parking'];
+                                                            if (lower.includes('gym') || lower.includes('fitness')) return AMENITY_ICONS['Fitness Center'];
+                                                            if (lower.includes('kitchen') || lower.includes('cooking')) return AMENITY_ICONS['Modern Kitchen'];
+                                                            if (lower.includes('security') || lower.includes('cctv') || lower.includes('guard')) return AMENITY_ICONS['Security'];
+                                                            if (lower.includes('pool') || lower.includes('swim')) return AMENITY_ICONS['Rooftop Pool'];
+                                                            if (lower.includes('power') || lower.includes('generator') || lower.includes('backup')) return AMENITY_ICONS['Generator/Backup Power'];
+                                                            if (lower.includes('air') || lower.includes('ac ') || lower.includes('conditioning')) return AMENITY_ICONS['Air Conditioning'];
+                                                            if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat')) return AMENITY_ICONS['Pet Friendly'];
+
+                                                            // 3. Default
+                                                            return { icon: Home, color: "text-blue-600", bgColor: "bg-blue-50/50" };
                                                         };
+
+                                                        const amenityConfig = getIcon(name);
                                                         const IconComponent = amenityConfig.icon;
+
                                                         return (
                                                             <div
                                                                 key={index}
@@ -394,7 +425,7 @@ export default function PropertyViewPage() {
                                                                     <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
                                                                 </div>
                                                                 <span className="text-slate-700 font-bold text-sm">
-                                                                    {amenity.name || amenity.amenities}
+                                                                    {name}
                                                                 </span>
                                                             </div>
                                                         );
@@ -417,8 +448,11 @@ export default function PropertyViewPage() {
                                                         <TableHeader>
                                                             <TableRow className="border-b border-slate-100 hover:bg-transparent">
                                                                 <TableHead className="font-bold text-slate-500 py-4">Unit #</TableHead>
+                                                                <TableHead className="font-bold text-slate-500 py-4">Type</TableHead>
                                                                 <TableHead className="font-bold text-slate-500 py-4">Status</TableHead>
                                                                 <TableHead className="font-bold text-slate-500 py-4">Monthly Rent</TableHead>
+                                                                <TableHead className="font-bold text-slate-500 py-4">Deposit 1</TableHead>
+                                                                <TableHead className="font-bold text-slate-500 py-4">Deposit 2</TableHead>
                                                                 <TableHead className="text-right font-bold text-slate-500 py-4">Action</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
@@ -428,13 +462,18 @@ export default function PropertyViewPage() {
                                                                     <TableCell className="font-extrabold text-slate-900 py-5">
                                                                         {unit.unit_number}
                                                                     </TableCell>
+                                                                    <TableCell className="font-bold text-slate-700 py-5">
+                                                                        {normalizeType(unit.type)}
+                                                                    </TableCell>
                                                                     <TableCell className="py-5">
                                                                         <Badge
-                                                                            className={`font-bold px-3 py-1 rounded-full ${unit.status === "vacant"
+                                                                            className={`font-bold px-3 py-1 rounded-full ${['vacant', 'available'].includes(unit.status?.toLowerCase())
                                                                                 ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                                                                : unit.status === "occupied"
+                                                                                : unit.status?.toLowerCase() === "occupied"
                                                                                     ? "bg-blue-50 text-blue-700 border-blue-100"
-                                                                                    : "bg-slate-50 text-slate-700 border-slate-100"
+                                                                                    : ["maintenance", "repair", "under maintenance"].includes(unit.status?.toLowerCase())
+                                                                                        ? "bg-red-50 text-red-700 border-red-100"
+                                                                                        : "bg-slate-50 text-slate-700 border-slate-100"
                                                                                 }`}
                                                                         >
                                                                             {unit.status}
@@ -443,11 +482,15 @@ export default function PropertyViewPage() {
                                                                     <TableCell className="font-bold text-slate-900 py-5">
                                                                         KES {unit.price?.toLocaleString() || 'N/A'}
                                                                     </TableCell>
+                                                                    <TableCell className="font-bold text-slate-900 py-5">
+                                                                        KES {Number(unit.deposit_1 || 0).toLocaleString()}
+                                                                    </TableCell>
+                                                                    <TableCell className="font-bold text-slate-900 py-5">
+                                                                        KES {Number(unit.deposit_2 || 0).toLocaleString()}
+                                                                    </TableCell>
                                                                     <TableCell className="text-right py-5">
                                                                         <Link
                                                                             href={`/unit/${unit.id}`}
-                                                                            //variant="ghost"
-                                                                            //size="sm"
                                                                             className="rounded-xl font-bold text-blue-600 hover:bg-blue-100"
                                                                         >
                                                                             view

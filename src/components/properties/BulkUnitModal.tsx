@@ -27,9 +27,9 @@ interface BulkUnitModalProps {
 
 interface GeneratedUnit {
     unit_number: string;
-    price: number;
-    deposit_1: number;
-    deposit_2: number;
+    price: number | string;
+    deposit_1: number | string;
+    deposit_2: number | string;
     status: string;
     type: string;
 }
@@ -38,10 +38,10 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
     const [prefix, setPrefix] = useState("A");
     const [startNumber, setStartNumber] = useState(101);
     const [count, setCount] = useState(10);
-    const [defaultPrice, setDefaultPrice] = useState(15000);
-    const [defaultDeposit1, setDefaultDeposit1] = useState(15000);
-    const [defaultDeposit2, setDefaultDeposit2] = useState(0);
-    const [defaultType, setDefaultType] = useState("One Bedroom");
+    const [defaultPrice, setDefaultPrice] = useState<number | string>("");
+    const [defaultDeposit1, setDefaultDeposit1] = useState<number | string>("");
+    const [defaultDeposit2, setDefaultDeposit2] = useState<number | string>("");
+    const [defaultType, setDefaultType] = useState("");
 
     const [generatedUnits, setGeneratedUnits] = useState<GeneratedUnit[]>([]);
     const [isPreviewing, setIsPreviewing] = useState(false);
@@ -121,10 +121,11 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Studio">Studio</SelectItem>
                                         <SelectItem value="One Bedroom">One Bedroom</SelectItem>
                                         <SelectItem value="Two Bedroom">Two Bedroom</SelectItem>
                                         <SelectItem value="Three Bedroom">Three Bedroom</SelectItem>
+                                        <SelectItem value="Shop">Shop</SelectItem>
+                                        <SelectItem value="Office">Office</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -175,10 +176,11 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="Studio">Studio</SelectItem>
                                                         <SelectItem value="One Bedroom">1 Bed</SelectItem>
                                                         <SelectItem value="Two Bedroom">2 Bed</SelectItem>
                                                         <SelectItem value="Three Bedroom">3 Bed</SelectItem>
+                                                        <SelectItem value="Shop">Shop</SelectItem>
+                                                        <SelectItem value="Office">Office</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
@@ -231,7 +233,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                             </Button>
                             <Button
                                 onClick={handleSubmit}
-                                disabled={isSubmitting || generatedUnits.length === 0 || generatedUnits.some(u => existingUnits.includes(u.unit_number))}
+                                disabled={isSubmitting || generatedUnits.length === 0 || generatedUnits.some(u => existingUnits.includes(u.unit_number) || !u.type || u.price === "" || u.status === "")}
                                 className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
                             >
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

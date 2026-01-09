@@ -351,20 +351,42 @@ export default function PropertyViewPage() {
                                         <CardContent className="pt-6">
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 {property.amenities.map((amenity: any, index: number) => {
-                                                    const amenityConfig = AMENITY_ICONS[amenity.amenity_icon] || {
-                                                        icon: Home,
-                                                        color: "text-slate-600",
-                                                        bgColor: "bg-slate-100"
+                                                    const name = (amenity.name || amenity.amenities || amenity.amenity_name || "").toString();
+
+                                                    // Helper to find icon
+                                                    const getIcon = (n: string) => {
+                                                        // 1. Direct match
+                                                        if (AMENITY_ICONS[n]) return AMENITY_ICONS[n];
+
+                                                        // 2. Fuzzy match
+                                                        const lower = n.toLowerCase();
+                                                        if (lower.includes('wifi') || lower.includes('internet')) return AMENITY_ICONS['High-Speed WiFi'];
+                                                        if (lower.includes('park') || lower.includes('garage')) return AMENITY_ICONS['Covered Parking'];
+                                                        if (lower.includes('gym') || lower.includes('fitness')) return AMENITY_ICONS['Fitness Center'];
+                                                        if (lower.includes('kitchen') || lower.includes('cooking')) return AMENITY_ICONS['Modern Kitchen'];
+                                                        if (lower.includes('security') || lower.includes('cctv') || lower.includes('guard')) return AMENITY_ICONS['Security'];
+                                                        if (lower.includes('pool') || lower.includes('swim')) return AMENITY_ICONS['Rooftop Pool'];
+                                                        if (lower.includes('power') || lower.includes('generator') || lower.includes('backup')) return AMENITY_ICONS['Generator/Backup Power'];
+                                                        if (lower.includes('air') || lower.includes('ac ') || lower.includes('conditioning')) return AMENITY_ICONS['Air Conditioning'];
+                                                        if (lower.includes('pet') || lower.includes('dog') || lower.includes('cat')) return AMENITY_ICONS['Pet Friendly'];
+
+                                                        // 3. Default
+                                                        return { icon: Home, color: "text-blue-600", bgColor: "bg-blue-50/50" };
                                                     };
+
+                                                    const amenityConfig = getIcon(name);
                                                     const IconComponent = amenityConfig.icon;
+
                                                     return (
                                                         <div
                                                             key={index}
-                                                            className={`flex items-center gap-3 p-4 ${amenityConfig.bgColor} rounded-lg border border-slate-100 transition-all duration-300 group`}
+                                                            className={`flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 transition-all duration-300 hover:border-blue-200 group`}
                                                         >
-                                                            <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
-                                                            <span className="text-slate-700 font-medium text-sm">
-                                                                {amenity.amenity_name}
+                                                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                                <IconComponent className={`w-5 h-5 ${amenityConfig.color}`} />
+                                                            </div>
+                                                            <span className="text-slate-700 font-bold text-sm">
+                                                                {name}
                                                             </span>
                                                         </div>
                                                     );
@@ -406,7 +428,9 @@ export default function PropertyViewPage() {
                                                         <TableRow className="bg-slate-50">
                                                             <TableHead className="font-semibold text-slate-700">Unit</TableHead>
                                                             <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Price</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Monthly Rent</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Deposit 1</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700">Deposit 2</TableHead>
                                                             <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
@@ -418,11 +442,13 @@ export default function PropertyViewPage() {
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <Badge
-                                                                        className={`font-semibold ${unit.status === "vacant"
-                                                                            ? "bg-emerald-100 text-emerald-700 border-0"
-                                                                            : unit.status === "occupied"
-                                                                                ? "bg-blue-100 text-blue-700 border-0"
-                                                                                : "bg-slate-100 text-slate-700 border-0"
+                                                                        className={`font-semibold ${['vacant', 'available'].includes(unit.status?.toLowerCase())
+                                                                            ? "bg-green-100 text-green-700 hover:bg-green-200 border-0"
+                                                                            : unit.status?.toLowerCase() === "occupied"
+                                                                                ? "bg-blue-100 text-blue-700 hover:bg-blue-200 border-0"
+                                                                                : unit.status?.toLowerCase() === "maintenance"
+                                                                                    ? "bg-red-100 text-red-700 hover:bg-red-200 border-0"
+                                                                                    : "bg-slate-100 text-slate-700 border-0"
                                                                             }`}
                                                                     >
                                                                         {unit.status}
@@ -430,6 +456,12 @@ export default function PropertyViewPage() {
                                                                 </TableCell>
                                                                 <TableCell className="font-semibold text-slate-900">
                                                                     KES {unit.price?.toLocaleString() || 'N/A'}
+                                                                </TableCell>
+                                                                <TableCell className="font-medium text-slate-600">
+                                                                    KES {Number(unit.deposit_1 || 0).toLocaleString()}
+                                                                </TableCell>
+                                                                <TableCell className="font-medium text-slate-600">
+                                                                    KES {Number(unit.deposit_2 || 0).toLocaleString()}
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     <Button

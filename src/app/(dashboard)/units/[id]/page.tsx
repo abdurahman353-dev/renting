@@ -82,9 +82,11 @@ export default function UnitDetailsPage() {
 
     const lease = unit.active_lease;
     const tenant = lease?.tenant;
-    const isOccupied = unit.status?.toUpperCase() === 'OCCUPIED';
-    const isAvailable = unit.status?.toUpperCase() === 'AVAILABLE' || unit.status?.toUpperCase() === 'VACANT';
-    const isMaintenance = unit.status?.toUpperCase() === 'MAINTENANCE';
+
+    const status = unit.status?.toLowerCase();
+    const isOccupied = status === 'occupied';
+    const isAvailable = ['available', 'vacant'].includes(status);
+    const isMaintenance = status === 'maintenance';
 
     // Image Handling
     const images = unit.images && unit.images.length > 0
@@ -99,7 +101,7 @@ export default function UnitDetailsPage() {
             ? "bg-blue-100 text-blue-700 hover:bg-blue-200 border-0"
             : isMaintenance
                 ? "bg-red-100 text-red-700 hover:bg-red-200 border-0"
-                : "bg-slate-100 text-slate-700";
+                : "bg-slate-100 text-slate-700 border-slate-200";
 
     return (
         <div className="min-h-screen bg-slate-50">

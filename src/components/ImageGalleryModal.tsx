@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Dialog,
     DialogContent,
+    DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +62,7 @@ export function ImageGalleryModal({ images, isOpen, onClose, initialIndex = 0 }:
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-[100vw] w-screen h-screen p-0 bg-black/95 border-0 rounded-none overflow-hidden flex flex-col justify-center items-center z-[100]">
+                <DialogTitle className="sr-only">Image Gallery</DialogTitle>
                 {/* Header/Controls */}
                 <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[110] bg-gradient-to-b from-black/50 to-transparent">
                     <div className="text-white font-medium">

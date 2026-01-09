@@ -420,11 +420,11 @@ export default function AddUnitPage() {
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
-                                                                <SelectItem value="Studio">Studio</SelectItem>
                                                                 <SelectItem value="1 Bedroom">1 Bedroom</SelectItem>
                                                                 <SelectItem value="2 Bedroom">2 Bedroom</SelectItem>
                                                                 <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
-                                                                <SelectItem value="Penthouse">Penthouse</SelectItem>
+                                                                <SelectItem value="Shop">Shop</SelectItem>
+                                                                <SelectItem value="Office">Office</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
