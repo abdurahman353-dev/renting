@@ -234,7 +234,7 @@ export default function FinancePage() {
             inv.amount,
             inv.paid_amount || 0,
             inv.status,
-            inv.created_at || inv.date
+            (inv.created_at || inv.date) ? new Date(inv.created_at || inv.date).toISOString().replace('T', ' ').substring(0, 16) : '-'
         ]);
 
         let csvContent = "data:text/csv;charset=utf-8,"

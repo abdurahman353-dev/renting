@@ -282,7 +282,21 @@ export default function UnitDetailsPage() {
                                 {/* <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
                                     <Wrench className="w-4 h-4 mr-2" /> Schedule Maintenance
                                 </Button> */}
-                                <Button className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm" variant="outline">
+                                <Button
+                                    className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        const phone = unit.property?.owner_contact || '0745621158';
+                                        if (!phone) {
+                                            toast.error("Contact number not available");
+                                            return;
+                                        }
+                                        // Simple cleanup for WhatsApp link
+                                        const cleanPhone = phone.replace(/\D/g, '');
+                                        const message = `Hi, I am interested in Unit ${unit.unit_number} at ${unit.property?.name}`;
+                                        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+                                    }}
+                                >
                                     <Phone className="w-4 h-4 mr-2" /> Contact Agent
                                 </Button>
                             </CardContent>
