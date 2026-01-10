@@ -31,7 +31,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { propertyAPI, tenantAPI } from "@/data/apis"
+import { propertyAPI, tenantAPI, communicationAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
@@ -97,6 +97,33 @@ function TenantsContent() {
     const [sendingReminders, setSendingReminders] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingTenantId, setEditingTenantId] = useState<number | null>(null);
+
+    // SMS State
+    const [smsOpen, setSmsOpen] = useState(false);
+    const [smsData, setSmsData] = useState({ phone: "", name: "" });
+    const [smsMessage, setSmsMessage] = useState("");
+    const [sendingSms, setSendingSms] = useState(false);
+
+    const handleSendSms = async () => {
+        if (!smsMessage.trim()) return;
+
+        setSendingSms(true);
+        try {
+            await communicationAPI.send({
+                phone: smsData.phone,
+                message: smsMessage
+            });
+            toast.success("SMS sent successfully");
+            setSmsOpen(false);
+            setSmsMessage("");
+        } catch (error: any) {
+            console.error("Failed to send SMS:", error);
+            const msg = error?.response?.data?.message || "Failed to send SMS";
+            toast.error(msg);
+        } finally {
+            setSendingSms(false);
+        }
+    };
 
     const handleSendReminders = async () => {
         if (!confirm("Are you sure you want to send balance reminders to all tenants with outstanding balances?")) return;
@@ -831,6 +858,16 @@ function TenantsContent() {
                                                 <DropdownMenuItem onClick={() => handleEditClick(tenant)}>
                                                     Edit Tenant
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    setSmsData({
+                                                        phone: tenant.phone,
+                                                        name: tenant.name
+                                                    });
+                                                    setSmsMessage("");
+                                                    setSmsOpen(true);
+                                                }}>
+                                                    <Mail className="mr-2 h-4 w-4" /> Send SMS
+                                                </DropdownMenuItem>
 
 
                                                 <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
@@ -852,6 +889,35 @@ function TenantsContent() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Send SMS Dialog */}
+            <Dialog open={smsOpen} onOpenChange={setSmsOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Send SMS to {smsData.name}</DialogTitle>
+                        <DialogDescription>
+                            Send a direct text message to {smsData.phone}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="sms-message">Message</Label>
+                        <textarea
+                            id="sms-message"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Type your message here..."
+                            value={smsMessage}
+                            onChange={(e) => setSmsMessage(e.target.value)}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setSmsOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSendSms} disabled={sendingSms || !smsMessage.trim()}>
+                            {sendingSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                            Send SMS
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
