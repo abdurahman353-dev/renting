@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { financeAPI } from '@/data/apis';
 import ReconcileModal from '@/components/ReconcileModal';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 interface MpesaTransaction {
     id: number;
     transaction_id: string;
@@ -36,6 +38,7 @@ interface MpesaTransaction {
 }
 
 export default function MpesaTransactionsPage() {
+    const { isSuperAdmin } = useAuth();
     const [transactions, setTransactions] = useState<MpesaTransaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'unreconciled' | 'reconciled'>('all');
@@ -132,27 +135,29 @@ export default function MpesaTransactionsPage() {
                         View and manage M-Pesa payment transactions
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    onClick={async () => {
-                        const loadingToast = toast.loading('Registering C2B URLs...');
-                        try {
-                            const result = await financeAPI.registerC2BUrls();
-                            toast.success('C2B URLs Registered Successfully!');
-                            toast.info('Safaricom will now send transactions to your backend.');
-                        } catch (error: any) {
-                            console.error('Registration error:', error);
-                            const errorMessage = error.response?.data?.message || 'Registration failed';
-                            toast.error(errorMessage);
-                        } finally {
-                            toast.dismiss(loadingToast);
-                        }
-                    }}
-                    title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
-                >
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Connect C2B / Register URLs
-                </Button>
+                {isSuperAdmin() && (
+                    <Button
+                        variant="outline"
+                        onClick={async () => {
+                            const loadingToast = toast.loading('Registering C2B URLs...');
+                            try {
+                                const result = await financeAPI.registerC2BUrls();
+                                toast.success('C2B URLs Registered Successfully!');
+                                toast.info('Safaricom will now send transactions to your backend.');
+                            } catch (error: any) {
+                                console.error('Registration error:', error);
+                                const errorMessage = error.response?.data?.message || 'Registration failed';
+                                toast.error(errorMessage);
+                            } finally {
+                                toast.dismiss(loadingToast);
+                            }
+                        }}
+                        title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
+                    >
+                        <LinkIcon className="w-4 h-4 mr-2" />
+                        Connect C2B / Register URLs
+                    </Button>
+                )}
             </div>
 
             {/* Stats Cards */}

@@ -156,7 +156,7 @@ export default function UnitsPage() {
             unit.deposit_1 || 0,
             unit.deposit_2 || 0,
             `"${unit.active_lease?.tenant?.name || 'N/A'}"`,
-            `"${unit.active_lease?.tenant?.phone || 'N/A'}"`
+            unit.active_lease?.tenant?.phone ? `="${unit.active_lease.tenant.phone}"` : '"N/A"'
         ]);
 
         const csvContent = [
