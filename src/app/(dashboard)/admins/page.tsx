@@ -353,8 +353,14 @@ export default function AdminManagementPage() {
                     <TableBody>
                         {filteredAdmins.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No admins found
+                                <TableCell colSpan={5} className="py-20 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-4">
+                                        <div className="bg-slate-100 p-6 rounded-full">
+                                            <Shield className="h-12 w-12 text-slate-400" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-black">Add Admins by clicking the Add new Admin button</h3>
+                                        <p className="text-slate-500 max-w-sm mx-auto">Create administrator accounts to help manage the system and assign roles.</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : filteredAdmins.map((admin) => (

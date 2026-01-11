@@ -176,6 +176,14 @@ export default function PropertiesPage() {
                             </CardContent>
                         </Card>
                     ))
+                ) : properties.length === 0 ? (
+                    <div className="col-span-full py-20 text-center flex flex-col items-center justify-center space-y-4">
+                        <div className="bg-slate-100 p-6 rounded-full">
+                            <Home className="h-12 w-12 text-slate-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-black">Create a Property by clicking add property button</h3>
+                        <p className="text-slate-500 max-w-sm mx-auto">Start by adding your first property to manage units and tenants effectively.</p>
+                    </div>
                 ) : (
                     <div className="col-span-full py-12 text-center text-muted-foreground">
                         No properties found matching your search.

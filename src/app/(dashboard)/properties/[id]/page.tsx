@@ -494,7 +494,15 @@ export default function PropertyViewPage() {
                                                 </Table>
                                             </div>
                                         ) : (
-                                            <p className="text-slate-500 text-center py-12 text-lg">No units available</p>
+                                            <div className="py-20 text-center flex flex-col items-center justify-center space-y-4">
+                                                <div className="bg-slate-100 p-6 rounded-full">
+                                                    <Home className="h-12 w-12 text-slate-400" />
+                                                </div>
+                                                <h3 className="text-2xl font-bold text-black max-w-lg mx-auto leading-tight">
+                                                    Add units in bulk by clicking Bulk Add button and click Add unit button when adding a single unit
+                                                </h3>
+                                                <p className="text-slate-500 max-w-sm mx-auto">Populate this property with units to start assigning tenants and generating revenue.</p>
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>

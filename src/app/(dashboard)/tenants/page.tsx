@@ -13,7 +13,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home } from "lucide-react"
+import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Users } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -771,7 +771,7 @@ function TenantsContent() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredTenants.map((tenant) => {
+                        {filteredTenants.length > 0 ? filteredTenants.map((tenant) => {
                             // Get lease information
                             const lease = tenant.leases?.[0];
                             const startDate = lease?.start_date ? new Date(lease.start_date).toLocaleDateString() : 'N/A';
@@ -885,7 +885,19 @@ function TenantsContent() {
                                     </TableCell>
                                 </TableRow>
                             );
-                        })}
+                        }) : (
+                            <TableRow>
+                                <TableCell colSpan={11} className="py-20 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-4">
+                                        <div className="bg-slate-100 p-6 rounded-full">
+                                            <Users className="h-12 w-12 text-slate-400" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-black">Assign Tenants to Properties by clicking Register Tenant button</h3>
+                                        <p className="text-slate-500 max-w-sm mx-auto">Start by registering your first tenant and assigning them to a property unit.</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </div>
