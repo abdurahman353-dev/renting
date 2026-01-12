@@ -591,7 +591,7 @@ export default function CashierPage() {
                                         />
 
                                         <div className="flex justify-end pt-4 gap-3">
-                                            <Button
+                                            {/* <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="lg"
@@ -605,7 +605,7 @@ export default function CashierPage() {
                                                 className="border-green-600 text-green-700 hover:bg-green-50"
                                             >
                                                 Pay via M-Pesa
-                                            </Button>
+                                            </Button> */}
                                             <Button
                                                 type="submit"
                                                 size="lg"
