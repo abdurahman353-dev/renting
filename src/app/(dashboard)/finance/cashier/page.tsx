@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Check, ChevronsUpDown, Loader2, DollarSign, CreditCard, User, Building2, Ticket, X, CheckSquare, Square } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, DollarSign, CreditCard, User, Building2, Ticket, X, CheckSquare, Square, Trash2 } from "lucide-react";
 
 import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { tenantAPI, financeAPI } from "@/data/apis";
+import { tenantAPI, financeAPI, superAdminAPI, authAPI } from "@/data/apis";
 import { toast } from "sonner";
 import MpesaPaymentModal from "@/components/MpesaPaymentModal";
 
@@ -102,6 +102,14 @@ export default function CashierPage() {
     const [selectedInvoices, setSelectedInvoices] = useState<number[]>([]);
     const [loadingInvoice, setLoadingInvoice] = useState(false);
     const [isMpesaModalOpen, setIsMpesaModalOpen] = useState(false);
+    const [reversingId, setReversingId] = useState<number | null>(null);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    useEffect(() => {
+        setCurrentUser(authAPI.getUser());
+    }, []);
+
+    const isSuperAdmin = currentUser?.role === 'super_admin';
 
     const form = useForm<z.infer<typeof paymentSchema>>({
         resolver: zodResolver(paymentSchema),
@@ -303,6 +311,36 @@ export default function CashierPage() {
             toast.error(msg);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleReversePayment = async (paymentId: number) => {
+        if (!window.confirm("Are you sure you want to reverse this payment? This will restore the tenant's balance and reopen the invoices. This action cannot be undone.")) {
+            return;
+        }
+
+        setReversingId(paymentId);
+        try {
+            await superAdminAPI.deletePayment(paymentId);
+            toast.success("Payment reversed successfully");
+
+            // Refresh data
+            if (selectedTenant) {
+                fetchPendingInvoices(selectedTenant.id);
+                fetchPaymentHistory(selectedTenant.id);
+
+                // Refresh tenants to get updated balance
+                tenantAPI.getAll().then(data => {
+                    setTenants(data);
+                    const updated = data.find((t: any) => t.id === selectedTenant.id);
+                    if (updated) setSelectedTenant(updated);
+                });
+            }
+        } catch (error: any) {
+            console.error("Failed to reverse payment", error);
+            toast.error(error.response?.data?.message || "Failed to reverse payment");
+        } finally {
+            setReversingId(null);
         }
     };
 
@@ -710,10 +748,28 @@ export default function CashierPage() {
                                                         </div>
                                                     </div>
                                                     {payment.reference && (
-                                                        <div className="text-right">
+                                                        <div className="text-right flex flex-col items-end gap-2">
                                                             <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded">
                                                                 {payment.reference}
                                                             </span>
+                                                            {isSuperAdmin && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleReversePayment(payment.id);
+                                                                    }}
+                                                                    disabled={reversingId === payment.id}
+                                                                >
+                                                                    {reversingId === payment.id ? (
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    )}
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>

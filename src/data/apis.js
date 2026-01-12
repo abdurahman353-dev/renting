@@ -448,6 +448,10 @@ export const superAdminAPI = {
         const response = await apiClient.put('/super-admin/settings', data);
         return response.data;
     },
+    deletePayment: async (id) => {
+        const response = await apiClient.delete(`/super-admin/payments/${id}`);
+        return response.data;
+    },
 };
 
 // ============================================================================
