@@ -65,42 +65,79 @@ export default function InvoiceViewPage() {
         setDownloading(true);
 
         try {
-            // Clone the element to render it off-screen without scroll constraints
             const element = componentRef.current;
             const clone = element.cloneNode(true) as HTMLElement;
 
-            // Set styles to ensure full visibility and A5 Landscape width (210mm approx 794px at 96dpi)
+            // Set styles to ensure full visibility and A4 Portrait width (approx 794px for 210mm)
             clone.style.position = 'absolute';
             clone.style.left = '-9999px';
             clone.style.top = '0';
             clone.style.width = '794px';
             clone.style.height = 'auto';
+            clone.style.minHeight = 'auto';
+            clone.style.maxHeight = 'none';
             clone.style.overflow = 'visible';
+            clone.style.backgroundColor = 'white';
 
-            // Append to body to render
+            // Ensure all Card/CardHeader/CardContent nested children don't have height constraints
+            const hFullElements = clone.querySelectorAll('.h-full');
+            hFullElements.forEach(el => (el as HTMLElement).classList.remove('h-full'));
+
+            const cards = clone.querySelectorAll('[class*="Card"]');
+            cards.forEach(el => {
+                const e = el as HTMLElement;
+                e.style.height = 'auto';
+                e.style.minHeight = 'auto';
+                e.style.maxHeight = 'none';
+                e.style.overflow = 'visible';
+                e.style.border = 'none';
+                e.style.boxShadow = 'none';
+            });
+
+            // Specific adjustment for the header to ensure it's not cut
+            const header = clone.querySelector('[class*="CardHeader"]') as HTMLElement;
+            if (header) {
+                header.style.minHeight = '100px';
+                header.style.height = 'auto';
+            }
+
             document.body.appendChild(clone);
+
+            // Wait a bit for any layout shifts
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const totalHeight = clone.scrollHeight;
 
             const canvas = await html2canvas(clone, {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 794,
+                height: totalHeight,
+                windowWidth: 794,
+                windowHeight: totalHeight,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0
             });
 
-            // Cleanup
             document.body.removeChild(clone);
 
             const imgData = canvas.toDataURL("image/png");
 
-            // A5 Landscape: 210mm x 148mm
+            // A4 Portrait: 210mm x 297mm
             const pdf = new jsPDF({
-                orientation: "landscape",
+                orientation: "portrait",
                 unit: "mm",
-                format: "a5"
+                format: "a4"
             });
 
-            const imgWidth = 210; // A5 width in mm
+            const imgWidth = 210; // A4 width in mm
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+            // If the content is longer than A4, jspdf will add a page? 
+            // Actually, we'll just place it. If it overflows, users might want pagination but single page high-quality is usually preferred for invoices.
             pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
             pdf.save(`Invoice_${invoice?.invoice_number || 'Details'}.pdf`);
         } catch (error) {
@@ -160,7 +197,7 @@ export default function InvoiceViewPage() {
                 {/* Invoice Card */}
                 <div ref={componentRef} className="bg-white">
                     <Card className="pt-0 shadow-lg border-none">
-                        <CardHeader className="border-b bg-slate-200 text-black rounded-t-lg h-full">
+                        <CardHeader className="border-b bg-slate-200 text-black rounded-t-lg">
                             <div className="flex justify-between items-start mt-4 mb-2">
                                 <div>
                                     <CardTitle className="text-2xl font-bold">INVOICE</CardTitle>
