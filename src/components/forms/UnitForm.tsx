@@ -271,7 +271,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 required
                             >
                                 <option value="available">Vacant</option>
-                                <option value="occupied">Occupied</option>
+                                {formData.status === 'occupied' && <option value="occupied">Occupied</option>}
                                 <option value="maintenance">Maintenance</option>
                             </select>
                             {initialData?.status === 'occupied' && (initialData?.active_lease || initialData?.activeLease) && (
