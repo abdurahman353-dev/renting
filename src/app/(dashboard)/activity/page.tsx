@@ -162,64 +162,66 @@ export default function ActivityLogsPage() {
                     <CardTitle className="text-lg">Audit Trail</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                                <TableHead className="font-semibold w-[180px]">Timestamp</TableHead>
-                                <TableHead className="font-semibold w-[150px]">Admin</TableHead>
-                                <TableHead className="font-semibold w-[150px]">Action</TableHead>
-                                <TableHead className="font-semibold">Details</TableHead>
-                                <TableHead className="font-semibold w-[120px]">Severity</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                            <Loader2 className="h-4 w-4 animate-spin" /> Loading activities...
-                                        </div>
-                                    </TableCell>
+                    <div className="max-h-[600px] overflow-y-auto relative">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                                    <TableHead className="font-semibold w-[180px]">Timestamp</TableHead>
+                                    <TableHead className="font-semibold w-[150px]">Admin</TableHead>
+                                    <TableHead className="font-semibold w-[150px]">Action</TableHead>
+                                    <TableHead className="font-semibold">Details</TableHead>
+                                    <TableHead className="font-semibold w-[120px]">Severity</TableHead>
                                 </TableRow>
-                            ) : filteredLogs.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        No logs found matching your criteria.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredLogs.map((log) => (
-                                    <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <TableCell className="text-slate-500 text-sm whitespace-nowrap">
-                                            {log.timestamp}
-                                        </TableCell>
-                                        <TableCell className="font-medium text-slate-900">{log.admin}</TableCell>
-                                        <TableCell>
-                                            <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium uppercase tracking-wider">
-                                                {log.action}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-slate-600 max-w-md truncate" title={log.details}>
-                                            {log.details}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={
-                                                log.severity === 'Critical' ? 'destructive' :
-                                                    log.severity === 'Warning' ? 'secondary' : 'outline'
-                                            }
-                                                className={
-                                                    log.severity === 'Warning' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                                                        log.severity === 'Normal' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : ''
-                                                }
-                                            >
-                                                {log.severity}
-                                            </Badge>
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Loading activities...
+                                            </div>
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : filteredLogs.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                            No logs found matching your criteria.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredLogs.map((log) => (
+                                        <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <TableCell className="text-slate-500 text-sm whitespace-nowrap">
+                                                {log.timestamp}
+                                            </TableCell>
+                                            <TableCell className="font-medium text-slate-900">{log.admin}</TableCell>
+                                            <TableCell>
+                                                <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium uppercase tracking-wider">
+                                                    {log.action}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-slate-600 max-w-md truncate" title={log.details}>
+                                                {log.details}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    log.severity === 'Critical' ? 'destructive' :
+                                                        log.severity === 'Warning' ? 'secondary' : 'outline'
+                                                }
+                                                    className={
+                                                        log.severity === 'Warning' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                                                            log.severity === 'Normal' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : ''
+                                                    }
+                                                >
+                                                    {log.severity}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

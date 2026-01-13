@@ -217,49 +217,51 @@ export default function TenantStatementPage() {
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-slate-50/50">
-                                    <TableHead className="w-[150px]">Date</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="text-right">Reference</TableHead>
-                                    <TableHead className="text-right">Charge / Credit</TableHead>
-                                    <TableHead className="text-right font-bold w-[150px]">Balance</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell colSpan={4} className="font-medium text-slate-500">Opening Balance</TableCell>
-                                    <TableCell className="text-right font-medium">KES 0</TableCell>
-                                </TableRow>
-                                {transactions.map((txn, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            {txn.description}
-                                        </TableCell>
-                                        <TableCell className="text-right font-mono text-xs">{txn.reference}</TableCell>
-                                        <TableCell className={`text-right font-medium ${txn.amount < 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                                            {txn.amount < 0 ? '-' : '+'} KES {Math.abs(txn.amount).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold text-slate-900">
-                                            KES {txn.running_balance.toLocaleString()}
+                        <div className="max-h-[600px] overflow-y-auto relative print:max-h-none print:overflow-visible">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm print:static print:shadow-none">
+                                    <TableRow className="bg-slate-50/50">
+                                        <TableHead className="w-[150px] bg-slate-50">Date</TableHead>
+                                        <TableHead className="bg-slate-50">Description</TableHead>
+                                        <TableHead className="text-right bg-slate-50">Reference</TableHead>
+                                        <TableHead className="text-right bg-slate-50">Charge / Credit</TableHead>
+                                        <TableHead className="text-right font-bold w-[150px] bg-slate-50">Balance</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="font-medium text-slate-500">Opening Balance</TableCell>
+                                        <TableCell className="text-right font-medium">KES 0</TableCell>
+                                    </TableRow>
+                                    {transactions.map((txn, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                {txn.description}
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono text-xs">{txn.reference}</TableCell>
+                                            <TableCell className={`text-right font-medium ${txn.amount < 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                                                {txn.amount < 0 ? '-' : '+'} KES {Math.abs(txn.amount).toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold text-slate-900">
+                                                KES {txn.running_balance.toLocaleString()}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    <TableRow className="border-t-2 border-slate-900 bg-slate-50/50">
+                                        <TableCell colSpan={4} className="text-right font-black text-slate-900 uppercase tracking-wider">Total Balance</TableCell>
+                                        <TableCell className="text-right">
+                                            <div className={`text-sm font-bold ${closingBalance < 0 ? 'text-red-600' : (closingBalance > 0 ? 'text-green-600' : 'text-slate-900')}`}>
+                                                {closingBalance > 0 ? '+' : ''} KES {closingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </div>
+                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                                                {closingBalance < 0 ? 'Pending Amount' : (closingBalance > 0 ? 'Outstanding Credit' : 'Account Balanced')}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
-                                ))}
-                                <TableRow className="border-t-2 border-slate-900 bg-slate-50/50">
-                                    <TableCell colSpan={4} className="text-right font-black text-slate-900 uppercase tracking-wider">Total Balance</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className={`text-sm font-bold ${closingBalance < 0 ? 'text-red-600' : (closingBalance > 0 ? 'text-green-600' : 'text-slate-900')}`}>
-                                            {closingBalance > 0 ? '+' : ''} KES {closingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        </div>
-                                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
-                                            {closingBalance < 0 ? 'Pending Amount' : (closingBalance > 0 ? 'Outstanding Credit' : 'Account Balanced')}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -250,45 +250,47 @@ export default function TenantDetailsPage() {
                                 </Button>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <Table>
-                                    <TableHeader className="bg-slate-50">
-                                        <TableRow>
-                                            <TableHead className="font-semibold text-slate-800">Date</TableHead>
-                                            <TableHead className="font-semibold text-slate-800">Reference</TableHead>
-                                            <TableHead className="font-semibold text-slate-800">Method</TableHead>
-                                            <TableHead className="text-right font-semibold text-slate-800">Amount</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {tenant.payments && tenant.payments.length > 0 ? (
-                                            tenant.payments.slice(0, 5).map((payment: any) => (
-                                                <TableRow key={payment.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <TableCell className="font-medium text-slate-700">
-                                                        <div className="flex items-center gap-2">
-                                                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                            {new Date(payment.date || payment.created_at).toLocaleDateString()}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-slate-600">{payment.reference || 'N/A'}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold text-slate-500 border-slate-200">
-                                                            {payment.method}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-bold text-emerald-600">
-                                                        KES {Number(payment.amount).toLocaleString()}
+                                <div className="max-h-[300px] overflow-y-auto relative">
+                                    <Table>
+                                        <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                            <TableRow>
+                                                <TableHead className="font-semibold text-slate-800 bg-slate-50">Date</TableHead>
+                                                <TableHead className="font-semibold text-slate-800 bg-slate-50">Reference</TableHead>
+                                                <TableHead className="font-semibold text-slate-800 bg-slate-50">Method</TableHead>
+                                                <TableHead className="text-right font-semibold text-slate-800 bg-slate-50">Amount</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {tenant.payments && tenant.payments.length > 0 ? (
+                                                tenant.payments.slice(0, 5).map((payment: any) => (
+                                                    <TableRow key={payment.id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <TableCell className="font-medium text-slate-700">
+                                                            <div className="flex items-center gap-2">
+                                                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                                {new Date(payment.date || payment.created_at).toLocaleDateString()}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-slate-600">{payment.reference || 'N/A'}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold text-slate-500 border-slate-200">
+                                                                {payment.method}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-bold text-emerald-600">
+                                                            KES {Number(payment.amount).toLocaleString()}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="text-center py-10 text-slate-400 italic">
+                                                        No recent transactions found.
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-center py-10 text-slate-400 italic">
-                                                    No recent transactions found.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>

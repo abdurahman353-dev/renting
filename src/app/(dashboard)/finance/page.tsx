@@ -339,98 +339,102 @@ export default function FinancePage() {
 
                 <TabsContent value="invoices" className="space-y-4">
                     <div className="rounded-md border bg-white shadow-sm">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Invoice ID</TableHead>
-                                    <TableHead>Tenant</TableHead>
-                                    <TableHead>Property</TableHead>
-                                    <TableHead>Unit</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredInvoices.length === 0 ? (
+                        <div className="max-h-[600px] overflow-y-auto relative">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
+                                        <TableHead className="bg-white">Invoice ID</TableHead>
+                                        <TableHead className="bg-white">Tenant</TableHead>
+                                        <TableHead className="bg-white">Property</TableHead>
+                                        <TableHead className="bg-white">Unit</TableHead>
+                                        <TableHead className="bg-white">Date</TableHead>
+                                        <TableHead className="bg-white">Status</TableHead>
+                                        <TableHead className="text-right bg-white">Amount</TableHead>
+                                        <TableHead className="w-[50px] bg-white"></TableHead>
                                     </TableRow>
-                                ) : filteredInvoices.map((inv) => (
-                                    <TableRow key={inv.id}>
-                                        <TableCell className="font-medium">{inv.invoice_number}</TableCell>
-                                        <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
-                                        <TableCell>{inv.property_name || '-'}</TableCell>
-                                        <TableCell>{inv.unit_number || inv.unit}</TableCell>
-                                        <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                className={`px-3 py-1 font-bold rounded-full ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
-                                            >
-                                                {inv.status === "OVERDUE" ? "NOT PAID" : inv.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-black text-slate-700">KES {Number(inv.amount).toLocaleString()}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    title="View Invoice"
-                                                    onClick={() => router.push(`/invoices/${inv.id}`)}
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredInvoices.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
+                                        </TableRow>
+                                    ) : filteredInvoices.map((inv) => (
+                                        <TableRow key={inv.id}>
+                                            <TableCell className="font-medium">{inv.invoice_number}</TableCell>
+                                            <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
+                                            <TableCell>{inv.property_name || '-'}</TableCell>
+                                            <TableCell>{inv.unit_number || inv.unit}</TableCell>
+                                            <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    className={`px-3 py-1 font-bold rounded-full ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
                                                 >
-                                                    <Eye className="h-4 w-4 text-slate-500" />
-                                                </Button>
-                                                {(inv.status === 'PENDING' || inv.status === 'PARTIAL') && (
+                                                    {inv.status === "OVERDUE" ? "NOT PAID" : inv.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-black text-slate-700">KES {Number(inv.amount).toLocaleString()}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1">
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        title="Process Payment"
-                                                        onClick={() => router.push(`/finance/cashier?invoice_id=${inv.id}`)}
-                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                        title="View Invoice"
+                                                        onClick={() => router.push(`/invoices/${inv.id}`)}
                                                     >
-                                                        <BanknoteArrowDown className="h-4 w-4" />
+                                                        <Eye className="h-4 w-4 text-slate-500" />
                                                     </Button>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                                    {(inv.status === 'PENDING' || inv.status === 'PARTIAL') && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            title="Process Payment"
+                                                            onClick={() => router.push(`/finance/cashier?invoice_id=${inv.id}`)}
+                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                        >
+                                                            <BanknoteArrowDown className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                 </TabsContent>
                 <TabsContent value="payments" className="space-y-4">
                     <div className="rounded-md border bg-white shadow-sm">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Payment ID</TableHead>
-                                    <TableHead>Tenant</TableHead>
-                                    <TableHead>Method</TableHead>
-                                    <TableHead>Reference</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredPayments.length === 0 ? (
+                        <div className="max-h-[600px] overflow-y-auto relative">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
+                                        <TableHead className="bg-white">Payment ID</TableHead>
+                                        <TableHead className="bg-white">Tenant</TableHead>
+                                        <TableHead className="bg-white">Method</TableHead>
+                                        <TableHead className="bg-white">Reference</TableHead>
+                                        <TableHead className="bg-white">Date</TableHead>
+                                        <TableHead className="text-right bg-white">Amount</TableHead>
                                     </TableRow>
-                                ) : filteredPayments.map((pay) => (
-                                    <TableRow key={pay.id}>
-                                        <TableCell className="font-medium">{pay.id}</TableCell>
-                                        <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
-                                        <TableCell>{pay.method}</TableCell>
-                                        <TableCell className="font-mono text-xs">{pay.reference}</TableCell>
-                                        <TableCell>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</TableCell>
-                                        <TableCell className="text-right font-bold text-green-600">+KES {Number(pay.amount).toLocaleString()}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredPayments.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
+                                        </TableRow>
+                                    ) : filteredPayments.map((pay) => (
+                                        <TableRow key={pay.id}>
+                                            <TableCell className="font-medium">{pay.id}</TableCell>
+                                            <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
+                                            <TableCell>{pay.method}</TableCell>
+                                            <TableCell className="font-mono text-xs">{pay.reference}</TableCell>
+                                            <TableCell>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</TableCell>
+                                            <TableCell className="text-right font-bold text-green-600">+KES {Number(pay.amount).toLocaleString()}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                 </TabsContent>
             </Tabs>

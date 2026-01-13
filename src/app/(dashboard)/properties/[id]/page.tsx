@@ -433,17 +433,17 @@ export default function PropertyViewPage() {
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         {property.units && property.units.length > 0 ? (
-                                            <div className="overflow-x-auto">
+                                            <div className="max-h-[500px] overflow-y-auto relative border rounded-md">
                                                 <Table>
-                                                    <TableHeader>
+                                                    <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                                                         <TableRow className="bg-slate-50">
-                                                            <TableHead className="font-semibold text-slate-700">Unit #</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Type</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Monthly Rent</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Deposit 1</TableHead>
-                                                            <TableHead className="font-semibold text-slate-700">Deposit 2</TableHead>
-                                                            <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Unit #</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Type</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Status</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Monthly Rent</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Deposit 1</TableHead>
+                                                            <TableHead className="font-semibold text-slate-700 bg-slate-50">Deposit 2</TableHead>
+                                                            <TableHead className="text-right font-semibold text-slate-700 bg-slate-50">Actions</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>

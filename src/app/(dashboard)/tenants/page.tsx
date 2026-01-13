@@ -753,183 +753,185 @@ function TenantsContent() {
                 )}
             </div>
 
-            <div className="rounded-md border bg-white shadow-sm overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>ID Number</TableHead>
-                            <TableHead>Property / Unit</TableHead>
-                            <TableHead>Contact</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Start Date</TableHead>
-                            <TableHead>Rent (KES)</TableHead>
-                            <TableHead>Deposit (Total)</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Balance (KES)</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredTenants.length > 0 ? filteredTenants.map((tenant) => {
-                            // Get lease information
-                            const lease = tenant.leases?.[0];
-                            const startDate = lease?.start_date ? new Date(lease.start_date).toLocaleDateString() : 'N/A';
-                            const rentAmount = lease?.rent_amount || 'N/A';
+            <div className="rounded-md border bg-white shadow-sm">
+                <div className="max-h-[600px] overflow-y-auto relative">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                            <TableRow>
+                                <TableHead className="bg-white">Name</TableHead>
+                                <TableHead className="bg-white">ID Number</TableHead>
+                                <TableHead className="bg-white">Property / Unit</TableHead>
+                                <TableHead className="bg-white">Contact</TableHead>
+                                <TableHead className="bg-white">Email</TableHead>
+                                <TableHead className="bg-white">Start Date</TableHead>
+                                <TableHead className="bg-white">Rent (KES)</TableHead>
+                                <TableHead className="bg-white">Deposit (Total)</TableHead>
+                                <TableHead className="bg-white">Status</TableHead>
+                                <TableHead className="text-right bg-white">Balance (KES)</TableHead>
+                                <TableHead className="w-[50px] bg-white"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredTenants.length > 0 ? filteredTenants.map((tenant) => {
+                                // Get lease information
+                                const lease = tenant.leases?.[0];
+                                const startDate = lease?.start_date ? new Date(lease.start_date).toLocaleDateString() : 'N/A';
+                                const rentAmount = lease?.rent_amount || 'N/A';
 
-                            return (
-                                <TableRow key={tenant.id} className="cursor-pointer hover:bg-slate-50">
-                                    <TableCell className="font-medium">
-                                        <div>{tenant.name}</div>
-                                        <div className="text-xs text-muted-foreground">ID: {tenant.id}</div>
-                                    </TableCell>
-                                    <TableCell className="font-mono text-sm">
-                                        {tenant.id_number || 'N/A'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div>{tenant.property?.name || tenant.property_name || 'N/A'}</div>
-                                        <div className="text-xs text-muted-foreground">{tenant.unit?.unit_number || tenant.unit_number || 'No Unit'}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center text-sm text-muted-foreground">
-                                            <Phone className="mr-2 h-3 w-3" /> {tenant.phone}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                        {tenant.email ? (
-                                            <div className="flex items-center text-muted-foreground">
-                                                <Mail className="mr-2 h-3 w-3" />
-                                                {tenant.email}
+                                return (
+                                    <TableRow key={tenant.id} className="cursor-pointer hover:bg-slate-50">
+                                        <TableCell className="font-medium">
+                                            <div>{tenant.name}</div>
+                                            <div className="text-xs text-muted-foreground">ID: {tenant.id}</div>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {tenant.id_number || 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div>{tenant.property?.name || tenant.property_name || 'N/A'}</div>
+                                            <div className="text-xs text-muted-foreground">{tenant.unit?.unit_number || tenant.unit_number || 'No Unit'}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center text-sm text-muted-foreground">
+                                                <Phone className="mr-2 h-3 w-3" /> {tenant.phone}
                                             </div>
-                                        ) : (
-                                            <span className="text-muted-foreground">N/A</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                        {startDate}
-                                    </TableCell>
-                                    <TableCell className="font-semibold">
-                                        {typeof rentAmount === 'number' ? rentAmount.toLocaleString() : rentAmount}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="font-medium text-slate-700">
-                                            {((Number(lease?.deposit_amount) || 0) + (Number(lease?.deposit_2_amount) || 0)).toLocaleString()}
-                                        </div>
-                                        {(Number(lease?.deposit_2_amount) > 0) && (
-                                            <div className="text-[10px] text-muted-foreground">
-                                                ({Number(lease?.deposit_amount).toLocaleString()} + {Number(lease?.deposit_2_amount).toLocaleString()})
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {tenant.email ? (
+                                                <div className="flex items-center text-muted-foreground">
+                                                    <Mail className="mr-2 h-3 w-3" />
+                                                    {tenant.email}
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground">N/A</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {startDate}
+                                        </TableCell>
+                                        <TableCell className="font-semibold">
+                                            {typeof rentAmount === 'number' ? rentAmount.toLocaleString() : rentAmount}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-medium text-slate-700">
+                                                {((Number(lease?.deposit_amount) || 0) + (Number(lease?.deposit_2_amount) || 0)).toLocaleString()}
                                             </div>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            className={
-                                                tenant.status?.toUpperCase() === "ACTIVE"
-                                                    ? "bg-green-500 hover:bg-green-600 text-white border-0"
-                                                    : tenant.status?.toUpperCase() === "INACTIVE"
-                                                        ? "bg-red-500 hover:bg-red-600 text-white border-0"
-                                                        : tenant.status === "Notice"
-                                                            ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
-                                                            : ""
-                                            }
-                                        >
-                                            {tenant.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className={`text-right font-medium ${tenant.balance < 0 ? "text-red-600" :
-                                        tenant.balance >= 0 ? "text-green-600" : ""
-                                        }`}>
-                                        {tenant.balance === 0 ? "Cleared" :
-                                            tenant.balance < 0 ? (tenant.balance ?? 0).toLocaleString() :
-                                                `+${(tenant.balance ?? 0).toLocaleString()}`}
-                                    </TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}`)}>
-                                                    View Details
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleEditClick(tenant)}>
-                                                    Edit Tenant
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => {
-                                                    setSmsData({
-                                                        phone: tenant.phone,
-                                                        name: tenant.name
-                                                    });
-                                                    setSmsMessage("");
-                                                    setSmsOpen(true);
-                                                }}>
-                                                    <Mail className="mr-2 h-4 w-4" /> Send SMS
-                                                </DropdownMenuItem>
+                                            {(Number(lease?.deposit_2_amount) > 0) && (
+                                                <div className="text-[10px] text-muted-foreground">
+                                                    ({Number(lease?.deposit_amount).toLocaleString()} + {Number(lease?.deposit_2_amount).toLocaleString()})
+                                                </div>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                className={
+                                                    tenant.status?.toUpperCase() === "ACTIVE"
+                                                        ? "bg-green-500 hover:bg-green-600 text-white border-0"
+                                                        : tenant.status?.toUpperCase() === "INACTIVE"
+                                                            ? "bg-red-500 hover:bg-red-600 text-white border-0"
+                                                            : tenant.status === "Notice"
+                                                                ? "bg-orange-500 hover:bg-orange-600 text-white border-0"
+                                                                : ""
+                                                }
+                                            >
+                                                {tenant.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className={`text-right font-medium ${tenant.balance < 0 ? "text-red-600" :
+                                            tenant.balance >= 0 ? "text-green-600" : ""
+                                            }`}>
+                                            {tenant.balance === 0 ? "Cleared" :
+                                                tenant.balance < 0 ? (tenant.balance ?? 0).toLocaleString() :
+                                                    `+${(tenant.balance ?? 0).toLocaleString()}`}
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}`)}>
+                                                        View Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(tenant)}>
+                                                        Edit Tenant
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => {
+                                                        setSmsData({
+                                                            phone: tenant.phone,
+                                                            name: tenant.name
+                                                        });
+                                                        setSmsMessage("");
+                                                        setSmsOpen(true);
+                                                    }}>
+                                                        <Mail className="mr-2 h-4 w-4" /> Send SMS
+                                                    </DropdownMenuItem>
 
 
-                                                <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
-                                                    View Statement
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                                                    onClick={() => handleDeactivate(tenant.id)}
-                                                >
-                                                    Deactivate
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                                    <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
+                                                        View Statement
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        className="text-red-600 focus:text-red-600 cursor-pointer"
+                                                        onClick={() => handleDeactivate(tenant.id)}
+                                                    >
+                                                        Deactivate
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            }) : (
+                                <TableRow>
+                                    <TableCell colSpan={11} className="py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4">
+                                            <div className="bg-slate-100 p-6 rounded-full">
+                                                <Users className="h-12 w-12 text-slate-400" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-black">Assign Tenants to Properties by clicking Register Tenant button</h3>
+                                            <p className="text-slate-500 max-w-sm mx-auto">Start by registering your first tenant and assigning them to a property unit.</p>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
-                            );
-                        }) : (
-                            <TableRow>
-                                <TableCell colSpan={11} className="py-20 text-center">
-                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="bg-slate-100 p-6 rounded-full">
-                                            <Users className="h-12 w-12 text-slate-400" />
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-black">Assign Tenants to Properties by clicking Register Tenant button</h3>
-                                        <p className="text-slate-500 max-w-sm mx-auto">Start by registering your first tenant and assigning them to a property unit.</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
 
-            {/* Send SMS Dialog */}
-            <Dialog open={smsOpen} onOpenChange={setSmsOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Send SMS to {smsData.name}</DialogTitle>
-                        <DialogDescription>
-                            Send a direct text message to {smsData.phone}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <Label htmlFor="sms-message">Message</Label>
-                        <textarea
-                            id="sms-message"
-                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Type your message here..."
-                            value={smsMessage}
-                            onChange={(e) => setSmsMessage(e.target.value)}
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setSmsOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSendSms} disabled={sendingSms || !smsMessage.trim()}>
-                            {sendingSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                            Send SMS
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                {/* Send SMS Dialog */}
+                <Dialog open={smsOpen} onOpenChange={setSmsOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Send SMS to {smsData.name}</DialogTitle>
+                            <DialogDescription>
+                                Send a direct text message to {smsData.phone}.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label htmlFor="sms-message">Message</Label>
+                            <textarea
+                                id="sms-message"
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Type your message here..."
+                                value={smsMessage}
+                                onChange={(e) => setSmsMessage(e.target.value)}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setSmsOpen(false)}>Cancel</Button>
+                            <Button onClick={handleSendSms} disabled={sendingSms || !smsMessage.trim()}>
+                                {sendingSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                                Send SMS
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     )
 }

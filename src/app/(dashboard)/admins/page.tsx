@@ -340,107 +340,109 @@ export default function AdminManagementPage() {
             </div>
 
             <div className="border rounded-lg">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Last Login</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredAdmins.length === 0 ? (
+                <div className="max-h-[600px] overflow-y-auto relative">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
                             <TableRow>
-                                <TableCell colSpan={5} className="py-20 text-center">
-                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="bg-slate-100 p-6 rounded-full">
-                                            <Shield className="h-12 w-12 text-slate-400" />
+                                <TableHead className="bg-white">Name</TableHead>
+                                <TableHead className="bg-white">Role</TableHead>
+                                <TableHead className="bg-white">Status</TableHead>
+                                <TableHead className="bg-white">Last Login</TableHead>
+                                <TableHead className="text-right bg-white">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAdmins.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4">
+                                            <div className="bg-slate-100 p-6 rounded-full">
+                                                <Shield className="h-12 w-12 text-slate-400" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-black">Add Admins by clicking the Add new Admin button</h3>
+                                            <p className="text-slate-500 max-w-sm mx-auto">Create administrator accounts to help manage the system and assign roles.</p>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-black">Add Admins by clicking the Add new Admin button</h3>
-                                        <p className="text-slate-500 max-w-sm mx-auto">Create administrator accounts to help manage the system and assign roles.</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : filteredAdmins.map((admin) => (
-                            <TableRow key={admin.id}>
-                                <TableCell>
-                                    <div className="flex flex-col">
-                                        <span className="font-medium">{admin.name}</span>
-                                        <span className="text-xs text-muted-foreground">{admin.email}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant="outline" className="font-normal">
-                                        <Shield className="mr-1 h-3 w-3" />
-                                        {admin.role}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        variant={admin.status === 'Active' ? 'default' : 'destructive'}
-                                        className={admin.status === 'Active' ? 'bg-green-600 hover:bg-green-700' : ''}
-                                    >
-                                        {admin.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                    {admin.last_login_at || 'Never'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem onClick={() => handleToggleStatus(admin)}>
-                                                <ShieldAlert className="mr-2 h-4 w-4" />
-                                                {admin.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(admin.id)}>
-                                                <Trash2 className="mr-2 h-4 w-4" /> Delete Account
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                                    </TableCell>
+                                </TableRow>
+                            ) : filteredAdmins.map((admin) => (
+                                <TableRow key={admin.id}>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{admin.name}</span>
+                                            <span className="text-xs text-muted-foreground">{admin.email}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="font-normal">
+                                            <Shield className="mr-1 h-3 w-3" />
+                                            {admin.role}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={admin.status === 'Active' ? 'default' : 'destructive'}
+                                            className={admin.status === 'Active' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                        >
+                                            {admin.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {admin.last_login_at || 'Never'}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleToggleStatus(admin)}>
+                                                    <ShieldAlert className="mr-2 h-4 w-4" />
+                                                    {admin.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(admin.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                {/* Confirmation Dialog */}
+                <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+                    <DialogContent className="sm:max-w-[400px] rounded-xl">
+                        <DialogHeader>
+                            <DialogTitle>{confirmConfig.title}</DialogTitle>
+                            <DialogDescription className="pt-2">
+                                {confirmConfig.description}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsConfirmDialogOpen(false)}
+                                className="w-full sm:w-auto rounded-xl"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant={confirmConfig.confirmVariant}
+                                onClick={confirmConfig.onConfirm}
+                                className="w-full sm:w-auto rounded-xl"
+                            >
+                                {confirmConfig.confirmText}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
-            {/* Confirmation Dialog */}
-            <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-                <DialogContent className="sm:max-w-[400px] rounded-xl">
-                    <DialogHeader>
-                        <DialogTitle>{confirmConfig.title}</DialogTitle>
-                        <DialogDescription className="pt-2">
-                            {confirmConfig.description}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsConfirmDialogOpen(false)}
-                            className="w-full sm:w-auto rounded-xl"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant={confirmConfig.confirmVariant}
-                            onClick={confirmConfig.onConfirm}
-                            className="w-full sm:w-auto rounded-xl"
-                        >
-                            {confirmConfig.confirmText}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

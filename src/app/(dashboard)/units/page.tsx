@@ -277,89 +277,91 @@ export default function UnitsPage() {
                     )}
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                                <TableHead className="font-semibold">Unit Number</TableHead>
-                                <TableHead className="font-semibold">Property</TableHead>
-                                <TableHead className="font-semibold">Type</TableHead>
-                                <TableHead className="font-semibold">Status</TableHead>
-                                <TableHead className="font-semibold">Price</TableHead>
-                                <TableHead className="font-semibold">Deposit 1</TableHead>
-                                <TableHead className="font-semibold">Deposit 2</TableHead>
-                                <TableHead className="font-semibold">Tenant</TableHead>
-                                <TableHead className="font-semibold">Contact</TableHead>
-                                <TableHead className="text-right font-semibold">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center">
-                                        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                            <Loader2 className="h-4 w-4 animate-spin" /> Loading units...
-                                        </div>
-                                    </TableCell>
+                    <div className="max-h-[600px] overflow-y-auto relative">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm border-b">
+                                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                                    <TableHead className="font-semibold bg-slate-50">Unit Number</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Property</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Type</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Status</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Price</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Deposit 1</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Deposit 2</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Tenant</TableHead>
+                                    <TableHead className="font-semibold bg-slate-50">Contact</TableHead>
+                                    <TableHead className="text-right font-semibold bg-slate-50">Actions</TableHead>
                                 </TableRow>
-                            ) : filteredUnits.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                        No units found matching your filters.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredUnits.map((unit) => (
-                                    <TableRow key={unit.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <TableCell className="font-medium text-slate-900">{unit.unit_number}</TableCell>
-                                        <TableCell className="text-slate-600">{unit.property?.name}</TableCell>
-                                        <TableCell className="text-slate-600">{normalizeType(unit.type)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className={getStatusColor(unit.status)}>
-                                                {unit.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="font-medium text-slate-900">{formatCurrency(unit.price)}</TableCell>
-                                        <TableCell className="text-slate-600">{formatCurrency(unit.deposit_1 || 0)}</TableCell>
-                                        <TableCell className="text-slate-600">{formatCurrency(unit.deposit_2 || 0)}</TableCell>
-                                        <TableCell className="text-slate-600">
-                                            {unit.active_lease?.tenant
-                                                ? unit.active_lease.tenant.name
-                                                : "-"
-                                            }
-                                        </TableCell>
-                                        <TableCell className="text-slate-600">
-                                            {unit.active_lease?.tenant
-                                                ? unit.active_lease.tenant.phone
-                                                : "-"
-                                            }
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                                                    onClick={() => router.push(`/units/${unit.id}`)}
-                                                >
-                                                    View
-                                                </Button>
-                                                {user?.role === 'super_admin' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => setUnitToDelete(unit)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center">
+                                            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Loading units...
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : filteredUnits.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                            No units found matching your filters.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredUnits.map((unit) => (
+                                        <TableRow key={unit.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <TableCell className="font-medium text-slate-900">{unit.unit_number}</TableCell>
+                                            <TableCell className="text-slate-600">{unit.property?.name}</TableCell>
+                                            <TableCell className="text-slate-600">{normalizeType(unit.type)}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={getStatusColor(unit.status)}>
+                                                    {unit.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="font-medium text-slate-900">{formatCurrency(unit.price)}</TableCell>
+                                            <TableCell className="text-slate-600">{formatCurrency(unit.deposit_1 || 0)}</TableCell>
+                                            <TableCell className="text-slate-600">{formatCurrency(unit.deposit_2 || 0)}</TableCell>
+                                            <TableCell className="text-slate-600">
+                                                {unit.active_lease?.tenant
+                                                    ? unit.active_lease.tenant.name
+                                                    : "-"
+                                                }
+                                            </TableCell>
+                                            <TableCell className="text-slate-600">
+                                                {unit.active_lease?.tenant
+                                                    ? unit.active_lease.tenant.phone
+                                                    : "-"
+                                                }
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                                        onClick={() => router.push(`/units/${unit.id}`)}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                    {user?.role === 'super_admin' && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => setUnitToDelete(unit)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
