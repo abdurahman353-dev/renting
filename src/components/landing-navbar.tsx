@@ -43,7 +43,7 @@ export function LandingNavbar() {
 
                 <div className="flex items-center gap-4">
                     <Link href="/login">
-                        <Button className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold px-6 shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 border-0">
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 border-0">
                             Admin Login
                         </Button>
                     </Link>

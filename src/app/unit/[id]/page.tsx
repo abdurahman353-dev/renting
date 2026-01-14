@@ -31,12 +31,13 @@ import {
     TrendingUp,
     ArrowLeft,
     Phone,
-    EyeIcon
+    EyeIcon,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { publicAPI, unitAPI } from "@/data/apis";
 import { toast } from "sonner";
 import { ImageGalleryModal } from "@/components/ImageGalleryModal";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 export default function UnitDetailsPage() {
     const params = useParams();
@@ -170,7 +171,7 @@ export default function UnitDetailsPage() {
                                         </div>
                                         {images.length > 4 && (
                                             <div
-                                                className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group"
+                                                className="relative bg-gray-400 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group"
                                                 onClick={() => { setGalleryIndex(4); setGalleryOpen(true); }}
                                             >
                                                 <div className="text-center text-white">
@@ -291,13 +292,21 @@ export default function UnitDetailsPage() {
                                             toast.error("Contact number not available");
                                             return;
                                         }
-                                        // Simple cleanup for WhatsApp link
-                                        const cleanPhone = phone.replace(/\D/g, '');
+                                        // Robust cleanup and international formatting for Kenyan numbers
+                                        const digitsOnly = phone.replace(/\D/g, '');
+                                        let cleanPhone = digitsOnly;
+
+                                        if (digitsOnly.startsWith('0')) {
+                                            cleanPhone = '254' + digitsOnly.substring(1);
+                                        } else if (digitsOnly.length === 9 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('1'))) {
+                                            cleanPhone = '254' + digitsOnly;
+                                        }
+
                                         const message = `Hi, I am interested in Unit ${unit.unit_number} at ${unit.property?.name}`;
                                         window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
                                     }}
                                 >
-                                    <Phone className="w-4 h-4 mr-2" /> Contact Agent
+                                    <WhatsAppIcon className="w-5 h-5 mr-2 text-emerald-500" /> Contact Agent
                                 </Button>
                             </CardContent>
                         </Card>

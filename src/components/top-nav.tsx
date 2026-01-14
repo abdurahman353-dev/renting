@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Menu, LogOut, Settings, User, Check, Info, AlertTriangle, CheckCircle, XCircle, MessageCircle } from "lucide-react"
+import { Bell, Menu, LogOut, Settings, User, Check, Info, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { useState, useRef, useEffect } from "react"
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import api from "@/lib/api"
 import { formatDate } from "@/lib/utils"
 import apiClient, { communicationAPI } from "@/data/apis"
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon"
 
 interface TopNavProps {
     onSidebarToggle: () => void
@@ -174,8 +175,16 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                                                         const details = extractDetails(notif.message);
                                                         if (!details.phone) return null;
 
+                                                        const digitsOnly = details.phone.replace(/\D/g, '');
+                                                        let cleanPhone = digitsOnly;
+                                                        if (digitsOnly.startsWith('0')) {
+                                                            cleanPhone = '254' + digitsOnly.substring(1);
+                                                        } else if (digitsOnly.length === 9 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('1'))) {
+                                                            cleanPhone = '254' + digitsOnly;
+                                                        }
+
                                                         const waText = `Hello ${details.from || ''}, I'm responding to your inquiry about "${details.subject || 'RentSys'}" via RentSys. \n\nYour message: "${details.content || ''}"`;
-                                                        const waUrl = `https://wa.me/${details.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`;
+                                                        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
 
                                                         return (
                                                             <a
@@ -185,7 +194,7 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                                                                 onClick={(e) => e.stopPropagation()}
                                                                 className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-all w-fit group"
                                                             >
-                                                                <MessageCircle className="w-3.5 h-3.5" />
+                                                                <WhatsAppIcon className="w-3.5 h-3.5" />
                                                                 Continue chatting on WhatsApp
                                                             </a>
                                                         );
