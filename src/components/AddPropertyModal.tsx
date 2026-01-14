@@ -394,7 +394,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-90 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden mx-auto">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">
+                <div className="bg-blue-600 text-white p-6 flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold">{editMode ? 'Edit Property' : 'Add New Property'}</h2>
                         <p className="text-blue-100 text-sm mt-1">Step {currentStep} of {totalSteps}</p>
@@ -407,7 +407,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                 {/* Progress Bar */}
                 <div className="bg-gray-100 h-2">
                     <div
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 h-full transition-all duration-300"
+                        className="bg-blue-600 h-full transition-all duration-300"
                         style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                     />
                 </div>
@@ -870,7 +870,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                     {currentStep < totalSteps ? (
                         <button
                             onClick={nextStep}
-                            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition"
+                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:shadow-lg transition"
                         >
                             Next
                         </button>
@@ -878,7 +878,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, editMode 
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 transition flex items-center gap-2"
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 transition flex items-center gap-2"
                         >
                             {loading ? 'Creating...' : 'Create Property'}
                             {!loading && <Check size={20} />}

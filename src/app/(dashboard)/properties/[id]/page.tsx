@@ -188,7 +188,7 @@ export default function PropertyViewPage() {
                                 alt={property.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                            <div className="absolute inset-0 bg-black/60"></div>
                             <div className="absolute bottom-6 left-6 right-6">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Sparkles className="w-5 h-5 text-yellow-400" />
@@ -233,7 +233,7 @@ export default function PropertyViewPage() {
                                             />
                                         </div>
                                         {images.length > 4 && (
-                                            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group">
+                                            <div className="relative bg-blue-600 flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-all duration-300 rounded-xl group">
                                                 <div className="text-center text-white">
                                                     <p className="text-4xl font-bold mb-2">+{images.length - 4}</p>
                                                     <p className="text-sm font-medium">More Photos</p>

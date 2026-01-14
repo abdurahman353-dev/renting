@@ -84,7 +84,7 @@ export default function TenantDetailsPage() {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
                             <User className="w-10 h-10 text-white" />
                         </div>
                         <div>

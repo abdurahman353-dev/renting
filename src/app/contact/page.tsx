@@ -79,7 +79,7 @@ export default function ContactPage() {
                     {/* Header Section */}
                     <div className="max-w-3xl mx-auto text-center mb-16">
                         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">
-                            Get in <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Touch</span>
+                            Get in <span className="text-blue-600">Touch</span>
                         </h1>
                         <p className="text-lg text-slate-600 font-medium">
                             Have questions about our properties or services? Our team is here to help you find the perfect rental solution.
@@ -220,7 +220,7 @@ export default function ContactPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={isSubmitting}
-                                                className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
+                                                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
                                             >
                                                 {isSubmitting ? (
                                                     <>

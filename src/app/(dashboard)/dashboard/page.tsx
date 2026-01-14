@@ -134,7 +134,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
+            <div className="text-3xl font-black tracking-tight text-emerald-600">
               KES {(stats?.revenue ?? 0).toLocaleString()}
             </div>
             <div className="flex items-center mt-3">
@@ -157,7 +157,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">
+            <div className="text-3xl font-black tracking-tight text-blue-600">
               {stats.activeTenants}
             </div>
             <div className="flex items-center mt-3">
@@ -180,7 +180,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-purple-500">
+            <div className="text-3xl font-black tracking-tight text-violet-600">
               {stats.occupancyRate}%
             </div>
             <div className="flex items-center mt-3">
@@ -203,7 +203,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500">
+            <div className="text-3xl font-black tracking-tight text-amber-600">
               {stats.totalProperties || 0}
             </div>
             <div className="flex items-center mt-3">
@@ -249,16 +249,9 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={getAggregatedData()} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                        <stop offset="50%" stopColor="#6366f1" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorRevenueStroke" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#6366f1" />
-                        <stop offset="50%" stopColor="#a855f7" />
-                        <stop offset="100%" stopColor="#ec4899" />
-                      </linearGradient>
+                      <filter id="shadow">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" />
+                      </filter>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis
@@ -290,10 +283,10 @@ export default function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="url(#colorRevenueStroke)"
+                      stroke="#6366f1"
                       strokeWidth={4}
-                      fillOpacity={1}
-                      fill="url(#colorRevenue)"
+                      fillOpacity={0.1}
+                      fill="#6366f1"
                       animationDuration={2500}
                       activeDot={{ r: 8, strokeWidth: 0, fill: '#6366f1' }}
                     />

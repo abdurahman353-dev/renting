@@ -152,12 +152,12 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
           <Link href="/dashboard" className="flex items-center pl-3 mb-14">
             <div className="relative w-8 h-8 mr-4">
               {/* Logo placeholder */}
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg opacity-75 blur-sm animate-pulse"></div>
+              <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
               <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
                 <span className="text-xl font-bold">R</span>
               </div>
             </div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+            <h1 className="text-2xl font-bold text-indigo-400">
               RentSys
             </h1>
           </Link>

@@ -69,7 +69,7 @@ export default function LoginPage() {
         <div className="min-h-screen w-full flex">
             {/* Left Side - Brand / Decorative */}
             <div className="hidden lg:flex w-1/2 bg-[#0B1120] text-white flex-col justify-between p-12 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
+                <div className="absolute inset-0 bg-blue-900/20" />
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 text-2xl font-bold">
                         <Link href="/" className="p-2 bg-blue-600 rounded-lg">

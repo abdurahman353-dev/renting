@@ -550,7 +550,7 @@ export default function CashierPage() {
                     {/* 2. Payment Form (Only visible if tenant selected) */}
                     {selectedTenant && (
                         <Card className="border-indigo-100 shadow-md">
-                            <CardHeader className="bg-gradient-to-r from-indigo-50 to-white border-b border-indigo-50">
+                            <CardHeader className="bg-indigo-50/50 border-b border-indigo-50">
                                 <CardTitle className="flex items-center gap-2 text-indigo-900">
                                     <CreditCard className="w-5 h-5 text-indigo-600" />
                                     Record Payment

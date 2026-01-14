@@ -136,7 +136,7 @@ export default function UnitDetailsPage() {
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 cursor-pointer"
                                 onClick={() => { setGalleryIndex(0); setGalleryOpen(true); }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
+                            <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
                             <div className="absolute bottom-6 left-6 right-6">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Sparkles className="w-5 h-5 text-yellow-400" />
@@ -171,7 +171,7 @@ export default function UnitDetailsPage() {
                                         </div>
                                         {images.length > 4 && (
                                             <div
-                                                className="relative bg-gray-400 flex items-center justify-center cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300 rounded-xl group"
+                                                className="relative bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-900 transition-all duration-300 rounded-xl group"
                                                 onClick={() => { setGalleryIndex(4); setGalleryOpen(true); }}
                                             >
                                                 <div className="text-center text-white">

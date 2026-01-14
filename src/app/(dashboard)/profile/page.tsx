@@ -134,7 +134,7 @@ export default function ProfilePage() {
             {/* Main Profile Card */}
             <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
                 {/* Banner/Header Background */}
-                <div className="h-32 bg-gradient-to-r from-primary/10 to-primary/5 w-full relative">
+                <div className="h-32 bg-primary/10 w-full relative">
                     <div className="absolute -bottom-12 left-8">
                         <div className="w-24 h-24 rounded-full bg-primary border-4 border-card flex items-center justify-center shadow-md">
                             <span className="text-3xl font-bold text-primary-foreground">

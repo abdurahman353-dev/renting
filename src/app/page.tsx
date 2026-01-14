@@ -184,16 +184,16 @@ export default function LandingPage() {
                         />
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-white" />
+                    <div className="absolute inset-0 bg-slate-900/70" />
                 </div>
 
                 <div className="container relative mx-auto px-4 text-center z-10">
                     <Badge variant="outline" className="mb-6 border-white/20 text-white px-4 py-1.5 backdrop-blur-md" style={{ background: 'transparent' }}>
-                        ✨ Simplify Your Living Experience
+                        Simplify Your Living Experience
                     </Badge>
                     <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
                         Find Your Next Home <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                        <span className="text-blue-400">
                             With Ease & Style
                         </span>
                     </h1>
@@ -201,7 +201,6 @@ export default function LandingPage() {
                         Browse premium available units and receive instant rent/payment links directly via SMS. No hassle, just comfort.
                     </p>
 
-                    {/* Search Bar */}
                     {/* Search Bar */}
                     <div className="max-w-5xl mx-auto bg-white p-4 rounded-2xl shadow-2xl shadow-blue-900/20 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">

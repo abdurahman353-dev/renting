@@ -30,7 +30,7 @@ export function LandingNavbar() {
                     <div className="p-2 bg-blue-600 rounded-lg text-white">
                         <Building2 className="h-5 w-5" />
                     </div>
-                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                    <span className="text-xl font-bold text-blue-600">
                         {companyName}
                     </span>
                 </Link>

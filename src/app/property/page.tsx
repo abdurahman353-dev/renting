@@ -138,7 +138,7 @@ export default function AllPropertiesPage() {
                     <div className="text-center mb-12">
                         <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
                             Find Your Perfect <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                            <span className="text-blue-600">
                                 Available Home
                             </span>
                         </h1>

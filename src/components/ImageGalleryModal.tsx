@@ -64,7 +64,7 @@ export function ImageGalleryModal({ images, isOpen, onClose, initialIndex = 0 }:
             <DialogContent className="max-w-[100vw] w-screen h-screen p-0 bg-black/95 border-0 rounded-none overflow-hidden flex flex-col justify-center items-center z-[100]">
                 <DialogTitle className="sr-only">Image Gallery</DialogTitle>
                 {/* Header/Controls */}
-                <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[110] bg-gradient-to-b from-black/50 to-transparent">
+                <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[110] bg-black/40">
                     <div className="text-white font-medium">
                         {currentIndex + 1} / {images.length}
                     </div>
@@ -132,7 +132,7 @@ export function ImageGalleryModal({ images, isOpen, onClose, initialIndex = 0 }:
                 </div>
 
                 {/* Thumbnails Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 h-32 flex justify-center items-center gap-3 bg-gradient-to-t from-black/50 to-transparent z-[110] overflow-x-auto">
+                <div className="absolute bottom-0 left-0 right-0 p-8 h-32 flex justify-center items-center gap-3 bg-black/40 z-[110] overflow-x-auto">
                     {images.map((img, idx) => (
                         <button
                             key={idx}
