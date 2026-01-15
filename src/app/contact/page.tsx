@@ -31,7 +31,7 @@ export default function ContactPage() {
         message: ''
     });
     const [settings, setSettings] = useState<any>({
-        company_phone: '+254 700 000 000',
+        company_phone: '0729671617',
         company_email: 'hello@rentsys.com',
         company_address: 'RentSys Plaza, 4th Floor',
         company_office_hours: 'Mon-Fri from 8am to 6pm',
@@ -52,6 +52,13 @@ export default function ContactPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate phone number length specifically
+        if (formData.phone.length !== 10) {
+            toast.error('Phone number must be exactly 10 digits');
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             await publicAPI.submitContactForm(formData);
@@ -67,7 +74,18 @@ export default function ContactPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
-        setFormData(prev => ({ ...prev, [id]: value }));
+
+        if (id === 'phone') {
+            // Only allow numbers
+            const numericValue = value.replace(/\D/g, '');
+
+            // Limit to 10 digits
+            if (numericValue.length > 10) return;
+
+            setFormData(prev => ({ ...prev, [id]: numericValue }));
+        } else {
+            setFormData(prev => ({ ...prev, [id]: value }));
+        }
     };
 
     return (
@@ -188,7 +206,7 @@ export default function ContactPage() {
                                                 <Input
                                                     id="phone"
                                                     type="tel"
-                                                    placeholder="+254 7XX XXX XXX"
+                                                    placeholder="07XX or 01XX XXX XXX"
                                                     className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
                                                     value={formData.phone}
                                                     onChange={handleChange}

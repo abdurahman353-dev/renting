@@ -8,8 +8,8 @@ import { publicAPI } from '@/data/apis';
 export function LandingFooter() {
     const [settings, setSettings] = useState({
         company_name: 'RentSys',
-        company_phone: '+254 700 000 000',
-        company_email: 'support@rentsys.com',
+        company_phone: '0729671617',
+        company_email: 'hello@rentsys.com',
         company_address: 'Nairobi, Kenya'
     });
 
