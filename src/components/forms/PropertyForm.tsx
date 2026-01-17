@@ -255,14 +255,18 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
         <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto pb-20">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <Button type="button" variant="outline" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
+                <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-transparent text-black transition-none hover:bg-transparent hover:text-black hover:opacity-100 focus:outline-none focus:ring-0 cursor-pointer dark:border-slate-600 dark:text-white dark:hover:bg-transparent dark:hover:text-white"
+                >
+                    <ArrowLeft className="h-5 w-5" />
+                </button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">
+                    <h1 className="text-2xl font-bold tracking-tight text-black dark:text-white">
                         {isEditMode ? `Edit ${initialData?.name || 'Property'}` : "Add New Property"}
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-base text-black font-medium dark:text-white">
                         {isEditMode ? "Update property details and images." : "Fill in the details to create a new property."}
                     </p>
                 </div>
@@ -500,9 +504,9 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
 
                         {/* Selected Amenities Tags */}
                         {formData.amenities.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
                                 {formData.amenities.map((amenity, index) => (
-                                    <div key={`${amenity}-${index}`} className="flex items-center gap-1 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
+                                    <div key={`${amenity}-${index}`} className="flex items-center gap-1 bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm font-medium">
                                         <span>{amenity}</span>
                                         <button
                                             type="button"
@@ -512,7 +516,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                                                     amenities: prev.amenities.filter((_, i) => i !== index)
                                                 }));
                                             }}
-                                            className="hover:text-red-600 transition-colors ml-1"
+                                            className="hover:text-destructive transition-colors ml-1"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                         </button>
@@ -565,8 +569,8 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
 
             {/* Footer Actions */}
             <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <Button type="submit" disabled={loading} className="min-w-[120px]">
+                <Button type="button" onClick={() => router.back()} className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm">Cancel</Button>
+                <Button type="submit" disabled={loading} className="min-w-[120px] bg-green-600 hover:bg-green-700 text-white" variant="default">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEditMode ? "Update Property" : "Create Property"}
                 </Button>

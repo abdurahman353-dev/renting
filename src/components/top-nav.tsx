@@ -9,6 +9,7 @@ import api from "@/lib/api"
 import { formatDate } from "@/lib/utils"
 import apiClient, { communicationAPI } from "@/data/apis"
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface TopNavProps {
     onSidebarToggle: () => void
@@ -121,6 +122,8 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
 
             {/* Right */}
             <div className="flex items-center gap-4">
+                <ThemeToggle />
+
                 {/* Notification Bell */}
                 <div className="relative" ref={notifRef}>
                     <button

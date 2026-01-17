@@ -30,7 +30,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* Main Content */}
-                <main className="bg-slate-50 min-h-screen">
+                <main className="bg-background min-h-screen">
                     {children}
                 </main>
             </div>

@@ -101,7 +101,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
 
                 <div className="flex-1 overflow-hidden flex flex-col gap-4">
                     {!isPreviewing ? (
-                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-slate-50">
+                        <div className="grid grid-cols-2 gap-4 p-4 border border-border rounded-lg bg-muted/40">
                             <div className="space-y-2">
                                 <Label>Unit Prefix</Label>
                                 <Input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="e.g. A, Block B-" />
@@ -143,7 +143,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                             </div>
                         </div>
                     ) : (
-                        <div className="flex-1 border rounded-md overflow-y-auto">
+                        <div className="flex-1 border border-border rounded-md overflow-y-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -163,10 +163,10 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                                     <Input
                                                         value={unit.unit_number}
                                                         onChange={(e) => handleUnitChange(index, 'unit_number', e.target.value)}
-                                                        className={`h-8 ${existingUnits.includes(unit.unit_number) ? "border-red-500 focus-visible:ring-red-500 bg-red-50" : ""}`}
+                                                        className={`h-8 ${existingUnits.includes(unit.unit_number) ? "border-destructive focus-visible:ring-destructive bg-destructive/10" : ""}`}
                                                     />
                                                     {existingUnits.includes(unit.unit_number) && (
-                                                        <p className="text-[10px] font-medium text-red-600">Already exists</p>
+                                                        <p className="text-[10px] font-medium text-destructive">Already exists</p>
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -210,7 +210,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                             </TableCell>
                                             <TableCell>
                                                 <Button variant="ghost" size="icon" onClick={() => handleRemoveUnit(index)}>
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -234,7 +234,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || generatedUnits.length === 0 || generatedUnits.some(u => existingUnits.includes(u.unit_number) || !u.type || u.price === "" || u.status === "")}
-                                className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
                             >
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save {generatedUnits.length} Units

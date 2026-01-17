@@ -174,18 +174,19 @@ export default function TenantStatementPage() {
     }
 
     return (
-        <div className="p-8 space-y-2 max-w-9xl mx-auto">
+        <div className="p-8 space-y-4 max-w-9xl mx-auto min-h-screen bg-muted/40">
             <div className="flex items-center justify-between print:hidden">
                 <Button variant="ghost" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to Tenant
                 </Button>
                 <div className="space-x-2">
-                    <Button variant="outline" onClick={handlePrint}>
+                    <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white border-none shadow-sm" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" /> Print
                     </Button>
                     <Button
                         onClick={handleDownloadPDF}
                         disabled={downloading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
                     >
                         {downloading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -197,9 +198,9 @@ export default function TenantStatementPage() {
                 </div>
             </div>
 
-            <div ref={componentRef} className="bg-white">
-                <Card className="bg-white shadow-sm pt-0" id="printable-statement">
-                    <CardHeader className="border-b bg-slate-50 rounded-t-lg pt-6">
+            <div ref={componentRef} className="bg-background">
+                <Card className="bg-card border border-border shadow-lg pt-0" id="printable-statement">
+                    <CardHeader className="border-b bg-muted/40 rounded-t-lg pt-6">
                         <div className="flex justify-between items-start">
                             <div>
                                 <CardTitle className="text-2xl font-bold">Statement of Account</CardTitle>
@@ -219,13 +220,13 @@ export default function TenantStatementPage() {
                     <CardContent className="p-0">
                         <div className="max-h-[600px] overflow-y-auto relative print:max-h-none print:overflow-visible">
                             <Table>
-                                <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm print:static print:shadow-none">
-                                    <TableRow className="bg-slate-50/50">
-                                        <TableHead className="w-[150px] bg-slate-50">Date</TableHead>
-                                        <TableHead className="bg-slate-50">Description</TableHead>
-                                        <TableHead className="text-right bg-slate-50">Reference</TableHead>
-                                        <TableHead className="text-right bg-slate-50">Charge / Credit</TableHead>
-                                        <TableHead className="text-right font-bold w-[150px] bg-slate-50">Balance</TableHead>
+                                <TableHeader className="sticky top-0 bg-muted/90 backdrop-blur-sm z-10 shadow-sm print:static print:shadow-none">
+                                    <TableRow className="bg-muted/50 border-border">
+                                        <TableHead className="w-[150px] text-foreground font-bold">Date</TableHead>
+                                        <TableHead className="text-foreground font-bold">Description</TableHead>
+                                        <TableHead className="text-right text-foreground font-bold">Reference</TableHead>
+                                        <TableHead className="text-right text-foreground font-bold">Charge / Credit</TableHead>
+                                        <TableHead className="text-right font-black w-[150px] text-foreground">Balance</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -234,27 +235,27 @@ export default function TenantStatementPage() {
                                         <TableCell className="text-right font-medium">KES 0</TableCell>
                                     </TableRow>
                                     {transactions.map((txn, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
-                                            <TableCell>
+                                        <TableRow key={index} className="border-border">
+                                            <TableCell className="text-foreground font-medium">{new Date(txn.date).toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-foreground">
                                                 {txn.description}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono text-xs">{txn.reference}</TableCell>
-                                            <TableCell className={`text-right font-medium ${txn.amount < 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                                            <TableCell className="text-right font-mono text-xs text-muted-foreground">{txn.reference}</TableCell>
+                                            <TableCell className={`text-right font-semibold ${txn.amount < 0 ? 'text-orange-500' : 'text-emerald-500'}`}>
                                                 {txn.amount < 0 ? '-' : '+'} KES {Math.abs(txn.amount).toLocaleString()}
                                             </TableCell>
-                                            <TableCell className="text-right font-bold text-slate-900">
+                                            <TableCell className="text-right font-bold text-foreground">
                                                 KES {txn.running_balance.toLocaleString()}
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    <TableRow className="border-t-2 border-slate-900 bg-slate-50/50">
-                                        <TableCell colSpan={4} className="text-right font-black text-slate-900 uppercase tracking-wider">Total Balance</TableCell>
+                                    <TableRow className="border-t-2 border-primary bg-muted/40">
+                                        <TableCell colSpan={4} className="text-right font-black text-foreground uppercase tracking-wider">Total Balance</TableCell>
                                         <TableCell className="text-right">
-                                            <div className={`text-sm font-bold ${closingBalance < 0 ? 'text-red-600' : (closingBalance > 0 ? 'text-green-600' : 'text-slate-900')}`}>
+                                            <div className={`text-base font-black ${closingBalance < 0 ? 'text-red-500' : (closingBalance > 0 ? 'text-emerald-500' : 'text-foreground')}`}>
                                                 {closingBalance > 0 ? '+' : ''} KES {closingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </div>
-                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                                                 {closingBalance < 0 ? 'Pending Amount' : (closingBalance > 0 ? 'Outstanding Credit' : 'Account Balanced')}
                                             </div>
                                         </TableCell>

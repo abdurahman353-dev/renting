@@ -144,7 +144,7 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
       {/* Sidebar */}
       <div
         className={cn(
-          "space-y-4 py-4 flex flex-col h-full bg-slate-900 text-white w-64 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out md:translate-x-0",
+          "space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border w-64 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

@@ -206,10 +206,10 @@ export default function AdminManagementPage() {
     if (isLoading) return <div className="p-8">Loading admins...</div>;
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex items-center justify-between">
+        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Admin Management</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Administrator Management</h2>
                     <p className="text-muted-foreground mt-2">Manage system administrators and their permissions.</p>
                 </div>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -264,7 +264,7 @@ export default function AdminManagementPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-4 w-4" />
@@ -291,7 +291,7 @@ export default function AdminManagementPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showConfirmPassword ? (
                                             <EyeOff className="h-4 w-4" />
@@ -342,13 +342,13 @@ export default function AdminManagementPage() {
             <div className="border rounded-lg">
                 <div className="max-h-[600px] overflow-y-auto relative">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                        <TableHeader className="sticky top-0 bg-card z-10 shadow-sm border-b">
                             <TableRow>
-                                <TableHead className="bg-white">Name</TableHead>
-                                <TableHead className="bg-white">Role</TableHead>
-                                <TableHead className="bg-white">Status</TableHead>
-                                <TableHead className="bg-white">Last Login</TableHead>
-                                <TableHead className="text-right bg-white">Actions</TableHead>
+                                <TableHead className="bg-card">Name</TableHead>
+                                <TableHead className="bg-card">Role</TableHead>
+                                <TableHead className="bg-card">Status</TableHead>
+                                <TableHead className="bg-card">Last Login</TableHead>
+                                <TableHead className="text-right bg-card">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -356,11 +356,11 @@ export default function AdminManagementPage() {
                                 <TableRow>
                                     <TableCell colSpan={5} className="py-20 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
-                                            <div className="bg-slate-100 p-6 rounded-full">
-                                                <Shield className="h-12 w-12 text-slate-400" />
+                                            <div className="bg-muted p-6 rounded-full">
+                                                <Shield className="h-12 w-12 text-muted-foreground" />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-black">Add Admins by clicking the Add new Admin button</h3>
-                                            <p className="text-slate-500 max-w-sm mx-auto">Create administrator accounts to help manage the system and assign roles.</p>
+                                            <h3 className="text-2xl font-bold text-foreground">Add Admins by clicking the Add new Admin button</h3>
+                                            <p className="text-muted-foreground max-w-sm mx-auto">Create administrator accounts to help manage the system and assign roles.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>

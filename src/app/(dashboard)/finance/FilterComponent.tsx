@@ -42,17 +42,17 @@ export default function FilterComponent({ properties, units, currentFilters, onF
         : [];
 
     return (
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-slate-500 mr-2 border-r pr-4 border-slate-200">
-                <Filter className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Filters</span>
+        <div className="bg-white dark:bg-[#161B22] p-4 rounded-xl border border-slate-100 dark:border-[#2A3242] shadow-sm flex flex-wrap items-center gap-3 transition-all">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-[#9CA3AF] mr-2 border-r pr-4 border-slate-200 dark:border-[#2A3242]">
+                <Filter className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider">Filters</span>
             </div>
 
             {/* Property Filter */}
             <div className="flex flex-col gap-1 min-w-[150px]">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Property</span>
+                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Property</span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
+                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
                     value={currentFilters.property_id}
                     onChange={(e) => {
                         onFilterChange({
@@ -70,9 +70,9 @@ export default function FilterComponent({ properties, units, currentFilters, onF
 
             {/* Unit Filter */}
             <div className={`flex flex-col gap-1 min-w-[120px] transition-opacity duration-300 ${currentFilters.property_id === 'all' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Unit</span>
+                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Unit</span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
+                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
                     value={currentFilters.unit_id}
                     onChange={(e) => onFilterChange({ unit_id: e.target.value })}
                     disabled={currentFilters.property_id === 'all'}
@@ -90,9 +90,9 @@ export default function FilterComponent({ properties, units, currentFilters, onF
 
             {/* Status Filter */}
             <div className="flex flex-col gap-1 min-w-[130px]">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Status</span>
+                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Status</span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
+                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
                     value={currentFilters.status}
                     onChange={(e) => onFilterChange({ status: e.target.value })}
                 >
@@ -104,9 +104,9 @@ export default function FilterComponent({ properties, units, currentFilters, onF
 
             {/* Month Filter */}
             <div className="flex flex-col gap-1 min-w-[120px]">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Month</span>
+                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Month</span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
+                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
                     value={currentFilters.month}
                     onChange={(e) => onFilterChange({ month: e.target.value })}
                 >
@@ -119,17 +119,20 @@ export default function FilterComponent({ properties, units, currentFilters, onF
 
             {/* Year Filter */}
             <div className="flex flex-col gap-1 min-w-[100px]">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Year</span>
-                <select
-                    className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white"
+                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Year</span>
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    placeholder="YYYY"
                     value={currentFilters.year}
-                    onChange={(e) => onFilterChange({ year: e.target.value })}
-                >
-                    <option value="">All Time</option>
-                    {years.map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                    ))}
-                </select>
+                    onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        onFilterChange({ year: val });
+                    }}
+                />
             </div>
 
             <div className="flex-1"></div>
@@ -138,7 +141,7 @@ export default function FilterComponent({ properties, units, currentFilters, onF
                 variant="outline"
                 onClick={onRefresh}
                 size="sm"
-                className="mt-4 h-9 border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50"
+                className="mt-4 h-9 border-slate-200 dark:border-[#2A3242] text-slate-600 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-[#2563EB] hover:border-indigo-200 dark:hover:border-[#2563EB] hover:bg-indigo-50 dark:hover:bg-[#1F2633]"
             >
                 <RefreshCw className="mr-2 h-3.5 w-3.5" /> Refresh
             </Button>

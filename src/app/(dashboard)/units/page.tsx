@@ -130,13 +130,13 @@ export default function UnitsPage() {
         switch (status?.toLowerCase()) {
             case 'available':
             case 'vacant':
-                return "bg-green-100 text-green-700 border-green-200";
+                return "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
             case 'occupied':
-                return "bg-blue-100 text-blue-700 border-blue-200";
+                return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800";
             case 'maintenance':
-                return "bg-red-100 text-red-700 border-red-200";
+                return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
             default:
-                return "bg-slate-100 text-slate-700 border-slate-200";
+                return "bg-muted text-muted-foreground border-border";
         }
     };
 
@@ -177,10 +177,10 @@ export default function UnitsPage() {
     };
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">Units</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Units</h2>
                     <p className="text-muted-foreground mt-1">
                         Manage all residential units across properties.
                     </p>
@@ -194,14 +194,14 @@ export default function UnitsPage() {
                 </Button>
             </div>
 
-            <Card className="border-slate-200 shadow-sm bg-white">
+            <Card className="border-border shadow-sm bg-card">
                 <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                         <div className="relative flex-1 max-w-md w-full">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search by unit, property, or tenant..."
-                                className="pl-9 bg-slate-50 border-slate-200"
+                                className="pl-9 bg-accent/20 border-input placeholder:text-muted-foreground"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -209,7 +209,7 @@ export default function UnitsPage() {
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                             <Button
                                 variant="outline"
-                                className={showFilters ? "bg-slate-100" : ""}
+                                className={showFilters ? "bg-accent" : ""}
                                 onClick={() => setShowFilters(!showFilters)}
                             >
                                 <Filter className="mr-2 h-4 w-4" /> Filters
@@ -221,7 +221,7 @@ export default function UnitsPage() {
                     </div>
 
                     {showFilters && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 pt-4 mt-4 border-t border-slate-100 animate-in slide-in-from-top-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 pt-4 mt-4 border-t border-border animate-in slide-in-from-top-2">
                             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Property" />
@@ -279,18 +279,18 @@ export default function UnitsPage() {
                 <CardContent className="p-0">
                     <div className="max-h-[600px] overflow-y-auto relative">
                         <Table>
-                            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm border-b">
-                                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                                    <TableHead className="font-semibold bg-slate-50">Unit Number</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Property</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Type</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Status</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Price</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Deposit 1</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Deposit 2</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Tenant</TableHead>
-                                    <TableHead className="font-semibold bg-slate-50">Contact</TableHead>
-                                    <TableHead className="text-right font-semibold bg-slate-50">Actions</TableHead>
+                            <TableHeader className="sticky top-0 bg-secondary/80 z-10 shadow-sm border-b border-border backdrop-blur-sm">
+                                <TableRow className="bg-transparent hover:bg-transparent">
+                                    <TableHead className="font-semibold text-foreground">Unit Number</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Property</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Type</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Status</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Price</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Deposit 1</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Deposit 2</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Tenant</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Contact</TableHead>
+                                    <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -310,25 +310,25 @@ export default function UnitsPage() {
                                     </TableRow>
                                 ) : (
                                     filteredUnits.map((unit) => (
-                                        <TableRow key={unit.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <TableCell className="font-medium text-slate-900">{unit.unit_number}</TableCell>
-                                            <TableCell className="text-slate-600">{unit.property?.name}</TableCell>
-                                            <TableCell className="text-slate-600">{normalizeType(unit.type)}</TableCell>
+                                        <TableRow key={unit.id} className="hover:bg-muted/50 transition-colors">
+                                            <TableCell className="font-medium text-foreground">{unit.unit_number}</TableCell>
+                                            <TableCell className="text-muted-foreground">{unit.property?.name}</TableCell>
+                                            <TableCell className="text-muted-foreground">{normalizeType(unit.type)}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className={getStatusColor(unit.status)}>
                                                     {unit.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="font-medium text-slate-900">{formatCurrency(unit.price)}</TableCell>
-                                            <TableCell className="text-slate-600">{formatCurrency(unit.deposit_1 || 0)}</TableCell>
-                                            <TableCell className="text-slate-600">{formatCurrency(unit.deposit_2 || 0)}</TableCell>
-                                            <TableCell className="text-slate-600">
+                                            <TableCell className="font-medium text-foreground">{formatCurrency(unit.price)}</TableCell>
+                                            <TableCell className="text-muted-foreground">{formatCurrency(unit.deposit_1 || 0)}</TableCell>
+                                            <TableCell className="text-muted-foreground">{formatCurrency(unit.deposit_2 || 0)}</TableCell>
+                                            <TableCell className="text-muted-foreground">
                                                 {unit.active_lease?.tenant
                                                     ? unit.active_lease.tenant.name
                                                     : "-"
                                                 }
                                             </TableCell>
-                                            <TableCell className="text-slate-600">
+                                            <TableCell className="text-muted-foreground">
                                                 {unit.active_lease?.tenant
                                                     ? unit.active_lease.tenant.phone
                                                     : "-"

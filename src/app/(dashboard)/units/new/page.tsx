@@ -257,10 +257,10 @@ export default function AddUnitPage() {
     };
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-8 max-w-4xl mx-auto min-h-screen bg-background w-full">
             <div className="mb-8">
-                <h2 className="text-3xl font-bold tracking-tight text-slate-900">Add New Unit</h2>
-                <p className="text-muted-foreground mt-2">
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">Add New Unit</h2>
+                <p className="text-base text-black font-medium dark:text-white mt-2">
                     Add new units to your properties.
                 </p>
             </div>
@@ -274,7 +274,7 @@ export default function AddUnitPage() {
                     <TabsTrigger value="bulk">Bulk Creation</TabsTrigger>
                 </TabsList> */}
 
-                <Card className="border-slate-200 shadow-sm bg-white">
+                <Card className="border-border shadow-sm bg-card">
                     <CardHeader>
                         <CardTitle>{mode === "single" ? "Single Unit Details" : "Bulk Generation Settings"}</CardTitle>
                         <CardDescription>
@@ -301,7 +301,7 @@ export default function AddUnitPage() {
                                                         disabled={!!propertyIdParam}
                                                     >
                                                         <FormControl>
-                                                            <SelectTrigger className={!!propertyIdParam ? "bg-slate-50 cursor-not-allowed" : ""}>
+                                                            <SelectTrigger className={!!propertyIdParam ? "bg-muted cursor-not-allowed" : ""}>
                                                                 <SelectValue placeholder="Select a property" />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -335,7 +335,7 @@ export default function AddUnitPage() {
                                                                 <Hash className={`absolute left-3 top-2.5 h-4 w-4 ${existingUnitNumbers.includes(field.value || '') ? "text-red-500" : "text-muted-foreground"}`} />
                                                                 <Input
                                                                     placeholder="e.g. A-101"
-                                                                    className={`pl-9 ${existingUnitNumbers.includes(field.value || '') ? "border-red-500 bg-red-50 focus-visible:ring-red-500" : ""}`}
+                                                                    className={`pl-9 ${existingUnitNumbers.includes(field.value || '') ? "border-destructive bg-destructive/10 focus-visible:ring-destructive" : ""}`}
                                                                     {...field}
                                                                     value={field.value || ''}
                                                                 />
@@ -349,7 +349,7 @@ export default function AddUnitPage() {
                                                 )}
                                             />
                                         ) : (
-                                            <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                            <div className="space-y-4 p-4 bg-muted/40 rounded-lg border border-border">
                                                 <FormField
                                                     control={form.control}
                                                     name="unit_prefix"
@@ -394,7 +394,7 @@ export default function AddUnitPage() {
                                                 </div>
 
                                                 {/* Replaced Alert with custom styled div */}
-                                                <div className="flex items-start gap-4 p-4 rounded-lg bg-blue-50 text-blue-800 border border-blue-100">
+                                                <div className="flex items-start gap-4 p-4 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
                                                     <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
                                                     <div className="space-y-1">
                                                         <h5 className="font-medium leading-none tracking-tight">Preview</h5>
@@ -541,12 +541,12 @@ export default function AddUnitPage() {
                                 <div className="flex justify-end gap-4 pt-4 border-t">
                                     <Button
                                         type="button"
-                                        variant="outline"
                                         onClick={() => router.back()}
+                                        className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                                     >
                                         Cancel
                                     </Button>
-                                    <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700">
+                                    <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
                                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         {loading ? "Processing..." : (mode === "single" ? "Create Unit" : `Create ${watchedCount || 0} Units`)}
                                     </Button>

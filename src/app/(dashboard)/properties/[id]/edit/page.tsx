@@ -67,7 +67,7 @@ export default function EditPropertyPage() {
     }
 
     return (
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-8 max-w-6xl mx-auto min-h-screen bg-background">
             <PropertyForm initialData={property} isEditMode={true} />
         </div>
     );

@@ -96,10 +96,10 @@ export default function ActivityLogsPage() {
     });
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">System Activity Logs</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">System Activity Logs</h2>
                     <p className="text-muted-foreground mt-1">Monitor administrator actions and system events.</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -121,20 +121,20 @@ export default function ActivityLogsPage() {
                         placeholder="Search logs..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-slate-50 border-slate-200"
+                        className="pl-9 bg-background border-input"
                     />
                 </div>
 
                 <div className="flex items-center gap-2 w-full lg:w-auto">
-                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1">
-                        <Calendar className="h-4 w-4 text-slate-400" />
+                    <div className="flex items-center gap-2 bg-background border border-input rounded-lg px-3 py-1">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
                         <Input
                             type="date"
                             className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px]"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                         />
-                        <span className="text-slate-300">to</span>
+                        <span className="text-muted-foreground">to</span>
                         <Input
                             type="date"
                             className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px]"
@@ -144,7 +144,7 @@ export default function ActivityLogsPage() {
                     </div>
 
                     <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                        <SelectTrigger className="bg-slate-50 border-slate-200 w-[140px]">
+                        <SelectTrigger className="bg-background border-input w-[140px]">
                             <SelectValue placeholder="Severity" />
                         </SelectTrigger>
                         <SelectContent>
@@ -157,15 +157,15 @@ export default function ActivityLogsPage() {
                 </div>
             </div>
 
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+            <Card className="border-border shadow-sm overflow-hidden">
+                <CardHeader className="bg-muted/50 border-b border-border">
                     <CardTitle className="text-lg">Audit Trail</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="max-h-[600px] overflow-y-auto relative">
                         <Table>
-                            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
-                                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                            <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
+                                <TableRow className="bg-muted/50 hover:bg-muted/50">
                                     <TableHead className="font-semibold w-[180px]">Timestamp</TableHead>
                                     <TableHead className="font-semibold w-[150px]">Admin</TableHead>
                                     <TableHead className="font-semibold w-[150px]">Action</TableHead>
@@ -190,17 +190,17 @@ export default function ActivityLogsPage() {
                                     </TableRow>
                                 ) : (
                                     filteredLogs.map((log) => (
-                                        <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <TableCell className="text-slate-500 text-sm whitespace-nowrap">
+                                        <TableRow key={log.id} className="hover:bg-muted/50 transition-colors">
+                                            <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                                                 {log.timestamp}
                                             </TableCell>
-                                            <TableCell className="font-medium text-slate-900">{log.admin}</TableCell>
+                                            <TableCell className="font-medium text-foreground">{log.admin}</TableCell>
                                             <TableCell>
-                                                <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium uppercase tracking-wider">
+                                                <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs font-medium uppercase tracking-wider">
                                                     {log.action}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-slate-600 max-w-md truncate" title={log.details}>
+                                            <TableCell className="text-muted-foreground max-w-md truncate" title={log.details}>
                                                 {log.details}
                                             </TableCell>
                                             <TableCell>

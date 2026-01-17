@@ -174,11 +174,11 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                 {/* Basic Info */}
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="property_id">Property</Label>
+                        <Label htmlFor="property_id" className="dark:text-[#CBD5E1]">Property</Label>
                         <select
                             name="property_id"
                             id="property_id"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-input dark:border-[#2A3242] bg-background dark:bg-[#1F2633] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#F9FAFB]"
                             value={formData.property_id}
                             onChange={handleInputChange}
                             disabled
@@ -193,7 +193,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="unit_number">Unit Number</Label>
+                            <Label htmlFor="unit_number" className="dark:text-[#CBD5E1]">Unit Number</Label>
                             <Input
                                 id="unit_number"
                                 name="unit_number"
@@ -201,14 +201,15 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 onChange={handleInputChange}
                                 placeholder="e.g. A1, 102"
                                 required
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="type">Unit Type</Label>
+                            <Label htmlFor="type" className="dark:text-[#CBD5E1]">Unit Type</Label>
                             <select
                                 id="type"
                                 name="type"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                className="flex h-10 w-full rounded-md border border-input dark:border-[#2A3242] bg-background dark:bg-[#1F2633] px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-[#F9FAFB]"
                                 value={formData.type}
                                 onChange={handleInputChange}
                                 required
@@ -225,7 +226,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="price">Monthly Rent (KES)</Label>
+                            <Label htmlFor="price" className="dark:text-[#CBD5E1]">Monthly Rent (KES)</Label>
                             <Input
                                 id="price"
                                 name="price"
@@ -234,10 +235,11 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 onChange={handleInputChange}
                                 placeholder="e.g. 25000"
                                 required
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="deposit_1">Deposit 1 (KES)</Label>
+                            <Label htmlFor="deposit_1" className="dark:text-[#CBD5E1]">Deposit 1 (KES)</Label>
                             <Input
                                 id="deposit_1"
                                 name="deposit_1"
@@ -246,10 +248,11 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 onChange={handleInputChange}
                                 placeholder="e.g. 10000"
                                 required
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="deposit_2">Deposit 2 (KES)</Label>
+                            <Label htmlFor="deposit_2" className="dark:text-[#CBD5E1]">Deposit 2 (KES)</Label>
                             <Input
                                 id="deposit_2"
                                 name="deposit_2"
@@ -257,14 +260,15 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 value={formData.deposit_2}
                                 onChange={handleInputChange}
                                 placeholder="e.g. 25000"
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label htmlFor="status" className="dark:text-[#CBD5E1]">Status</Label>
                             <select
                                 id="status"
                                 name="status"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                                className="flex h-10 w-full rounded-md border border-input dark:border-[#2A3242] bg-background dark:bg-[#1F2633] px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted dark:disabled:bg-[#161B22]/50 dark:text-[#F9FAFB]"
                                 value={formData.status}
                                 onChange={handleInputChange}
                                 disabled={initialData?.status === 'occupied' && (initialData?.active_lease || initialData?.activeLease)}
@@ -275,7 +279,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 <option value="maintenance">Maintenance</option>
                             </select>
                             {initialData?.status === 'occupied' && (initialData?.active_lease || initialData?.activeLease) && (
-                                <p className="text-[0.8rem] text-muted-foreground">
+                                <p className="text-[0.8rem] text-muted-foreground dark:text-[#9CA3AF]">
                                     Status is locked because the unit is currently occupied by a tenant.
                                 </p>
                             )}
@@ -287,33 +291,35 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="size">Size (sqft)</Label>
+                            <Label htmlFor="size" className="dark:text-[#CBD5E1]">Size (sqft)</Label>
                             <Input
                                 id="size"
                                 name="size"
                                 value={formData.size}
                                 onChange={handleInputChange}
                                 placeholder="e.g. 600"
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="floor">Floor Number</Label>
+                            <Label htmlFor="floor" className="dark:text-[#CBD5E1]">Floor Number</Label>
                             <Input
                                 id="floor"
                                 name="floor"
                                 value={formData.floor}
                                 onChange={handleInputChange}
                                 placeholder="e.g. 2nd"
+                                className="dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="features">Features/Amenities</Label>
+                        <Label htmlFor="features" className="dark:text-[#CBD5E1]">Features/Amenities</Label>
                         <Textarea
                             id="features"
                             name="features"
-                            className="min-h-[100px]"
+                            className="min-h-[100px] dark:bg-[#1F2633] dark:border-[#2A3242] dark:text-[#F9FAFB] dark:placeholder:text-[#9CA3AF]"
                             value={formData.features}
                             onChange={handleInputChange}
                             placeholder="e.g. Balcony, High Ceiling, Built-in wardrobes..."
@@ -325,10 +331,10 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
             {/* Image Section */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <Label className="text-base font-bold">Unit Photographs</Label>
+                    <Label className="text-base font-bold dark:text-[#F9FAFB]">Unit Photographs</Label>
                     <Label
                         htmlFor="image-upload"
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg cursor-pointer hover:bg-indigo-100 transition-colors text-sm font-semibold"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/10 text-indigo-700 dark:text-[#2563EB] rounded-lg cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/20 transition-colors text-sm font-semibold border border-transparent dark:border-[#2563EB]/30"
                     >
                         <Plus className="w-4 h-4" /> Add Photos
                         <input
@@ -344,7 +350,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {images.map((img) => (
-                        <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                        <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-muted">
                             <img
                                 src={img.isExisting && !img.url.startsWith('http') ? storageBaseUrl + img.url : img.url}
                                 alt="Preview"
@@ -369,7 +375,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                         type="button"
                                         size="sm"
                                         variant={img.isFeatured ? "default" : "secondary"}
-                                        className={`gap-1 h-8 px-3 rounded-full shadow-lg ${img.isFeatured ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-white/90 hover:bg-white text-slate-700'}`}
+                                        className={`gap-1 h-8 px-3 rounded-full shadow-lg ${img.isFeatured ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-background/90 hover:bg-background text-foreground'}`}
                                         onClick={() => setFeaturedImage(img.id)}
                                     >
                                         <Star className={`w-3.5 h-3.5 ${img.isFeatured ? 'fill-current' : ''}`} />
@@ -389,10 +395,10 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                     {images.length === 0 && (
                         <label
                             htmlFor="image-upload-empty"
-                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group"
+                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
                         >
-                            <Upload className="w-8 h-8 text-slate-300 group-hover:text-indigo-400 mb-2" />
-                            <span className="text-xs font-semibold text-slate-400 group-hover:text-indigo-500">Upload Photos</span>
+                            <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary mb-2" />
+                            <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary">Upload Photos</span>
                             <input
                                 id="image-upload-empty"
                                 type="file"
@@ -409,17 +415,17 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                 </p>
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <div className="flex justify-end gap-3 pt-6 border-t border-border dark:border-[#2A3242]">
                 <Button
                     type="button"
-                    variant="outline"
                     onClick={() => router.back()}
+                    className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95"
                 >
                     Cancel
                 </Button>
                 <Button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 min-w-[150px]"
+                    className="min-w-[150px] bg-green-600 hover:bg-green-700 text-white shadow-sm transition-all active:scale-95"
                     disabled={isSubmitting || localSubmitting}
                 >
                     {(isSubmitting || localSubmitting) ? (

@@ -65,7 +65,7 @@ export default function EditUnitPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-screen bg-muted/40 p-6 transition-colors duration-300">
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -73,17 +73,17 @@ export default function EditUnitPage() {
                         variant="outline"
                         size="icon"
                         onClick={() => router.push(`/units/${params.id}`)}
-                        className="bg-white"
+                        className="bg-white dark:bg-[#161B22] border-slate-200 dark:border-[#2A3242] text-slate-600 dark:text-[#CBD5E1]"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Edit Unit {unit.unit_number}</h1>
-                        <p className="text-slate-500">Update unit information and manage gallery images.</p>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-[#F9FAFB] font-outfit">Edit Unit {unit.unit_number}</h1>
+                        <p className="text-slate-500 dark:text-[#9CA3AF] font-medium">Update unit information and manage gallery images.</p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <div className="bg-white dark:bg-[#161B22] rounded-2xl shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-[#2A3242] p-8 transition-all">
                     <UnitForm
                         initialData={unit}
                         onSubmit={handleSubmit}

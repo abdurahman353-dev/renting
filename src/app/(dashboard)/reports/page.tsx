@@ -47,7 +47,7 @@ const occupancyData = [
 
 export default function ReportsPage() {
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Reports & Analytics</h2>
@@ -67,16 +67,16 @@ export default function ReportsPage() {
                         <div className="h-[350px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={revenueData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                                     <XAxis
                                         dataKey="name"
-                                        stroke="#888888"
+                                        stroke="var(--muted-foreground)"
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
                                     />
                                     <YAxis
-                                        stroke="#888888"
+                                        stroke="var(--muted-foreground)"
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
@@ -84,9 +84,10 @@ export default function ReportsPage() {
                                     />
                                     <Tooltip
                                         formatter={(value) => [`KES ${value.toLocaleString()}`, "Revenue"]}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: 'var(--muted)' }}
                                     />
-                                    <Bar dataKey="total" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="total" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -100,16 +101,16 @@ export default function ReportsPage() {
                         <div className="h-[350px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={occupancyData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                                     <XAxis
                                         dataKey="name"
-                                        stroke="#888888"
+                                        stroke="var(--muted-foreground)"
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
                                     />
                                     <YAxis
-                                        stroke="#888888"
+                                        stroke="var(--muted-foreground)"
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
@@ -117,9 +118,9 @@ export default function ReportsPage() {
                                     />
                                     <Tooltip
                                         formatter={(value) => [`${value}%`, "Occupancy"]}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ backgroundColor: 'var(--popover)', color: 'var(--popover-foreground)', borderRadius: '8px', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
-                                    <Line type="monotone" dataKey="rate" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                                    <Line type="monotone" dataKey="rate" stroke="var(--primary)" strokeWidth={2} dot={{ r: 4, fill: 'var(--background)', strokeWidth: 2 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

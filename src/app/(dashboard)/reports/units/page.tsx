@@ -105,11 +105,11 @@ export default function UnitsReportPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+        <div className="p-8 space-y-8 min-h-screen bg-muted/40">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Units Period Report</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground font-outfit">Units Period Report</h2>
                     <p className="text-muted-foreground mt-1 text-sm font-medium">
                         Comprehensive overview of unit occupancy and financial status for {months.find(m => m.value === filters.month)?.label} {filters.year}.
                     </p>
@@ -122,15 +122,15 @@ export default function UnitsReportPage() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                                 <Home className="h-6 w-6 text-indigo-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Units</p>
-                                <p className="text-2xl font-black text-slate-900">{stats.total}</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Total Units</p>
+                                <p className="text-2xl font-black text-foreground">{stats.total}</p>
                             </div>
                         </div>
                         <div className="h-1 w-full bg-indigo-500/10">
@@ -139,15 +139,15 @@ export default function UnitsReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                                 <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Occupied</p>
-                                <p className="text-2xl font-black text-slate-900">{stats.occupied}</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Occupied</p>
+                                <p className="text-2xl font-black text-foreground">{stats.occupied}</p>
                             </div>
                         </div>
                         <div className="h-1 w-full bg-emerald-500/10">
@@ -156,15 +156,15 @@ export default function UnitsReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                                 <XCircle className="h-6 w-6 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Available</p>
-                                <p className="text-2xl font-black text-slate-900">{stats.available}</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Available</p>
+                                <p className="text-2xl font-black text-foreground">{stats.available}</p>
                             </div>
                         </div>
                         <div className="h-1 w-full bg-amber-500/10">
@@ -175,17 +175,17 @@ export default function UnitsReportPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
-                <div className="flex items-center gap-2 mb-6 text-slate-800 font-bold">
+            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border transition-all hover:shadow-md">
+                <div className="flex items-center gap-2 mb-6 text-foreground font-bold">
                     <Filter className="h-4 w-4 text-indigo-600" />
                     Filter Parameters
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Property Select */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Property</label>
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Property</label>
                         <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
                             value={filters.property_id}
                             onChange={(e) => setFilters({ ...filters, property_id: e.target.value })}
                         >
@@ -198,9 +198,9 @@ export default function UnitsReportPage() {
 
                     {/* Month Select */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Month</label>
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Month</label>
                         <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
                             value={filters.month}
                             onChange={(e) => setFilters({ ...filters, month: parseInt(e.target.value) })}
                         >
@@ -212,31 +212,37 @@ export default function UnitsReportPage() {
 
                     {/* Year Select */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Year</label>
-                        <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-white"
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Year</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={4}
+                            placeholder="YYYY"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all hover:bg-muted/50"
                             value={filters.year}
-                            onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
-                        >
-                            {years.map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                if (val.length <= 4) {
+                                    setFilters({ ...filters, year: parseInt(val) || 0 });
+                                }
+                            }}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Table */}
-            <Card className="border-slate-200/60 shadow-sm rounded-2xl overflow-hidden bg-white">
-                <CardHeader className="bg-slate-50/30 border-b border-slate-100 py-6 px-8">
-                    <CardTitle className="text-xl font-black text-slate-800 flex items-center">
-                        <Building2 className="mr-3 h-5 w-5 text-slate-400" />
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+                <CardHeader className="bg-muted/30 border-b border-border py-6 px-8">
+                    <CardTitle className="text-xl font-black text-foreground flex items-center">
+                        <Building2 className="mr-3 h-5 w-5 text-muted-foreground" />
                         Unit Status Breakdown
                     </CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left border-collapse">
-                        <thead className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50/80 border-b border-slate-100">
+                        <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] bg-muted/50 border-b border-border">
                             <tr>
                                 <th className="px-8 py-5">Unit Detail</th>
                                 <th className="px-8 py-5">Property</th>
@@ -264,30 +270,30 @@ export default function UnitsReportPage() {
                                 </tr>
                             ) : (
                                 data.map((row: any) => (
-                                    <tr key={row.id} className="hover:bg-slate-50/80 transition-all duration-200 group">
+                                    <tr key={row.id} className="hover:bg-muted/50 transition-all duration-200 group">
                                         <td className="px-8 py-5">
                                             <div className="flex items-center">
-                                                <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center mr-3 font-bold text-slate-600 border border-slate-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 transition-colors">
+                                                <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center mr-3 font-bold text-muted-foreground border border-border group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 transition-colors">
                                                     {row.unit_number.slice(-2)}
                                                 </div>
-                                                <span className="font-bold text-slate-800 text-base">{row.unit_number}</span>
+                                                <span className="font-bold text-foreground text-base">{row.unit_number}</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-5 font-bold text-slate-500">{row.property_name}</td>
+                                        <td className="px-8 py-5 font-bold text-muted-foreground">{row.property_name}</td>
                                         <td className="px-8 py-5">
                                             {row.tenant_name !== 'N/A' ? (
-                                                <div className="flex items-center font-bold text-slate-800">
+                                                <div className="flex items-center font-bold text-foreground">
                                                     <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2"></div>
                                                     {row.tenant_name}
                                                 </div>
                                             ) : (
-                                                <span className="text-slate-300 italic font-medium">No active tenant</span>
+                                                <span className="text-muted-foreground italic font-medium">No active tenant</span>
                                             )}
                                         </td>
                                         <td className="px-8 py-5 text-center">
                                             <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
+                                                : 'bg-muted text-muted-foreground border-border'
                                                 }`}>
                                                 {row.status}
                                             </span>

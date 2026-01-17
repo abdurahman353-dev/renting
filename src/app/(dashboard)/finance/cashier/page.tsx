@@ -362,18 +362,22 @@ export default function CashierPage() {
     }
 
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+        <div className="p-8 space-y-8 min-h-screen bg-slate-50 dark:bg-[#0F1115] transition-colors duration-300">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">Cashier</h2>
-                    <p className="text-muted-foreground mt-2">
+                    <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Cashier</h2>
+                    <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">
                         {targetInvoice
                             ? `Processing payment for Invoice #${targetInvoice.invoice_number}`
                             : "Process rent payments and view tenant balances."}
                     </p>
                 </div>
                 {invoiceIdParam && (
-                    <Button variant="outline" onClick={() => router.push("/finance")}>
+                    <Button
+                        variant="ghost"
+                        className="text-slate-500 dark:text-[#9CA3AF] hover:bg-slate-100 dark:hover:bg-[#1E2430] rounded-xl"
+                        onClick={() => router.push("/finance")}
+                    >
                         <X className="h-4 w-4 mr-2" />
                         Cancel
                     </Button>
@@ -382,29 +386,29 @@ export default function CashierPage() {
 
             {/* Target Invoice Card (if coming from invoice) */}
             {targetInvoice && (
-                <Card className="border-blue-200 bg-blue-50/50">
+                <Card className="border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-2xl">
                     <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Ticket className="w-5 h-5 text-blue-600" />
+                        <CardTitle className="text-lg flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
+                            <Ticket className="w-5 h-5 text-[#6366F1]" />
                             Invoice Details
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                            <p className="text-sm text-slate-600">Invoice Number</p>
-                            <p className="font-semibold">{targetInvoice.invoice_number}</p>
+                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Invoice Number</p>
+                            <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">{targetInvoice.invoice_number}</p>
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Type</p>
-                            <Badge variant="secondary">{targetInvoice.type}</Badge>
+                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Type</p>
+                            <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{targetInvoice.type}</Badge>
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Amount</p>
-                            <p className="font-semibold">KES {targetInvoice.amount.toLocaleString()}</p>
+                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Amount</p>
+                            <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">KES {targetInvoice.amount.toLocaleString()}</p>
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Balance Due</p>
-                            <p className="font-semibold text-red-600">
+                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Balance Due</p>
+                            <p className="font-black text-rose-500">
                                 KES {(targetInvoice.amount - targetInvoice.paid_amount).toLocaleString()}
                             </p>
                         </div>
@@ -418,10 +422,10 @@ export default function CashierPage() {
 
                     {/* 1. Tenant Selector */}
                     {!targetInvoice && (
-                        <Card className="border-slate-200 shadow-sm overflow-hidden">
-                            <CardHeader className="bg-white border-b border-slate-100 pb-4">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <User className="w-5 h-5 text-indigo-600" />
+                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] overflow-hidden transition-all duration-300">
+                            <CardHeader className="bg-white dark:bg-[#161B22] border-b border-slate-100 dark:border-[#2A3242] pb-4">
+                                <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
+                                    <User className="w-5 h-5 text-primary" />
                                     Select Tenant
                                 </CardTitle>
                             </CardHeader>
@@ -432,7 +436,7 @@ export default function CashierPage() {
                                             variant="outline"
                                             role="combobox"
                                             aria-expanded={open}
-                                            className="w-full justify-between h-12 text-base"
+                                            className="w-full justify-between h-14 text-base bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl hover:bg-slate-50 dark:hover:bg-[#1F2633]/80 transition-all font-medium"
                                         >
                                             {selectedTenant
                                                 ? `${selectedTenant.name} - ${selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'No Unit'}`
@@ -440,13 +444,14 @@ export default function CashierPage() {
                                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[400px] p-0" align="start">
-                                        <Command>
-                                            <CommandInput placeholder="Search tenant..." />
-                                            <CommandEmpty>No tenant found.</CommandEmpty>
-                                            <CommandGroup className="max-h-[300px] overflow-auto">
+                                    <PopoverContent className="w-[400px] p-0 bg-white dark:bg-[#161A22] border-slate-200 dark:border-[#2A2F3A] shadow-2xl" align="start">
+                                        <Command className="dark:bg-[#161A22]">
+                                            <CommandInput placeholder="Search tenant..." className="dark:text-[#E5E7EB]" />
+                                            <CommandEmpty className="py-6 text-center text-[#9CA3AF]">No tenant found.</CommandEmpty>
+                                            <CommandGroup className="max-h-[350px] overflow-auto p-2">
                                                 {loadingTenants ? (
-                                                    <div className="p-4 text-center text-sm text-muted-foreground">
+                                                    <div className="p-4 text-center text-sm text-[#9CA3AF]">
+                                                        <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
                                                         Loading...
                                                     </div>
                                                 ) : (
@@ -455,17 +460,17 @@ export default function CashierPage() {
                                                             key={tenant.id}
                                                             value={tenant.name}
                                                             onSelect={() => onTenantSelect(tenant)}
-                                                            className="cursor-pointer py-3 px-4"
+                                                            className="cursor-pointer py-3 px-4 rounded-lg aria-selected:bg-indigo-50 dark:aria-selected:bg-[#1E2430] group transition-colors"
                                                         >
                                                             <Check
                                                                 className={cn(
-                                                                    "mr-2 h-4 w-4",
+                                                                    "mr-3 h-4 w-4 text-[#6366F1]",
                                                                     selectedTenant?.id === tenant.id ? "opacity-100" : "opacity-0"
                                                                 )}
                                                             />
                                                             <div className="flex flex-col">
-                                                                <span className="font-medium">{tenant.name}</span>
-                                                                <span className="text-xs text-muted-foreground">
+                                                                <span className="font-bold text-slate-900 dark:text-[#E5E7EB] group-aria-selected:text-[#6366F1]">{tenant.name}</span>
+                                                                <span className="text-xs text-slate-500 dark:text-[#9CA3AF]">
                                                                     {tenant.unit?.unit_number || tenant.unit_number || 'No Unit'} • {tenant.property?.name || tenant.property_name || 'No Property'}
                                                                 </span>
                                                             </div>
@@ -482,24 +487,25 @@ export default function CashierPage() {
 
                     {/* Pending Invoices Selection */}
                     {selectedTenant && pendingInvoices.length > 0 && (
-                        <Card className="border-slate-200 shadow-sm">
-                            <CardHeader className="bg-white border-b border-slate-100">
+                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
+                            <CardHeader className="bg-white dark:bg-[#161B22] border-b border-slate-100 dark:border-[#2A3242]">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <Ticket className="w-5 h-5 text-slate-600" />
+                                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
+                                        <Ticket className="w-5 h-5 text-primary" />
                                         Pending Invoices
                                     </CardTitle>
                                     <Button
-                                        variant="outline"
+                                        variant="ghost"
                                         size="sm"
                                         onClick={handlePayAllInvoices}
+                                        className="text-primary font-bold hover:bg-slate-50 dark:hover:bg-[#1F2633]"
                                     >
                                         Select All
                                     </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-4">
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {pendingInvoices.map((invoice) => {
                                         const balance = invoice.amount - invoice.paid_amount;
                                         const isSelected = selectedInvoices.includes(invoice.id);
@@ -508,24 +514,30 @@ export default function CashierPage() {
                                             <div
                                                 key={invoice.id}
                                                 className={cn(
-                                                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors",
-                                                    isSelected ? "bg-indigo-50 border-indigo-300" : "bg-white border-slate-200 hover:bg-slate-50"
+                                                    "flex items-center justify-between p-4 rounded-xl border transition-all duration-300 transform active:scale-[0.98]",
+                                                    isSelected
+                                                        ? "bg-blue-50/50 dark:bg-primary/10 border-primary dark:border-primary shadow-sm"
+                                                        : "bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md cursor-pointer"
                                                 )}
                                                 onClick={() => toggleInvoiceSelection(invoice.id)}
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <Checkbox
-                                                        checked={isSelected}
-                                                        onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
-                                                    />
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "w-6 h-6 rounded-md border flex items-center justify-center transition-all",
+                                                        isSelected
+                                                            ? "bg-[#6366F1] border-[#6366F1]"
+                                                            : "bg-white dark:bg-transparent border-slate-300 dark:border-[#2A2F3A]"
+                                                    )}>
+                                                        {isSelected && <Check className="w-4 h-4 text-white" />}
+                                                    </div>
                                                     <div>
-                                                        <p className="font-medium text-sm">{invoice.invoice_number}</p>
-                                                        <p className="text-xs text-slate-600">{invoice.description}</p>
+                                                        <p className="font-bold text-slate-900 dark:text-[#E5E7EB]">{invoice.invoice_number}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-[#9CA3AF] font-medium">{invoice.description}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="font-semibold text-sm">KES {balance.toLocaleString()}</p>
-                                                    <Badge variant="secondary" className="text-xs">
+                                                    <p className="font-black text-primary">KES {balance.toLocaleString()}</p>
+                                                    <Badge className="bg-emerald-500/15 text-[#22C55E] border border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)] text-[10px] font-bold">
                                                         {invoice.status}
                                                     </Badge>
                                                 </div>
@@ -534,10 +546,10 @@ export default function CashierPage() {
                                     })}
                                 </div>
                                 {selectedInvoices.length > 0 && (
-                                    <div className="mt-4 p-3 bg-slate-100 rounded-lg">
+                                    <div className="mt-6 p-4 bg-slate-50 dark:bg-[#1B2230] rounded-xl border border-slate-200 dark:border-[#2A3242]">
                                         <div className="flex justify-between items-center">
-                                            <span className="font-medium">Selected Total:</span>
-                                            <span className="text-lg font-bold text-indigo-600">
+                                            <span className="font-bold text-slate-600 dark:text-[#9CA3AF]">Selected Total:</span>
+                                            <span className="text-xl font-black text-primary">
                                                 KES {calculateSelectedTotal().toLocaleString()}
                                             </span>
                                         </div>
@@ -549,32 +561,32 @@ export default function CashierPage() {
 
                     {/* 2. Payment Form (Only visible if tenant selected) */}
                     {selectedTenant && (
-                        <Card className="border-indigo-100 shadow-md">
-                            <CardHeader className="bg-indigo-50/50 border-b border-indigo-50">
-                                <CardTitle className="flex items-center gap-2 text-indigo-900">
-                                    <CreditCard className="w-5 h-5 text-indigo-600" />
+                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
+                            <CardHeader className="bg-indigo-50/50 dark:bg-primary/5 border-b border-indigo-100 dark:border-[#2A3242]">
+                                <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-[#F9FAFB] font-bold">
+                                    <CreditCard className="w-5 h-5 text-primary" />
                                     Record Payment
                                 </CardTitle>
-                                <CardDescription>
-                                    Enter payment details for <strong>{selectedTenant.name}</strong>
+                                <CardDescription className="text-indigo-600/70 dark:text-[#9CA3AF] font-medium">
+                                    Enter payment details for <strong className="text-indigo-900 dark:text-[#F9FAFB]">{selectedTenant.name}</strong>
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="pt-6">
+                            <CardContent className="pt-8">
                                 <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <FormField
                                                 control={form.control}
                                                 name="amount"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Amount (KES)</FormLabel>
+                                                        <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Amount (KES)</FormLabel>
                                                         <FormControl>
                                                             <div className="relative">
-                                                                <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">KES</div>
                                                                 <Input
                                                                     placeholder="0.00"
-                                                                    className="pl-9 h-11 text-lg font-medium bg-slate-50 cursor-not-allowed"
+                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] cursor-not-allowed rounded-xl"
                                                                     type="number"
                                                                     readOnly
                                                                     {...field}
@@ -591,14 +603,14 @@ export default function CashierPage() {
                                                 name="method"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Payment Method</FormLabel>
+                                                        <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Payment Method</FormLabel>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                             <FormControl>
-                                                                <SelectTrigger className="h-11">
+                                                                <SelectTrigger className="h-14 bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl font-medium">
                                                                     <SelectValue placeholder="Select method" />
                                                                 </SelectTrigger>
                                                             </FormControl>
-                                                            <SelectContent>
+                                                            <SelectContent className="dark:bg-[#161B22] dark:border-[#2A3242]">
                                                                 <SelectItem value="Cash">Cash</SelectItem>
                                                                 <SelectItem value="M-Pesa">M-Pesa</SelectItem>
                                                                 <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
@@ -616,11 +628,15 @@ export default function CashierPage() {
                                             name="reference"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Reference Code (Optional)</FormLabel>
+                                                    <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Reference Code (Optional)</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="e.g. M-Pesa Code, Receipt No." {...field} />
+                                                        <Input
+                                                            placeholder="e.g. M-Pesa Code, Receipt No."
+                                                            className="h-14 bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl font-medium"
+                                                            {...field}
+                                                        />
                                                     </FormControl>
-                                                    <FormDescription>
+                                                    <FormDescription className="text-slate-400 dark:text-[#9CA3AF]">
                                                         Transaction ID or receipt number for tracking.
                                                     </FormDescription>
                                                     <FormMessage />
@@ -628,37 +644,19 @@ export default function CashierPage() {
                                             )}
                                         />
 
-                                        <div className="flex justify-end pt-4 gap-3">
-                                            {/* <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="lg"
-                                                onClick={() => {
-                                                    if (selectedInvoices.length === 0) {
-                                                        toast.error("Please select at least one invoice to pay");
-                                                        return;
-                                                    }
-                                                    setIsMpesaModalOpen(true);
-                                                }}
-                                                className="border-green-600 text-green-700 hover:bg-green-50"
-                                            >
-                                                Pay via M-Pesa
-                                            </Button> */}
+                                        <div className="flex justify-end pt-4">
                                             <Button
                                                 type="submit"
-                                                size="lg"
                                                 disabled={submitting}
-                                                className="bg-indigo-600 hover:bg-indigo-700 min-w-[200px]"
+                                                className="bg-primary hover:bg-primary/90 h-14 px-10 text-lg rounded-xl font-black shadow-xl dark:shadow-none min-w-[240px] transition-all transform hover:scale-105 active:scale-95"
                                             >
                                                 {submitting ? (
                                                     <>
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        <Loader2 className="mr-3 h-6 w-6 animate-spin" />
                                                         Processing...
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        Record Payment
-                                                    </>
+                                                    "Record Payment"
                                                 )}
                                             </Button>
                                         </div>
@@ -674,104 +672,112 @@ export default function CashierPage() {
                     {selectedTenant ? (
                         <>
                             {/* Tenant Snapshot */}
-                            <Card className="bg-slate-900 text-white border-0 shadow-lg overflow-hidden relative">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Building2 className="w-32 h-32" />
+                            <Card className="bg-[#161A22] dark:bg-[#161A22] text-white border border-slate-200 dark:border-[#2A2F3A] shadow-xl rounded-[18px] overflow-hidden relative">
+                                <div className="absolute top-0 right-0 p-4 opacity-5">
+                                    <Building2 className="w-32 h-32 text-white" />
                                 </div>
+                                <div className="h-1 bg-[#6366F1]"></div>
                                 <CardHeader className="pb-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-lg">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-14 w-14 rounded-2xl bg-[#6366F1] flex items-center justify-center font-black text-xl shadow-lg">
                                             {getInitials(selectedTenant.name)}
                                         </div>
                                         <div>
-                                            <CardTitle className="text-xl">{selectedTenant.name}</CardTitle>
-                                            <p className="text-indigo-200 text-sm">{selectedTenant.email || selectedTenant.phone}</p>
+                                            <CardTitle className="text-xl font-black">{selectedTenant.name}</CardTitle>
+                                            <p className="text-[#9CA3AF] text-sm font-medium">{selectedTenant.email || selectedTenant.phone}</p>
                                         </div>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="mt-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-indigo-300 text-xs uppercase tracking-wider font-semibold">Current Balance</p>
-                                            <p className={cn(
-                                                "text-2xl font-bold mt-1",
-                                                selectedTenant.balance < 0 ? "text-red-400" : "text-emerald-400"
-                                            )}>
-                                                {formatCurrency(selectedTenant.balance.toString())}
-                                            </p>
-                                            <p className="text-xs text-slate-400 mt-1">
-                                                {selectedTenant.balance < 0 ? "Arrears" : "Credit / Clear"}
-                                            </p>
+                                <CardContent className="mt-6">
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div className="p-4 bg-[#1B2230] rounded-2xl border border-[#2A3242]">
+                                            <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Current Balance</p>
+                                            <div className="flex items-baseline gap-2 mt-1">
+                                                <p className={cn(
+                                                    "text-3xl font-black",
+                                                    selectedTenant.balance < 0 ? "text-rose-500" : "text-[#22C55E]"
+                                                )}>
+                                                    KES {Math.abs(selectedTenant.balance).toLocaleString()}
+                                                </p>
+                                                <span className="text-xs font-bold text-[#9CA3AF]">
+                                                    {selectedTenant.balance < 0 ? "Due" : "Credit"}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-indigo-300 text-xs uppercase tracking-wider font-semibold">Unit Details</p>
-                                            <p className="text-lg font-bold mt-1 text-white">
-                                                {selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'N/A'}
-                                            </p>
-                                            <p className="text-xs text-slate-400 line-clamp-1">
-                                                {selectedTenant.property?.name || selectedTenant.property_name || 'N/A'}
-                                            </p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-4 bg-[#1B2230]/40 rounded-2xl border border-[#2A3242]/50">
+                                                <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Unit</p>
+                                                <p className="text-lg font-black mt-1 text-white">
+                                                    {selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div className="p-4 bg-[#1B2230]/40 rounded-2xl border border-[#2A3242]/50">
+                                                <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Property</p>
+                                                <p className="text-sm font-bold mt-1 text-white line-clamp-1">
+                                                    {selectedTenant.property?.name || selectedTenant.property_name || 'N/A'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
 
                             {/* Recent Transactions */}
-                            <Card className="border-slate-200 shadow-sm h-full max-h-[600px] flex flex-col">
-                                <CardHeader className="pb-3 border-b">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <Ticket className="w-4 h-4 text-slate-500" />
+                            <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] h-full max-h-[600px] flex flex-col overflow-hidden transition-all duration-300">
+                                <CardHeader className="pb-4 border-b border-slate-100 dark:border-[#2A3242]">
+                                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
+                                        <Ticket className="w-5 h-5 text-primary" />
                                         Recent Transactions
                                     </CardTitle>
                                 </CardHeader>
-                                <div className="flex-1 overflow-auto p-0">
+                                <div className="flex-1 overflow-auto">
                                     {paymentHistory.length === 0 ? (
-                                        <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
-                                            <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                                                <CreditCard className="w-6 h-6 text-slate-300" />
+                                        <div className="p-10 text-center text-[#9CA3AF] flex flex-col items-center">
+                                            <div className="h-16 w-16 rounded-3xl bg-slate-50 dark:bg-[#1E2430] flex items-center justify-center mb-4">
+                                                <CreditCard className="w-8 h-8 text-slate-300 dark:text-[#2A2F3A]" />
                                             </div>
-                                            <p>No payment history found</p>
+                                            <p className="font-medium">No payment history found</p>
                                         </div>
                                     ) : (
-                                        <div className="divide-y divide-slate-100">
-                                            {paymentHistory.map((payment: any, i) => (
-                                                <div key={payment.id || i} className="p-4 hover:bg-slate-50 transition-colors flex justify-between items-center group">
+                                        <div className="divide-y divide-slate-50 dark:divide-[#2A2F3A]">
+                                            {paymentHistory.map((payment: any) => (
+                                                <div key={payment.id} className="p-5 hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors flex justify-between items-center group border-b border-slate-50 dark:border-[#2A3242]">
                                                     <div>
-                                                        <p className="font-medium text-slate-900">{formatCurrency(payment.amount.toString())}</p>
+                                                        <p className="font-black text-slate-900 dark:text-[#FFFFFF]">KES {Number(payment.amount).toLocaleString()}</p>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal bg-indigo-50 text-indigo-700">
+                                                            <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
                                                                 {payment.method}
                                                             </Badge>
-                                                            <span className="text-xs text-slate-400">
-                                                                {format(new Date(payment.date), "MMM dd, yyyy")}
+                                                            <span className="text-xs text-slate-400 dark:text-[#9CA3AF] font-medium">
+                                                                {format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    {payment.reference && (
-                                                        <div className="text-right flex flex-col items-end gap-2">
-                                                            <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded">
+                                                    <div className="text-right flex flex-col items-end gap-2">
+                                                        {payment.reference && (
+                                                            <span className="text-[10px] font-black text-[#CBD5E1] bg-slate-50 dark:bg-[#1B2230] px-2 py-1 rounded-md border border-slate-200 dark:border-[#2A3242] uppercase tracking-tighter">
                                                                 {payment.reference}
                                                             </span>
-                                                            {isSuperAdmin && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleReversePayment(payment.id);
-                                                                    }}
-                                                                    disabled={reversingId === payment.id}
-                                                                >
-                                                                    {reversingId === payment.id ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    )}
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                        {isSuperAdmin && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleReversePayment(payment.id);
+                                                                }}
+                                                                disabled={reversingId === payment.id}
+                                                            >
+                                                                {reversingId === payment.id ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -781,10 +787,12 @@ export default function CashierPage() {
                         </>
                     ) : (
                         // Placeholder when no tenant selected
-                        <div className="h-full rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center text-muted-foreground bg-slate-50/50">
-                            <User className="h-12 w-12 text-slate-300 mb-4" />
-                            <h3 className="font-semibold text-lg text-slate-700">No Tenant Selected</h3>
-                            <p className="text-sm mt-2 max-w-[200px]">
+                        <div className="h-full min-h-[400px] rounded-3xl border-2 border-dashed border-slate-200 dark:border-[#2A3242] flex flex-col items-center justify-center p-10 text-center bg-white dark:bg-[#161B22] shadow-inner transition-all">
+                            <div className="w-20 h-20 bg-slate-50 dark:bg-[#0E1117] rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+                                <User className="h-10 w-10 text-slate-300 dark:text-[#2A3242]" />
+                            </div>
+                            <h3 className="font-black text-2xl text-slate-800 dark:text-[#F9FAFB]">No Tenant Selected</h3>
+                            <p className="text-slate-500 dark:text-[#9CA3AF] mt-3 max-w-[240px] font-medium leading-relaxed">
                                 Use the search box on the left to find a tenant and process payments.
                             </p>
                         </div>

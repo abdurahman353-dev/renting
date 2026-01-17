@@ -253,24 +253,24 @@ export default function FinancePage() {
     // if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 bg-slate-50 dark:bg-[#0F1115] min-h-screen transition-colors duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black tracking-tight text-slate-900">Finance</h2>
-                    <p className="text-slate-500 font-medium">Manage invoices, payments, and financial overview.</p>
+                    <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Financial Overview</h2>
+                    <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">Manage invoices, payments, and financial overview.</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex items-center gap-3">
                     <Button
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
                         onClick={handleExport}
                     >
-                        <Download className="mr-2 h-4 w-4" /> Export Excel
+                        <Download className="mr-2 h-4 w-4" /> Export Report
                     </Button>
                     <Button
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                        className="bg-[#6366F1] hover:bg-[#4f46e5] text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
                         onClick={handleGenerateInvoices}
                     >
-                        <Plus className="mr-2 h-4 w-4" /> Generate Monthly Invoices
+                        <Plus className="mr-2 h-4 w-4" /> Generate Invoices
                     </Button>
                 </div>
             </div>
@@ -286,19 +286,19 @@ export default function FinancePage() {
             />
 
             <Tabs defaultValue="invoices" onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="bg-slate-100 p-1 rounded-xl w-auto inline-flex gap-2">
+                <TabsList className="bg-slate-100 dark:bg-[#1B2230] p-1.5 rounded-2xl w-auto inline-flex gap-2 border border-slate-200 dark:border-[#2A3242] shadow-inner transition-all">
                     <TabsTrigger
                         value="invoices"
-                        className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm px-6 py-2 rounded-lg transition-all duration-300 font-bold border border-transparent data-[state=active]:border-indigo-100"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#161B22] data-[state=active]:text-[#2563EB] dark:data-[state=active]:text-[#2563EB] data-[state=active]:shadow-md px-6 py-2.5 rounded-xl transition-all duration-300 font-bold border border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-[#2A3242]"
                     >
-                        <FileText className={`w-4 h-4 mr-2 ${activeTab === 'invoices' ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <FileText className={`w-4 h-4 mr-2 ${activeTab === 'invoices' ? 'text-[#2563EB]' : 'text-slate-500 dark:text-[#9CA3AF]'}`} />
                         Invoices
                     </TabsTrigger>
                     <TabsTrigger
                         value="payments"
-                        className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm px-6 py-2 rounded-lg transition-all duration-300 font-bold border border-transparent data-[state=active]:border-emerald-100"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#161B22] data-[state=active]:text-[#22C55E] dark:data-[state=active]:text-[#22C55E] data-[state=active]:shadow-md px-6 py-2.5 rounded-xl transition-all duration-300 font-bold border border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-[#2A3242]"
                     >
-                        <Wallet className={`w-4 h-4 mr-2 ${activeTab === 'payments' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                        <Wallet className={`w-4 h-4 mr-2 ${activeTab === 'payments' ? 'text-[#22C55E]' : 'text-slate-500 dark:text-[#9CA3AF]'}`} />
                         Payments
                     </TabsTrigger>
                 </TabsList>
@@ -338,19 +338,19 @@ export default function FinancePage() {
 
 
                 <TabsContent value="invoices" className="space-y-4">
-                    <div className="rounded-md border bg-white shadow-sm">
+                    <div className="rounded-2xl border border-slate-200 dark:border-[#2A3242] bg-white dark:bg-[#161B22] shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] overflow-hidden transition-all">
                         <div className="max-h-[600px] overflow-y-auto relative">
                             <Table>
-                                <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
-                                    <TableRow>
-                                        <TableHead className="bg-white">Invoice ID</TableHead>
-                                        <TableHead className="bg-white">Tenant</TableHead>
-                                        <TableHead className="bg-white">Property</TableHead>
-                                        <TableHead className="bg-white">Unit</TableHead>
-                                        <TableHead className="bg-white">Date</TableHead>
-                                        <TableHead className="bg-white">Status</TableHead>
-                                        <TableHead className="text-right bg-white">Amount</TableHead>
-                                        <TableHead className="w-[50px] bg-white"></TableHead>
+                                <TableHeader className="sticky top-0 bg-slate-50 dark:bg-[#1B2230] z-10 shadow-sm border-b border-slate-200 dark:border-[#2A3242]">
+                                    <TableRow className="hover:bg-transparent border-0">
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Invoice ID</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Tenant</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Property</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Unit</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Date</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Status</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Amount</TableHead>
+                                        <TableHead className="w-[50px] bg-slate-50 dark:bg-[#1B2230]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -359,7 +359,7 @@ export default function FinancePage() {
                                             <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
                                         </TableRow>
                                     ) : filteredInvoices.map((inv) => (
-                                        <TableRow key={inv.id}>
+                                        <TableRow key={inv.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{inv.invoice_number}</TableCell>
                                             <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
                                             <TableCell>{inv.property_name || '-'}</TableCell>
@@ -367,12 +367,16 @@ export default function FinancePage() {
                                             <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
                                             <TableCell>
                                                 <Badge
-                                                    className={`px-3 py-1 font-bold rounded-full ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
+                                                    className={`px-3 py-1 font-bold rounded-full transition-all duration-300 ${inv.status === "PAID"
+                                                        ? "bg-emerald-500/15 text-[#22C55E] border border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:bg-emerald-500/20"
+                                                        : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/40 hover:bg-amber-200"
+                                                            : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 dark:border dark:border-blue-500/40 hover:bg-blue-200"
+                                                                : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400 dark:border dark:border-red-500/40 hover:bg-red-200"}`}
                                                 >
                                                     {inv.status === "OVERDUE" ? "NOT PAID" : inv.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right font-black text-slate-700">KES {Number(inv.amount).toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-black text-slate-900 dark:text-[#FFFFFF]">KES {Number(inv.amount).toLocaleString()}</TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1">
                                                     <Button
@@ -381,7 +385,7 @@ export default function FinancePage() {
                                                         title="View Invoice"
                                                         onClick={() => router.push(`/invoices/${inv.id}`)}
                                                     >
-                                                        <Eye className="h-4 w-4 text-slate-500" />
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
                                                     </Button>
                                                     {(inv.status === 'PENDING' || inv.status === 'PARTIAL') && (
                                                         <Button
@@ -404,17 +408,17 @@ export default function FinancePage() {
                     </div>
                 </TabsContent>
                 <TabsContent value="payments" className="space-y-4">
-                    <div className="rounded-md border bg-white shadow-sm">
+                    <div className="rounded-2xl border border-slate-200 dark:border-[#2A3242] bg-white dark:bg-[#161B22] shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] overflow-hidden transition-all">
                         <div className="max-h-[600px] overflow-y-auto relative">
                             <Table>
-                                <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
-                                    <TableRow>
-                                        <TableHead className="bg-white">Payment ID</TableHead>
-                                        <TableHead className="bg-white">Tenant</TableHead>
-                                        <TableHead className="bg-white">Method</TableHead>
-                                        <TableHead className="bg-white">Reference</TableHead>
-                                        <TableHead className="bg-white">Date</TableHead>
-                                        <TableHead className="text-right bg-white">Amount</TableHead>
+                                <TableHeader className="sticky top-0 bg-slate-50 dark:bg-[#1B2230] z-10 shadow-sm border-b border-slate-200 dark:border-[#2A3242]">
+                                    <TableRow className="hover:bg-transparent border-0">
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Payment ID</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Tenant</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Method</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Reference</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Date</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -423,7 +427,7 @@ export default function FinancePage() {
                                             <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
                                         </TableRow>
                                     ) : filteredPayments.map((pay) => (
-                                        <TableRow key={pay.id}>
+                                        <TableRow key={pay.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{pay.id}</TableCell>
                                             <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
                                             <TableCell>{pay.method}</TableCell>

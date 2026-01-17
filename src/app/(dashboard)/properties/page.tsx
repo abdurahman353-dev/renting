@@ -88,28 +88,30 @@ export default function PropertiesPage() {
     });
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Properties</h2>
-                    <p className="text-muted-foreground">Manage your houses and residential units.</p>
-                </div>
+        <div className="p-8 space-y-8 bg-slate-50 dark:bg-[#0F1115] min-h-screen transition-colors duration-300">
+            <div className="border-b border-slate-200 dark:border-[#1F2630] pb-6 mb-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Properties</h2>
+                        <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">Manage your houses and residential units.</p>
+                    </div>
 
-                <Button
-                    onClick={() => router.push('/properties/new')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-                >
-                    <Plus className="mr-2 h-4 w-4" /> Add Property
-                </Button>
+                    <Button
+                        onClick={() => router.push('/properties/new')}
+                        className="bg-[#6366F1] hover:bg-[#4f46e5] text-white shadow-xl px-8 py-6 rounded-xl text-lg font-bold transition-all duration-300 transform hover:scale-105 active:scale-95"
+                    >
+                        <Plus className="mr-2 h-6 w-6" /> Add Property
+                    </Button>
+                </div>
             </div>
 
             <div className="flex items-center space-x-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 dark:text-[#9CA3AF]" />
                     <Input
                         type="search"
                         placeholder="Search by name or location..."
-                        className="pl-8 h-10 border-slate-300 focus:border-indigo-500 rounded-lg shadow-sm"
+                        className="pl-12 h-12 bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] placeholder:text-slate-400 dark:placeholder:text-[#9CA3AF] rounded-xl shadow-sm dark:shadow-inner focus:border-primary dark:focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -122,18 +124,30 @@ export default function PropertiesPage() {
                         <Card
                             key={property.id}
                             onClick={() => router.push(`/properties/${property.id}`)}
-                            className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer border-slate-200"
+                            className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl overflow-hidden hover:shadow-xl dark:hover:shadow-[0_12px_28px_rgba(0,0,0,0.6)] transition-all duration-500 group cursor-pointer transform hover:-translate-y-2"
                         >
-                            <div className="h-48 overflow-hidden relative">
+                            <div className="h-56 overflow-hidden relative">
                                 <img
                                     src={property.featured_image_url || property.images || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&auto=format&fit=crop&q=60"}
                                     alt={property.name}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
-                                <div className="absolute top-2 left-2">
-                                    <Badge variant={property.occupied_units === property.total_units ? "secondary" : "default"} className="bg-white/90 text-black hover:bg-white">
-                                        {(property.occupied_units || 0)}/{property.units?.length || 0} Occupied
-                                    </Badge>
+                                <div className="absolute top-4 left-4">
+                                    {(() => {
+                                        const total = property.units?.length || property.total_units || 0;
+                                        const occupied = property.occupied_units || 0;
+                                        const rate = total > 0 ? (occupied / total) : 0;
+
+                                        let badgeColor = "bg-emerald-500/15 text-[#22C55E] border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)]";
+                                        if (rate < 0.5) badgeColor = "bg-rose-500/15 text-rose-500 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)]";
+                                        else if (rate < 1) badgeColor = "bg-amber-500/15 text-amber-500 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
+
+                                        return (
+                                            <Badge className={`${badgeColor} backdrop-blur-md px-3 py-1.5 rounded-xl border text-sm font-black shadow-lg transition-all duration-300`}>
+                                                {occupied}/{total} Occupied
+                                            </Badge>
+                                        );
+                                    })()}
                                 </div>
                                 {user?.role === 'super_admin' && (
                                     <Button
@@ -149,28 +163,32 @@ export default function PropertiesPage() {
                                     </Button>
                                 )}
                             </div>
-                            <CardHeader>
-                                <CardTitle className="flex justify-between items-start">
-                                    <span>{property.name}</span>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-2xl font-bold text-slate-800 dark:text-[#FFFFFF] group-hover:text-primary transition-colors">
+                                    {property.name}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-2 text-sm text-muted-foreground">
-                                    <div className="flex items-center">
-                                        <MapPin className="mr-2 h-4 w-4 text-indigo-500" />
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex items-center text-slate-600 dark:text-[#9CA3AF] font-medium">
+                                        <MapPin className="mr-3 h-5 w-5 text-primary" />
                                         {property.location}
                                     </div>
-                                    <div className="flex items-center">
-                                        <Home className="mr-2 h-4 w-4 text-indigo-500" />
-                                        {property.units?.length || 0} Units Total
+                                    <div className="flex items-center text-slate-600 dark:text-[#9CA3AF] font-medium">
+                                        <Home className="mr-3 h-5 w-5 text-primary" />
+                                        {property.units?.length || property.total_units || 0} Units Total
                                     </div>
                                 </div>
-                                <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                                    <div className="text-xs font-medium text-slate-500">
+                                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-[#2A2F3A] flex justify-between items-center">
+                                    <div className="text-sm font-bold text-slate-400 dark:text-[#9CA3AF] uppercase tracking-wider">
                                         Occupancy Rate
                                     </div>
-                                    <div className="text-sm font-bold text-indigo-600">
-                                        {property.total_units > 0 ? Math.round(((property.occupied_units || 0) / property.total_units) * 100) : 0}%
+                                    <div className="text-xl font-black text-primary">
+                                        {(() => {
+                                            const total = property.units?.length || property.total_units || 0;
+                                            const occupied = property.occupied_units || 0;
+                                            return total > 0 ? Math.round((occupied / total) * 100) : 0;
+                                        })()}%
                                     </div>
                                 </div>
                             </CardContent>
@@ -178,11 +196,11 @@ export default function PropertiesPage() {
                     ))
                 ) : properties.length === 0 ? (
                     <div className="col-span-full py-20 text-center flex flex-col items-center justify-center space-y-4">
-                        <div className="bg-slate-100 p-6 rounded-full">
-                            <Home className="h-12 w-12 text-slate-400" />
+                        <div className="bg-muted p-6 rounded-full">
+                            <Home className="h-12 w-12 text-muted-foreground" />
                         </div>
-                        <h3 className="text-2xl font-bold text-black">Create a Property by clicking add property button</h3>
-                        <p className="text-slate-500 max-w-sm mx-auto">Start by adding your first property to manage units and tenants effectively.</p>
+                        <h3 className="text-2xl font-bold text-foreground">Create a Property by clicking add property button</h3>
+                        <p className="text-muted-foreground max-w-sm mx-auto">Start by adding your first property to manage units and tenants effectively.</p>
                     </div>
                 ) : (
                     <div className="col-span-full py-12 text-center text-muted-foreground">

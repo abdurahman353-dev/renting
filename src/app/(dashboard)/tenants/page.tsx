@@ -425,10 +425,10 @@ function TenantsContent() {
     if (loading) return <div className="p-8">Loading tenants...</div>;
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Tenants</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Tenants</h2>
                     <p className="text-muted-foreground">Manage tenant profiles and lease agreements.</p>
                 </div>
 
@@ -637,7 +637,7 @@ function TenantsContent() {
             </div>
 
             {/* Professional Search and Filters */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <div className="bg-card rounded-xl shadow-lg border border-border p-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Enhanced Search Bar */}
                     <div className="flex-1">
@@ -649,7 +649,7 @@ function TenantsContent() {
                             <Input
                                 type="search"
                                 placeholder="Search by name, ID number, or unit..."
-                                className="pl-12 pr-4 h-12 text-base border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm"
+                                className="pl-12 pr-4 h-12 text-base border-input focus:border-ring focus:ring-ring rounded-lg shadow-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -668,7 +668,7 @@ function TenantsContent() {
                                 setFilterProperty(e.target.value);
                                 setFilterUnit(""); // Reset unit filter when property changes
                             }}
-                            className="w-full h-12 px-4 text-base rounded-lg border border-slate-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer hover:border-slate-400"
+                            className="w-full h-12 px-4 text-base rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none transition-all cursor-pointer hover:border-input"
                         >
                             <option value="">All Properties</option>
                             {properties.map((p: any) => (
@@ -687,7 +687,7 @@ function TenantsContent() {
                             value={filterUnit}
                             onChange={(e) => setFilterUnit(e.target.value)}
                             disabled={!filterProperty}
-                            className="w-full h-12 px-4 text-base rounded-lg border border-slate-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer hover:border-slate-400 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="w-full h-12 px-4 text-base rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none transition-all cursor-pointer hover:border-input disabled:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <option value="">All Units</option>
                             {availableFilterUnits.map((u: any) => (
@@ -699,7 +699,7 @@ function TenantsContent() {
 
                 {/* Active Filters Display */}
                 {(searchQuery || filterProperty || filterUnit) && (
-                    <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="mt-4 pt-4 border-t border-border">
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium text-slate-600">Active Filters:</span>
                             {searchQuery && (
@@ -714,7 +714,7 @@ function TenantsContent() {
                                 </Badge>
                             )}
                             {filterProperty && (
-                                <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-0">
+                                <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-300 border-0">
                                     Property: {filterProperty}
                                     <button
                                         onClick={() => {
@@ -728,7 +728,7 @@ function TenantsContent() {
                                 </Badge>
                             )}
                             {filterUnit && (
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-0">
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-300 border-0">
                                     Unit: {filterUnit}
                                     <button
                                         onClick={() => setFilterUnit("")}
@@ -744,7 +744,7 @@ function TenantsContent() {
                                     setFilterProperty("");
                                     setFilterUnit("");
                                 }}
-                                className="text-sm text-slate-600 hover:text-slate-900 underline ml-2"
+                                className="text-sm text-muted-foreground hover:text-foreground underline ml-2"
                             >
                                 Clear all
                             </button>
@@ -753,22 +753,24 @@ function TenantsContent() {
                 )}
             </div>
 
-            <div className="rounded-md border bg-white shadow-sm">
+
+
+            <div className="rounded-md border border-border bg-card shadow-sm">
                 <div className="max-h-[600px] overflow-y-auto relative">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                        <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                             <TableRow>
-                                <TableHead className="bg-white">Name</TableHead>
-                                <TableHead className="bg-white">ID Number</TableHead>
-                                <TableHead className="bg-white">Property / Unit</TableHead>
-                                <TableHead className="bg-white">Contact</TableHead>
-                                <TableHead className="bg-white">Email</TableHead>
-                                <TableHead className="bg-white">Start Date</TableHead>
-                                <TableHead className="bg-white">Rent (KES)</TableHead>
-                                <TableHead className="bg-white">Deposit (Total)</TableHead>
-                                <TableHead className="bg-white">Status</TableHead>
-                                <TableHead className="text-right bg-white">Balance (KES)</TableHead>
-                                <TableHead className="w-[50px] bg-white"></TableHead>
+                                <TableHead className="bg-card">Name</TableHead>
+                                <TableHead className="bg-card">ID Number</TableHead>
+                                <TableHead className="bg-card">Property / Unit</TableHead>
+                                <TableHead className="bg-card">Contact</TableHead>
+                                <TableHead className="bg-card">Email</TableHead>
+                                <TableHead className="bg-card">Start Date</TableHead>
+                                <TableHead className="bg-card">Rent (KES)</TableHead>
+                                <TableHead className="bg-card">Deposit (Total)</TableHead>
+                                <TableHead className="bg-card">Status</TableHead>
+                                <TableHead className="text-right bg-card">Balance (KES)</TableHead>
+                                <TableHead className="w-[50px] bg-card"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -779,7 +781,7 @@ function TenantsContent() {
                                 const rentAmount = lease?.rent_amount || 'N/A';
 
                                 return (
-                                    <TableRow key={tenant.id} className="cursor-pointer hover:bg-slate-50">
+                                    <TableRow key={tenant.id} className="cursor-pointer hover:bg-muted/50">
                                         <TableCell className="font-medium">
                                             <div>{tenant.name}</div>
                                             <div className="text-xs text-muted-foreground">ID: {tenant.id}</div>
@@ -890,11 +892,11 @@ function TenantsContent() {
                                 <TableRow>
                                     <TableCell colSpan={11} className="py-20 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
-                                            <div className="bg-slate-100 p-6 rounded-full">
-                                                <Users className="h-12 w-12 text-slate-400" />
+                                            <div className="bg-muted p-6 rounded-full">
+                                                <Users className="h-12 w-12 text-muted-foreground" />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-black">Assign Tenants to Properties by clicking Register Tenant button</h3>
-                                            <p className="text-slate-500 max-w-sm mx-auto">Start by registering your first tenant and assigning them to a property unit.</p>
+                                            <h3 className="text-2xl font-bold text-foreground">Assign Tenants to Properties by clicking Register Tenant button</h3>
+                                            <p className="text-muted-foreground max-w-sm mx-auto">Start by registering your first tenant and assigning them to a property unit.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -932,6 +934,6 @@ function TenantsContent() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </div >
     )
 }

@@ -103,11 +103,11 @@ export default function TenantReportPage() {
     const debtors = data.filter(d => d.balance < 0).length;
 
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+        <div className="p-8 space-y-8 min-h-screen bg-muted/40">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Tenants Ledger Report</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground font-outfit">Tenants Ledger Report</h2>
                     <p className="text-muted-foreground mt-1 text-sm font-medium">
                         Monthly financial overview of all tenant accounts and outstanding balances.
                     </p>
@@ -120,15 +120,15 @@ export default function TenantReportPage() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
                                 <CreditCard className="h-6 w-6 text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Collected</p>
-                                <p className="text-2xl font-black text-slate-900">{totalPaid.toLocaleString()}</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Collected</p>
+                                <p className="text-2xl font-black text-foreground">{totalPaid.toLocaleString()}</p>
                             </div>
                         </div>
                         <div className="h-1 w-full bg-emerald-500/10">
@@ -137,14 +137,14 @@ export default function TenantReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-rose-50 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
                                 <AlertCircle className="h-6 w-6 text-rose-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Outstanding</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Outstanding</p>
                                 <p className="text-2xl font-black text-rose-600">{Math.abs(totalBalance).toLocaleString()}</p>
                             </div>
                         </div>
@@ -154,15 +154,15 @@ export default function TenantReportPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-white overflow-hidden group">
+                <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform">
                                 <User className="h-6 w-6 text-indigo-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Active Debtors</p>
-                                <p className="text-2xl font-black text-slate-900">{debtors}</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Active Debtors</p>
+                                <p className="text-2xl font-black text-foreground">{debtors}</p>
                             </div>
                         </div>
                         <div className="h-1 w-full bg-indigo-500/10">
@@ -173,16 +173,16 @@ export default function TenantReportPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
-                <div className="flex items-center gap-2 mb-6 text-slate-800 font-bold">
+            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-6 text-foreground font-bold">
                     <Filter className="h-4 w-4 text-emerald-500" />
                     Report Filtering
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Property</label>
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Property</label>
                         <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
                             value={filters.property_id}
                             onChange={(e) => setFilters({ ...filters, property_id: e.target.value })}
                         >
@@ -194,9 +194,9 @@ export default function TenantReportPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Fiscal Month</label>
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Fiscal Month</label>
                         <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer hover:bg-white"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
                             value={filters.month}
                             onChange={(e) => setFilters({ ...filters, month: parseInt(e.target.value) })}
                         >
@@ -207,31 +207,37 @@ export default function TenantReportPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Fiscal Year</label>
-                        <select
-                            className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50/50 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer hover:bg-white"
+                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Fiscal Year</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={4}
+                            placeholder="YYYY"
+                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all hover:bg-muted/50"
                             value={filters.year}
-                            onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
-                        >
-                            {years.map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                if (val.length <= 4) {
+                                    setFilters({ ...filters, year: parseInt(val) || 0 });
+                                }
+                            }}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Table */}
-            <Card className="border-slate-200/60 shadow-sm rounded-2xl overflow-hidden bg-white">
-                <CardHeader className="bg-slate-50/20 border-b border-slate-100 py-6 px-8">
-                    <CardTitle className="text-xl font-black text-slate-800 flex items-center">
-                        <Building2 className="mr-3 h-5 w-5 text-slate-400" />
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+                <CardHeader className="bg-muted/30 border-b border-border py-6 px-8">
+                    <CardTitle className="text-xl font-black text-foreground flex items-center">
+                        <Building2 className="mr-3 h-5 w-5 text-muted-foreground" />
                         Monthly Tenant Balance Sheet
                     </CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left border-collapse">
-                        <thead className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50/80 border-b border-slate-100">
+                        <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] bg-muted/50 border-b border-border">
                             <tr>
                                 <th className="px-8 py-5">Property</th>
                                 <th className="px-8 py-5">Tenant Identity</th>
@@ -259,24 +265,24 @@ export default function TenantReportPage() {
                                 </tr>
                             ) : (
                                 data.map((row: any) => (
-                                    <tr key={row.id} className="hover:bg-slate-50/50 transition-all group">
-                                        <td className="px-8 py-5 font-bold text-slate-500 uppercase text-[11px] tracking-wide">{row.property_name}</td>
+                                    <tr key={row.id} className="hover:bg-muted/50 transition-all group">
+                                        <td className="px-8 py-5 font-bold text-muted-foreground uppercase text-[11px] tracking-wide">{row.property_name}</td>
                                         <td className="px-8 py-5">
                                             <div className="flex items-center">
-                                                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 group-hover:bg-emerald-600 transition-colors">
-                                                    <User className="h-4 w-4 text-slate-400 group-hover:text-white" />
+                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3 group-hover:bg-emerald-600 transition-colors">
+                                                    <User className="h-4 w-4 text-muted-foreground group-hover:text-white" />
                                                 </div>
-                                                <div className="font-black text-slate-900 text-base">{row.tenant_name}</div>
+                                                <div className="font-black text-foreground text-base">{row.tenant_name}</div>
                                             </div>
                                         </td>
                                         <td className="px-8 py-5">
-                                            <div className="flex items-center text-slate-500 font-bold">
+                                            <div className="flex items-center text-muted-foreground font-bold">
                                                 <Phone className="h-3 w-3 mr-2 opacity-50" />
                                                 {row.phone}
                                             </div>
                                         </td>
                                         <td className="px-8 py-5 text-center">
-                                            <span className="bg-slate-900 text-white px-3 py-1 rounded-lg text-xs font-black shadow-sm group-hover:scale-110 transition-transform inline-block">
+                                            <span className="bg-foreground text-background px-3 py-1 rounded-lg text-xs font-black shadow-sm group-hover:scale-110 transition-transform inline-block">
                                                 {row.unit_number}
                                             </span>
                                         </td>

@@ -104,7 +104,7 @@ export default function UnitDetailsPage() {
                 : "bg-slate-100 text-slate-700 border-slate-200";
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-muted/40 text-foreground">
             <div className="max-w-7xl mx-auto p-6 space-y-6">
                 {/* Hero Section with Images */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl">
@@ -121,7 +121,7 @@ export default function UnitDetailsPage() {
                                     <Sparkles className="w-5 h-5 text-yellow-400" />
                                     <span className="text-yellow-400 font-semibold text-sm">Premium Listing</span>
                                 </div>
-                                <Button variant="secondary" size="sm" className="bg-white/90 backdrop-blur-sm hover:bg-white">
+                                <Button variant="secondary" size="sm" className="bg-black text-white hover:bg-black/90 border-0 shadow-sm font-semibold">
                                     View All {images.length} Photos
                                 </Button>
                             </div>
@@ -159,15 +159,15 @@ export default function UnitDetailsPage() {
                 </div>
 
                 {/* Header */}
-                <div className="bg-white rounded-2xl shadow-sm p-8 border border-slate-200">
+                <div className="bg-card rounded-2xl shadow-sm p-8 border border-border">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-slate-900 mb-3">
+                            <h1 className="text-3xl font-bold text-foreground mb-3">
                                 Unit {unit.unit_number} - {unit.property?.name}
                             </h1>
-                            <div className="flex items-center text-slate-600 gap-4">
-                                <span className="flex items-center text-lg"><Home className="w-5 h-5 mr-2 text-slate-500" /> {unit.type}</span>
-                                {unit.size && <span className="flex items-center text-lg"><Maximize className="w-5 h-5 mr-2 text-slate-500" /> {unit.size} sqft</span>}
+                            <div className="flex items-center text-muted-foreground gap-4">
+                                <span className="flex items-center text-lg"><Home className="w-5 h-5 mr-2 text-muted-foreground" /> {unit.type}</span>
+                                {unit.size && <span className="flex items-center text-lg"><Maximize className="w-5 h-5 mr-2 text-muted-foreground" /> {unit.size} sqft</span>}
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -199,57 +199,57 @@ export default function UnitDetailsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Main Details */}
                     <div className="lg:col-span-2 space-y-6">
-                        <Card className="bg-white shadow-sm border border-slate-200">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100">
-                                <CardTitle className="text-xl font-bold text-slate-800">Unit Overview</CardTitle>
+                        <Card className="bg-card shadow-sm border border-border">
+                            <CardHeader className="bg-muted/40 border-b border-border">
+                                <CardTitle className="text-xl font-bold text-foreground">Unit Overview</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 grid grid-cols-2 gap-6">
-                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                    <span className="text-slate-600 font-medium">Monthly Rent</span>
-                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.price).toLocaleString()} KES</span>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Monthly Rent</span>
+                                    <span className="font-bold text-foreground text-lg">{Number(unit.price).toLocaleString()} KES</span>
                                 </div>
-                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                    <span className="text-slate-600 font-medium">Deposit 1</span>
-                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_1 || 0).toLocaleString()} KES</span>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Deposit 1</span>
+                                    <span className="font-bold text-foreground text-lg">{Number(unit.deposit_1 || 0).toLocaleString()} KES</span>
                                 </div>
-                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                    <span className="text-slate-600 font-medium">Deposit 2</span>
-                                    <span className="font-bold text-slate-900 text-lg">{Number(unit.deposit_2 || 0).toLocaleString()} KES</span>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Deposit 2</span>
+                                    <span className="font-bold text-foreground text-lg">{Number(unit.deposit_2 || 0).toLocaleString()} KES</span>
                                 </div>
-                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                    <span className="text-slate-600 font-medium">Property</span>
-                                    <span className="font-semibold text-slate-900">{unit.property?.name || "N/A"}</span>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Property</span>
+                                    <span className="font-semibold text-foreground">{unit.property?.name || "N/A"}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-4 px-4 bg-slate-50 rounded-lg">
-                                    <span className="text-slate-600 font-medium">Floor</span>
-                                    <span className="font-semibold text-slate-900">{unit.floor || "N/A"}</span>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Floor</span>
+                                    <span className="font-semibold text-foreground">{unit.floor || "N/A"}</span>
                                 </div>
                                 {unit.features && (
-                                    <div className="col-span-2 py-4 px-4 bg-slate-50 rounded-lg">
-                                        <span className="block text-slate-600 font-medium mb-2">Features</span>
-                                        <p className="text-slate-900 font-medium flex items-center"><Sparkles className="w-4 h-4 mr-2 text-yellow-500" /> {unit.features}</p>
+                                    <div className="col-span-2 py-4 px-4 bg-muted/40 rounded-lg">
+                                        <span className="block text-muted-foreground font-medium mb-2">Features</span>
+                                        <p className="text-foreground font-medium flex items-center"><Sparkles className="w-4 h-4 mr-2 text-yellow-500" /> {unit.features}</p>
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
 
                         {/* History */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100">
-                                <CardTitle className="text-xl font-bold text-slate-800">History & Activity</CardTitle>
+                        <Card className="bg-card shadow-sm border border-border">
+                            <CardHeader className="bg-muted/40 border-b border-border">
+                                <CardTitle className="text-xl font-bold text-foreground">History & Activity</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6">
                                 {lease ? (
-                                    <div className="flex gap-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                                    <div className="flex gap-4 p-4 bg-blue-500/10 rounded-lg border border-blue-200 dark:border-blue-900">
                                         <div className="mt-1">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                <History className="w-5 h-5 text-blue-600" />
+                                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                                                <History className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900">Active Lease</p>
-                                            <p className="text-slate-600">
-                                                Occupied by <span className="font-semibold text-blue-700">{tenant?.name}</span> since {new Date(lease.created_at).toLocaleDateString()}
+                                            <p className="font-bold text-foreground">Active Lease</p>
+                                            <p className="text-muted-foreground">
+                                                Occupied by <span className="font-semibold text-blue-600 dark:text-blue-400">{tenant?.name}</span> since {new Date(lease.created_at).toLocaleDateString()}
                                             </p>
                                         </div>
                                     </div>
@@ -263,39 +263,39 @@ export default function UnitDetailsPage() {
                     {/* Right Column - Sidebar */}
                     <div className="space-y-6">
                         {/* Tenant Card */}
-                        <Card className="bg-white shadow-sm border border-slate-200">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                                <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
-                                    <User className="w-5 h-5 text-slate-500" /> Current Tenant
+                        <Card className="bg-card shadow-sm border border-border">
+                            <CardHeader className="bg-muted/40 border-b border-border pb-4">
+                                <CardTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
+                                    <User className="w-5 h-5 text-muted-foreground" /> Current Tenant
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6">
                                 {isOccupied && tenant ? (
                                     <>
                                         <div className="flex items-center gap-4 mb-6">
-                                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <span className="font-bold text-lg text-indigo-700">{tenant.name.charAt(0)}</span>
+                                            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center">
+                                                <span className="font-bold text-lg text-indigo-700 dark:text-indigo-400">{tenant.name.charAt(0)}</span>
                                             </div>
                                             <div>
-                                                <p className="font-bold text-lg text-slate-900">{tenant.name}</p>
-                                                <p className="text-sm text-slate-500">{tenant.email || tenant.phone}</p>
+                                                <p className="font-bold text-lg text-foreground">{tenant.name}</p>
+                                                <p className="text-sm text-muted-foreground">{tenant.email || tenant.phone}</p>
                                             </div>
                                         </div>
                                         <div className="space-y-3 pt-2">
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Id Number</span>
-                                                <span className="font-medium text-slate-900">{tenant.id_number}</span>
+                                                <span className="text-muted-foreground">Id Number</span>
+                                                <span className="font-medium text-foreground">{tenant.id_number}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-slate-500">Moved in on</span>
-                                                <span className="font-medium text-slate-900">{lease.start_date || "N/A"}</span>
+                                                <span className="text-muted-foreground">Moved in on</span>
+                                                <span className="font-medium text-foreground">{lease.start_date || "N/A"}</span>
                                             </div>
                                             <Button onClick={() => router.push(`/tenants/${tenant.id}`)} variant="outline" className="w-full mt-4">View Full Profile</Button>
                                         </div>
                                     </>
                                 ) : (
                                     <div className="text-center py-6">
-                                        <p className="text-slate-500 mb-4">
+                                        <p className="text-muted-foreground mb-4">
                                             {isMaintenance ? "Unit is under maintenance." : "Unit is currently vacant."}
                                         </p>
                                         <Button
@@ -339,7 +339,7 @@ export default function UnitDetailsPage() {
                         <DialogTitle>Are you absolutely sure?</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
-                        <p className="text-slate-600">
+                        <p className="text-muted-foreground">
                             This action cannot be undone. This will permanently delete the unit <strong>{unit.unit_number}</strong>
                             and remove all associated data.
                         </p>
