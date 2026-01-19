@@ -266,12 +266,12 @@ export default function FinancePage() {
                     >
                         <Download className="mr-2 h-4 w-4" /> Export Report
                     </Button>
-                    <Button
+                    {/* <Button
                         className="bg-[#6366F1] hover:bg-[#4f46e5] text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
                         onClick={handleGenerateInvoices}
                     >
                         <Plus className="mr-2 h-4 w-4" /> Generate Invoices
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 
