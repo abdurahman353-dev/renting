@@ -211,7 +211,7 @@ export default function TenantDetailsPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-6">
-                                            <div className="pb-4 border-b border-slate-50 dark:border-[#2A2F3A]">
+                                            <div className="pb-4 border-b border-slate-50 dark:border-[#2A2F3A] flex flex-col items-end">
                                                 <p className="text-xs text-slate-400 dark:text-[#9CA3AF] font-bold uppercase mb-1">Security Deposit</p>
                                                 <div className="text-right flex flex-col items-end">
                                                     <div className="text-slate-900 dark:text-[#E5E7EB] font-black text-xl">
@@ -229,7 +229,7 @@ export default function TenantDetailsPage() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col items-end">
                                                 <p className="text-xs text-slate-400 dark:text-[#9CA3AF] font-bold uppercase mb-1">Rent Cycle</p>
                                                 <Badge variant="outline" className="text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#2A2F3A] font-bold px-3 py-1">Monthly</Badge>
                                             </div>
