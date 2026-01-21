@@ -162,12 +162,12 @@ export default function MpesaTransactionsPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
+                {/* <Card>
                     <CardHeader className="pb-2">
                         <CardDescription>Total Transactions</CardDescription>
                         <CardTitle className="text-3xl">{stats.total}</CardTitle>
                     </CardHeader>
-                </Card>
+                </Card> */}
 
                 <Card>
                     <CardHeader className="pb-2">
