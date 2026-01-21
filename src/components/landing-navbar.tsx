@@ -38,7 +38,13 @@ export function LandingNavbar() {
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
                     <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
                     <Link href="/property" className="hover:text-blue-600 transition-colors">Properties</Link>
-                    <Link href="/contact" className="hover:text-blue-600 transition-colors">Contact</Link>
+                    {/* <Link href="/contact" className="hover:text-blue-600 transition-colors">Contact</Link> */}
+                    <button
+                        onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="hover:text-blue-600 transition-colors"
+                    >
+                        Contact
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-4">
