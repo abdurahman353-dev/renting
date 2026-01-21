@@ -32,6 +32,9 @@ interface GeneratedUnit {
     deposit_2: number | string;
     status: string;
     type: string;
+    floor: string;
+    size: string;
+    features: string;
 }
 
 export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existingUnits = [] }: BulkUnitModalProps) {
@@ -42,6 +45,9 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
     const [defaultDeposit1, setDefaultDeposit1] = useState<number | string>("");
     const [defaultDeposit2, setDefaultDeposit2] = useState<number | string>("");
     const [defaultType, setDefaultType] = useState("");
+    const [defaultFloor, setDefaultFloor] = useState("");
+    const [defaultSize, setDefaultSize] = useState("");
+    const [defaultFeatures, setDefaultFeatures] = useState("");
 
     const [generatedUnits, setGeneratedUnits] = useState<GeneratedUnit[]>([]);
     const [isPreviewing, setIsPreviewing] = useState(false);
@@ -57,6 +63,9 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                 deposit_2: defaultDeposit2,
                 status: "vacant",
                 type: defaultType,
+                floor: defaultFloor,
+                size: defaultSize,
+                features: defaultFeatures,
             });
         }
         setGeneratedUnits(units);
@@ -141,6 +150,18 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                 <Label>Default Deposit 2 (KES)</Label>
                                 <Input type="number" value={defaultDeposit2} onChange={(e) => setDefaultDeposit2(Number(e.target.value))} />
                             </div>
+                            <div className="space-y-2">
+                                <Label>Default Floor</Label>
+                                <Input value={defaultFloor} onChange={(e) => setDefaultFloor(e.target.value)} placeholder="e.g. 1st" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Default Size (sqft)</Label>
+                                <Input value={defaultSize} onChange={(e) => setDefaultSize(e.target.value)} placeholder="e.g. 600" />
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                                <Label>Default Features</Label>
+                                <Input value={defaultFeatures} onChange={(e) => setDefaultFeatures(e.target.value)} placeholder="e.g. Balcony, Wifi" />
+                            </div>
                         </div>
                     ) : (
                         <div className="flex-1 border border-border rounded-md overflow-y-auto">
@@ -152,6 +173,9 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                         <TableHead>Price (KES)</TableHead>
                                         <TableHead>Deposit 1</TableHead>
                                         <TableHead>Deposit 2</TableHead>
+                                        <TableHead>Floor</TableHead>
+                                        <TableHead>Size</TableHead>
+                                        <TableHead>Features</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -206,6 +230,27 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                                                     value={unit.deposit_2}
                                                     onChange={(e) => handleUnitChange(index, 'deposit_2', Number(e.target.value))}
                                                     className="h-8 w-[100px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    value={unit.floor}
+                                                    onChange={(e) => handleUnitChange(index, 'floor', e.target.value)}
+                                                    className="h-8 w-[80px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    value={unit.size}
+                                                    onChange={(e) => handleUnitChange(index, 'size', e.target.value)}
+                                                    className="h-8 w-[80px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    value={unit.features}
+                                                    onChange={(e) => handleUnitChange(index, 'features', e.target.value)}
+                                                    className="h-8 w-[150px]"
                                                 />
                                             </TableCell>
                                             <TableCell>

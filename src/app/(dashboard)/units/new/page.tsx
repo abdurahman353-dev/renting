@@ -45,6 +45,9 @@ const formSchema = z.object({
     status: z.string().min(1, "Status is required."),
     image: z.string().optional(),
     images: z.array(z.union([z.string(), z.instanceof(File)])).optional(),
+    size: z.string().optional(),
+    floor: z.string().optional(),
+    features: z.string().optional(),
 
     // Single mode specific
     unit_number: z.string().optional(),
@@ -115,6 +118,9 @@ export default function AddUnitPage() {
             unit_prefix: "",
             start_number: 1,
             count: 10,
+            size: "",
+            floor: "",
+            features: "",
         },
     });
 
@@ -200,6 +206,9 @@ export default function AddUnitPage() {
                     deposit_2: values.deposit_2 ? parseFloat(values.deposit_2) : 0,
                     image: mainImage,
                     images: imageUrls,
+                    size: values.size,
+                    floor: values.floor,
+                    features: values.features,
                 });
             } else {
                 // Bulk mode
@@ -223,6 +232,9 @@ export default function AddUnitPage() {
                         deposit_2: values.deposit_2 ? parseFloat(values.deposit_2) : 0,
                         image: mainImage,
                         images: imageUrls,
+                        size: values.size,
+                        floor: values.floor,
+                        features: values.features,
                     });
                 }
 
@@ -507,6 +519,54 @@ export default function AddUnitPage() {
                                                 )}
                                             />
                                         </div>
+
+                                        {/* Additional Details */}
+                                        <div className="space-y-6 pt-4 border-t">
+                                            <h3 className="text-lg font-medium">Unit Details</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="size"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Size (sqft)</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="e.g. 600" {...field} value={field.value || ''} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="floor"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Floor Number</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="e.g. 2nd" {...field} value={field.value || ''} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                            <FormField
+                                                control={form.control}
+                                                name="features"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Features / Amenities</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="e.g. Balcony, High Ceiling, Built-in wardrobes" {...field} value={field.value || ''} />
+                                                        </FormControl>
+                                                        <FormDescription>Comma separated list of features.</FormDescription>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+
                                     </div>
 
                                     {/* Image Upload */}
@@ -559,3 +619,4 @@ export default function AddUnitPage() {
         </div>
     );
 }
+
