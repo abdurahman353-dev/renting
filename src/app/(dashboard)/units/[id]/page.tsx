@@ -224,6 +224,10 @@ export default function UnitDetailsPage() {
                                     <span className="text-muted-foreground font-medium">Floor</span>
                                     <span className="font-semibold text-foreground">{unit.floor || "N/A"}</span>
                                 </div>
+                                <div className="flex justify-between items-center py-4 px-4 bg-muted/40 rounded-lg">
+                                    <span className="text-muted-foreground font-medium">Size (sqft)</span>
+                                    <span className="font-semibold text-foreground">{unit.size || "N/A"}</span>
+                                </div>
                                 {unit.features && (
                                     <div className="col-span-2 py-4 px-4 bg-muted/40 rounded-lg">
                                         <span className="block text-muted-foreground font-medium mb-2">Features</span>
