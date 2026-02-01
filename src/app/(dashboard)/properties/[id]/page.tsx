@@ -34,6 +34,7 @@ import { propertyAPI } from "@/data/apis";
 import { useRouter } from "next/navigation";
 import { BulkUnitModal } from "@/components/properties/BulkUnitModal";
 import { formatText, formatTextType } from "@/lib/utils";
+import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 
 // Enhanced icon mapping with vibrant colors
 // Simplified professional icon mapping
@@ -88,6 +89,7 @@ export default function PropertyViewPage() {
     const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
     const normalizeUnitType = (type: string) => {
         if (!type) return 'N/A';
@@ -186,6 +188,7 @@ export default function PropertyViewPage() {
                             <img
                                 src={images[0]}
                                 alt={property.name}
+                                onClick={() => setIsGalleryOpen(true)}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-black/60"></div>
@@ -198,6 +201,7 @@ export default function PropertyViewPage() {
                                     variant="secondary"
                                     size="sm"
                                     className="bg-black text-white hover:bg-black/90 border-0 shadow-sm font-semibold"
+                                    onClick={() => setIsGalleryOpen(true)}
                                 >
                                     View All {images.length} Photos
                                 </Button>
@@ -630,6 +634,12 @@ export default function PropertyViewPage() {
                     existingUnits={property.units?.map(u => u.unit_number.toString()) || []}
                 />
             )}
+
+            <ImageGalleryModal
+                images={images}
+                isOpen={isGalleryOpen}
+                onClose={() => setIsGalleryOpen(false)}
+            />
         </div>
     );
 }

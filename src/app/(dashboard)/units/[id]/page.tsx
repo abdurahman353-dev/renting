@@ -33,6 +33,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { unitAPI, authAPI, mediaAPI } from "@/data/apis";
 import { toast } from "sonner";
+import { ImageGalleryModal } from "@/components/ImageGalleryModal";
 
 export default function UnitDetailsPage() {
     const params = useParams();
@@ -42,6 +43,7 @@ export default function UnitDetailsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [unitToDelete, setUnitToDelete] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
@@ -113,6 +115,7 @@ export default function UnitDetailsPage() {
                             <img
                                 src={images[0]}
                                 alt={`Unit ${unit.unit_number}`}
+                                onClick={() => setIsGalleryOpen(true)}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-black/60"></div>
@@ -121,7 +124,7 @@ export default function UnitDetailsPage() {
                                     <Sparkles className="w-5 h-5 text-yellow-400" />
                                     <span className="text-yellow-400 font-semibold text-sm">Premium Listing</span>
                                 </div>
-                                <Button variant="secondary" size="sm" className="bg-black text-white hover:bg-black/90 border-0 shadow-sm font-semibold">
+                                <Button variant="secondary" size="sm" onClick={() => setIsGalleryOpen(true)} className="bg-black text-white hover:bg-black/90 border-0 shadow-sm font-semibold">
                                     View All {images.length} Photos
                                 </Button>
                             </div>
@@ -365,6 +368,12 @@ export default function UnitDetailsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ImageGalleryModal
+                images={images}
+                isOpen={isGalleryOpen}
+                onClose={() => setIsGalleryOpen(false)}
+            />
         </div>
     );
 }

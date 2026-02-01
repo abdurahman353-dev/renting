@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"; // Assuming you have this, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { MOMBASA_LOCATIONS } from "@/data/mombasaLocations";
 
 interface ImageItem {
     id: string; // Unique ID for key
@@ -44,7 +45,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
     // Form State
     const [formData, setFormData] = useState({
         name: "", location: "", full_address: "", city: "",
-        state: "", postal_code: "", property_type: "", year_built: "",
+        state: "Mombasa", postal_code: "", property_type: "", year_built: "",
         floors: "", parking_spaces: "", pet_policy: "",
         description: "", property_manager: "", status: "active",
         min_lease_period: "", payment_frequency_options: [] as string[],
@@ -52,6 +53,11 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
         owner_name: "", owner_contact: "", owner_email: "", owner_id: "",
         notes: "", amenities: [] as string[], custom_amenity: ""
     });
+
+    // Location State
+    const [selectedSubcounty, setSelectedSubcounty] = useState("");
+    const [selectedWard, setSelectedWard] = useState("");
+    const [selectedSubward, setSelectedSubward] = useState("");
 
     // Load Initial Data
     useEffect(() => {
@@ -138,6 +144,24 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
     const handleSelectChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     }
+
+    const handleLocationChange = (type: 'subcounty' | 'ward' | 'subward', value: string) => {
+        if (type === 'subcounty') {
+            setSelectedSubcounty(value);
+            setSelectedWard("");
+            setSelectedSubward("");
+            setFormData(prev => ({ ...prev, city: value, state: "Mombasa", location: "" }));
+        } else if (type === 'ward') {
+            setSelectedWard(value);
+            setSelectedSubward("");
+            // Update location with Ward primarily
+            setFormData(prev => ({ ...prev, location: `${value}, ${selectedSubcounty}` }));
+        } else if (type === 'subward') {
+            setSelectedSubward(value);
+            // More specific location: "Subward, Ward"
+            setFormData(prev => ({ ...prev, location: `${value}, ${selectedWard}` }));
+        }
+    };
 
     const handleCheckboxChange = (name: string, value: string) => {
         setFormData(prev => {
@@ -288,14 +312,15 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                             required
                         />
                     </div>
-                    <div className="space-y-2">
-                        <Label>Location/Area *</Label>
-                        <Input
-                            name="location"
-                            value={formData.location}
+
+                    <div className="md:col-span-2 space-y-2">
+                        <Label>Property Description</Label>
+                        <Textarea
+                            name="description"
+                            value={formData.description}
                             onChange={handleInputChange}
-                            placeholder="e.g. Westlands"
-                            required
+                            rows={4}
+                            placeholder="Describe the property..."
                         />
                     </div>
                 </CardContent>
@@ -307,18 +332,60 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                     <CardTitle>Address Details</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="space-y-4 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="space-y-2">
+                            <Label>Sub-County *</Label>
+                            <Select value={selectedSubcounty} onValueChange={(val) => handleLocationChange('subcounty', val)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Sub-County" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MOMBASA_LOCATIONS.map(sc => (
+                                        <SelectItem key={sc.name} value={sc.name}>{sc.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Ward *</Label>
+                            <Select value={selectedWard} onValueChange={(val) => handleLocationChange('ward', val)} disabled={!selectedSubcounty}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Ward" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {selectedSubcounty && MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.map(w => (
+                                        <SelectItem key={w.name} value={w.name}>{w.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Sub-Ward (Location) *</Label>
+                            <Select value={selectedSubward} onValueChange={(val) => handleLocationChange('subward', val)} disabled={!selectedWard}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Sub-Ward" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {selectedSubcounty && selectedWard &&
+                                        MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.find(w => w.name === selectedWard)?.subLocations.map(sw => (
+                                            <SelectItem key={sw.name} value={sw.name}>{sw.name}</SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    {/* <div className="md:col-span-2 space-y-2">
                         <Label>Full Address</Label>
                         <Input name="full_address" value={formData.full_address} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
+                    </div> */}
+                    {/* <div className="space-y-2">
                         <Label>City</Label>
                         <Input name="city" value={formData.city} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
+                    </div> */}
+                    {/* <div className="space-y-2">
                         <Label>State/County</Label>
                         <Input name="state" value={formData.state} onChange={handleInputChange} />
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                         <Label>Postal Code</Label>
                         <Input name="postal_code" value={formData.postal_code} onChange={handleInputChange} />
@@ -441,19 +508,9 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             {/* Description & Amenities */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Description & Amenities</CardTitle>
+                    <CardTitle>Amenities</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label>Property Description</Label>
-                        <Textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            rows={4}
-                            placeholder="Describe the property..."
-                        />
-                    </div>
                     <div className="space-y-4">
                         <Label>Amenities</Label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
