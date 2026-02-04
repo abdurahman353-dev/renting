@@ -220,6 +220,8 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                                 <option value="3 Bedroom">3 Bedroom</option>
                                 <option value="Shop">Shop</option>
                                 <option value="Office">Office</option>
+                                <option value="Shop & 1 Bedroom">Shop & 1 Bedroom</option>
+                                <option value="Shop & Shop">Shop & Shop</option>
                             </select>
                         </div>
                     </div>
