@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -15,7 +16,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet } from "lucide-react"
+import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet, Search } from "lucide-react"
 import { financeAPI, propertyAPI, unitAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
 import FilterComponent from "./FilterComponent"
@@ -62,6 +63,7 @@ export default function FinancePage() {
 
     const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
     const [allPayments, setAllPayments] = useState<Payment[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
     const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
@@ -146,6 +148,26 @@ export default function FinancePage() {
         let filteredInv = [...invList];
         let filteredPay = [...payList];
 
+        // Apply Search (Lightning Fast)
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filteredInv = filteredInv.filter(inv =>
+                (String(inv.invoice_number || "").toLowerCase().includes(query)) ||
+                (String(inv.tenant_name || "").toLowerCase().includes(query)) ||
+                (String(inv.tenant || "").toLowerCase().includes(query)) ||
+                (String(inv.property_name || "").toLowerCase().includes(query)) ||
+                (String(inv.unit_number || "").toLowerCase().includes(query)) ||
+                (String(inv.unit || "").toLowerCase().includes(query))
+            );
+
+            filteredPay = filteredPay.filter(pay =>
+                (String(pay.reference || "").toLowerCase().includes(query)) ||
+                (String(pay.tenant_name || "").toLowerCase().includes(query)) ||
+                (String(pay.tenant || "").toLowerCase().includes(query)) ||
+                (String(pay.id || "").toLowerCase().includes(query))
+            );
+        }
+
         if (filters.property_id !== 'all') {
             filteredInv = filteredInv.filter(inv => inv.property_name && properties.find(p => p.id.toString() === filters.property_id)?.name === inv.property_name);
             // Note: Payment models might need property linking to filter correctly here if not in tenant_name
@@ -206,7 +228,7 @@ export default function FinancePage() {
         if (!loading) {
             applyFilters(allInvoices, allPayments);
         }
-    }, [filters.property_id, filters.unit_id, filters.status, filters.month]);
+    }, [filters.property_id, filters.unit_id, filters.status, filters.month, searchQuery]);
 
     const onFilterChange = (newFilters: any) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
@@ -273,6 +295,28 @@ export default function FinancePage() {
                         <Plus className="mr-2 h-4 w-4" /> Generate Invoices
                     </Button> */}
                 </div>
+            </div>
+
+            {/* Lightning Fast Search Bar */}
+            <div className="relative group max-w-2xl">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-slate-400 group-focus-within:text-[#2563EB] transition-colors duration-300" />
+                </div>
+                <Input
+                    type="text"
+                    placeholder="Search by Invoice ID, Tenant, Property or Unit..."
+                    className="pl-12 h-14 w-full bg-white dark:bg-[#161B22] border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-lg focus:ring-4 focus:ring-[#2563EB]/10 transition-all duration-300 text-lg font-medium placeholder:text-slate-400 dark:placeholder:text-[#9CA3AF] dark:text-[#F9FAFB]"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                    <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                        Clear
+                    </button>
+                )}
             </div>
 
             {/* Advanced Filters */}
