@@ -47,7 +47,9 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
             // Normalize unit type
             let normalizedType = initialData.type || "";
             const t = normalizedType.toLowerCase();
-            if (t.includes('one') || t === '1 bedroom') normalizedType = "1 Bedroom";
+            if (t === 'shop & 1 bedroom') normalizedType = "Shop & 1 Bedroom";
+            else if (t === 'shop & shop') normalizedType = "Shop & Shop";
+            else if (t.includes('one') || t === '1 bedroom') normalizedType = "1 Bedroom";
             else if (t.includes('two') || t === '2 bedroom') normalizedType = "2 Bedroom";
             else if (t.includes('three') || t === '3 bedroom') normalizedType = "3 Bedroom";
             else if (t.includes('shop')) normalizedType = "Shop";

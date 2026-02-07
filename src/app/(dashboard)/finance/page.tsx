@@ -198,7 +198,7 @@ export default function FinancePage() {
         // Recalculate stats based on filtered data for better feedback
         const totalInvoiced = filteredInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
         const pendingAmount = filteredInv
-            .filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL')
+            .filter(inv => inv.status === 'PENDING')
             .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
 
         const today = new Date();
@@ -413,14 +413,12 @@ export default function FinancePage() {
                                                 <Badge
                                                     className={`px-3 py-1 font-bold rounded-full transition-all duration-300 ${inv.status === "PAID"
                                                         ? "bg-emerald-500/15 text-[#22C55E] border border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:bg-emerald-500/20"
-                                                        : inv.status === "PENDING" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/40 hover:bg-amber-200"
-                                                            : inv.status === "PARTIAL" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 dark:border dark:border-blue-500/40 hover:bg-blue-200"
-                                                                : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400 dark:border dark:border-red-500/40 hover:bg-red-200"}`}
+                                                        : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/40 hover:bg-amber-200"}`}
                                                 >
-                                                    {inv.status === "OVERDUE" ? "NOT PAID" : inv.status}
+                                                    {inv.status === "PAID" ? "PAID" : "PENDING"}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right font-black text-slate-900 dark:text-[#FFFFFF]">KES {Number(inv.amount).toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-black text-slate-900 dark:text-[#FFFFFF]">KES {(Number(inv.amount) - Number(inv.paid_amount || 0)).toLocaleString()}</TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1">
                                                     <Button

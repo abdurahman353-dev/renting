@@ -55,13 +55,14 @@ export default function PropertyReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Amount Paid", "Balance"];
+        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Amount Paid", "Previous Balances", "Total Balance"];
         const rows = data.map((row: any) => [
             `"${row.name}"`,
             row.total_units,
             row.occupied_units,
             row.vacant_units,
             row.amount_paid,
+            row.arrears_bf,
             row.balance
         ]);
 
@@ -184,7 +185,8 @@ export default function PropertyReportPage() {
                                 <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
                                 <th className="px-6 py-3 text-center text-muted-foreground">Vacant Units</th>
                                 <th className="px-6 py-3 text-right">Amount Paid</th>
-                                <th className="px-6 py-3 text-right">Balance</th>
+                                <th className="px-6 py-3 text-right text-rose-500">Previous Balances</th>
+                                <th className="px-6 py-3 text-right">Total Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -201,6 +203,9 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-center text-muted-foreground">{row.vacant_units}</td>
                                         <td className="px-6 py-4 text-right font-medium text-foreground">
                                             {Number(row.amount_paid).toLocaleString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-rose-500">
+                                            {Number(row.arrears_bf) !== 0 ? Number(row.arrears_bf).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {Number(row.balance).toLocaleString()}

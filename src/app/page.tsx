@@ -229,6 +229,8 @@ export default function LandingPage() {
                                 <option value="3 Bedroom">3 Bedroom</option>
                                 <option value="Shop">Shop</option>
                                 <option value="Office">Office</option>
+                                <option value="Shop & 1 Bedroom">Shop & 1 Bedroom</option>
+                                <option value="Shop & Shop">Shop & Shop</option>
                             </select>
                         </div>
                         <div className="flex-1 relative flex gap-2">

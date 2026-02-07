@@ -258,8 +258,8 @@ export default function CashierPage() {
 
     const onSubmit = async (values: z.infer<typeof paymentSchema>) => {
         if (!selectedTenant) return;
-        if (selectedInvoices.length === 0) {
-            toast.error("Please select at least one invoice to pay");
+        if (values.amount === "" || parseFloat(values.amount) <= 0) {
+            toast.error("Please enter a valid amount");
             return;
         }
 
@@ -366,7 +366,7 @@ export default function CashierPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Cashier</h2>
-                    <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">
+                    <p className="text-slate-700 dark:text-[#9CA3AF] text-lg font-medium">
                         {targetInvoice
                             ? `Processing payment for Invoice #${targetInvoice.invoice_number}`
                             : "Process rent payments and view tenant balances."}
@@ -384,8 +384,8 @@ export default function CashierPage() {
                 )}
             </div>
 
-            {/* Target Invoice Card (if coming from invoice) */}
-            {targetInvoice && (
+            {/* Target Invoice Card (Show if targetInvoice exists OR if tenant is selected and has pending invoices) */}
+            {(targetInvoice || (selectedTenant && pendingInvoices.length > 0)) && (
                 <Card className="border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-2xl">
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
@@ -393,25 +393,52 @@ export default function CashierPage() {
                             Invoice Details
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Invoice Number</p>
-                            <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">{targetInvoice.invoice_number}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Type</p>
-                            <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{targetInvoice.type}</Badge>
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Amount</p>
-                            <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">KES {targetInvoice.amount.toLocaleString()}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-[#9CA3AF]">Balance Due</p>
-                            <p className="font-black text-rose-500">
-                                KES {(targetInvoice.amount - targetInvoice.paid_amount).toLocaleString()}
-                            </p>
-                        </div>
+                    <CardContent className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                        {(() => {
+                            // Determine which invoice to display
+                            // Priority: targetInvoice -> First Selected Invoice -> First Pending Invoice
+                            const displayInvoice = targetInvoice
+                                || pendingInvoices.find(inv => selectedInvoices.includes(inv.id))
+                                || pendingInvoices[0];
+
+                            if (!displayInvoice) return null;
+
+                            const invoiceBalance = displayInvoice.amount - displayInvoice.paid_amount;
+                            // Calculate Arrears: Total Tenant Balance - Current Invoice Balance
+                            // Tenant Balance is negative for debt. We take absolute value to represent debt magnitude.
+                            const currentTenant = selectedTenant || tenants.find(t => t.id === displayInvoice.tenant_id);
+                            const totalDebt = currentTenant ? Math.abs(currentTenant.balance) : 0;
+                            const arrears = Math.max(0, totalDebt - invoiceBalance);
+
+                            return (
+                                <>
+                                    <div>
+                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Invoice Number</p>
+                                        <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">{displayInvoice.invoice_number}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Type</p>
+                                        <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{displayInvoice.type}</Badge>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Amount</p>
+                                        <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">KES {displayInvoice.amount.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Balance Due</p>
+                                        <p className="font-black text-rose-500">
+                                            KES {invoiceBalance.toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Previous Balance</p>
+                                        <p className="font-black text-orange-500">
+                                            KES {arrears.toLocaleString()}
+                                        </p>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </CardContent>
                 </Card>
             )}
@@ -532,7 +559,7 @@ export default function CashierPage() {
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-slate-900 dark:text-[#E5E7EB]">{invoice.invoice_number}</p>
-                                                        <p className="text-xs text-slate-500 dark:text-[#9CA3AF] font-medium">{invoice.description}</p>
+                                                        <p className="text-xs text-slate-700 dark:text-[#9CA3AF] font-medium">{invoice.description}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
@@ -548,7 +575,7 @@ export default function CashierPage() {
                                 {selectedInvoices.length > 0 && (
                                     <div className="mt-6 p-4 bg-slate-50 dark:bg-[#1B2230] rounded-xl border border-slate-200 dark:border-[#2A3242]">
                                         <div className="flex justify-between items-center">
-                                            <span className="font-bold text-slate-600 dark:text-[#9CA3AF]">Selected Total:</span>
+                                            <span className="font-bold text-slate-800 dark:text-[#9CA3AF]">Selected Total:</span>
                                             <span className="text-xl font-black text-primary">
                                                 KES {calculateSelectedTotal().toLocaleString()}
                                             </span>
@@ -586,9 +613,8 @@ export default function CashierPage() {
                                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">KES</div>
                                                                 <Input
                                                                     placeholder="0.00"
-                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] cursor-not-allowed rounded-xl"
+                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl"
                                                                     type="number"
-                                                                    readOnly
                                                                     {...field}
                                                                 />
                                                             </div>
@@ -636,7 +662,7 @@ export default function CashierPage() {
                                                             {...field}
                                                         />
                                                     </FormControl>
-                                                    <FormDescription className="text-slate-400 dark:text-[#9CA3AF]">
+                                                    <FormDescription className="text-slate-700 dark:text-[#9CA3AF]">
                                                         Transaction ID or receipt number for tracking.
                                                     </FormDescription>
                                                     <FormMessage />
@@ -748,14 +774,14 @@ export default function CashierPage() {
                                                             <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
                                                                 {payment.method}
                                                             </Badge>
-                                                            <span className="text-xs text-slate-400 dark:text-[#9CA3AF] font-medium">
+                                                            <span className="text-xs text-slate-700 dark:text-[#9CA3AF] font-medium">
                                                                 {format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="text-right flex flex-col items-end gap-2">
                                                         {payment.reference && (
-                                                            <span className="text-[10px] font-black text-[#CBD5E1] bg-slate-50 dark:bg-[#1B2230] px-2 py-1 rounded-md border border-slate-200 dark:border-[#2A3242] uppercase tracking-tighter">
+                                                            <span className="text-[10px] font-black text-slate-800 dark:text-[#CBD5E1] bg-slate-100 dark:bg-[#1B2230] px-2 py-1 rounded-md border border-slate-300 dark:border-[#2A3242] uppercase tracking-tighter shadow-sm">
                                                                 {payment.reference}
                                                             </span>
                                                         )}
@@ -792,7 +818,7 @@ export default function CashierPage() {
                                 <User className="h-10 w-10 text-slate-300 dark:text-[#2A3242]" />
                             </div>
                             <h3 className="font-black text-2xl text-slate-800 dark:text-[#F9FAFB]">No Tenant Selected</h3>
-                            <p className="text-slate-500 dark:text-[#9CA3AF] mt-3 max-w-[240px] font-medium leading-relaxed">
+                            <p className="text-slate-700 dark:text-[#9CA3AF] mt-3 max-w-[240px] font-medium leading-relaxed">
                                 Use the search box on the left to find a tenant and process payments.
                             </p>
                         </div>

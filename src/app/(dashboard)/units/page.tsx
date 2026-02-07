@@ -245,6 +245,8 @@ export default function UnitsPage() {
                                     <SelectItem value="3 Bedroom">3 Bedroom</SelectItem>
                                     <SelectItem value="Shop">Shop</SelectItem>
                                     <SelectItem value="Office">Office</SelectItem>
+                                    <SelectItem value="Shop & 1 Bedroom">Shop & 1 Bedroom</SelectItem>
+                                    <SelectItem value="Shop & Shop">Shop & Shop</SelectItem>
                                 </SelectContent>
                             </Select>
 

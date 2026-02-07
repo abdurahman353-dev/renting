@@ -79,7 +79,7 @@ export default function MpesaPaymentModal({
                     phone_number: formattedPhone,
                     amount: parseFloat(paymentAmount),
                     account_reference: accountReference,
-                    transaction_desc: `Rent payment for ${tenant.name}`,
+                    transaction_desc: `Previous Balance Payment for ${tenant.name}`,
                     tenant_id: tenant.id,
                     invoice_id: invoiceId,
                 }),

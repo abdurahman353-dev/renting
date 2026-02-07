@@ -50,6 +50,8 @@ interface Tenant {
     status: string;
     balance: number;
     previous_balance?: number;
+    remaining_previous_balance?: number;
+    unallocated_balance?: number;
     leases?: Array<{
         start_date?: string;
         rent_amount?: number;
@@ -846,7 +848,9 @@ function TenantsContent() {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            {tenant.previous_balance ? tenant.previous_balance.toLocaleString() : "0"}
+                                            {tenant.remaining_previous_balance !== undefined
+                                                ? tenant.remaining_previous_balance.toLocaleString()
+                                                : (tenant.previous_balance ? tenant.previous_balance.toLocaleString() : "0")}
                                         </TableCell>
                                         <TableCell>
                                             <Badge
