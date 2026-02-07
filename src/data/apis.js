@@ -263,6 +263,11 @@ export const financeAPI = {
         return response.data;
     },
 
+    generateMonthlyInvoices: async (data = {}) => {
+        const response = await apiClient.post('/finance/invoices/generate-monthly', data);
+        return response.data;
+    },
+
     // Payments
     getPayments: async (params = {}) => {
         const response = await apiClient.get('/finance/payments', { params });

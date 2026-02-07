@@ -245,6 +245,29 @@ export default function FinancePage() {
         }
     };
 
+    const handleGenerateMonthlyInvoices = async () => {
+        const date = new Date();
+        const monthName = date.toLocaleString('default', { month: 'long' });
+        const year = date.getFullYear();
+
+        if (!confirm(`Are you sure you want to generate invoices for ${monthName} ${year}?`)) {
+            return;
+        }
+
+        try {
+            const res = await financeAPI.generateMonthlyInvoices({
+                month: date.getMonth() + 1,
+                year: year
+            });
+            const message = res.message || "Invoices generated successfully";
+            alert(message);
+            fetchData();
+        } catch (error: any) {
+            console.error("Generate error:", error);
+            alert(error.response?.data?.message || "Failed to generate invoices");
+        }
+    };
+
     const handleExport = () => {
         // Simple CSV Export of current view
         const headers = ["ID", "Tenant", "Unit", "Property", "Amount", "Paid", "Status", "Date"];
@@ -274,6 +297,9 @@ export default function FinancePage() {
 
     // if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
+    // Dynamic button label
+    const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+
     return (
         <div className="p-8 space-y-8 bg-slate-50 dark:bg-[#0F1115] min-h-screen transition-colors duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -288,12 +314,12 @@ export default function FinancePage() {
                     >
                         <Download className="mr-2 h-4 w-4" /> Export Report
                     </Button>
-                    {/* <Button
-                        className="bg-[#6366F1] hover:bg-[#4f46e5] text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
-                        onClick={handleGenerateInvoices}
+                    <Button
+                        className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
+                        onClick={handleGenerateMonthlyInvoices}
                     >
-                        <Plus className="mr-2 h-4 w-4" /> Generate Invoices
-                    </Button> */}
+                        <Plus className="mr-2 h-4 w-4" /> Generate {currentMonthName} Invoices
+                    </Button>
                 </div>
             </div>
 
