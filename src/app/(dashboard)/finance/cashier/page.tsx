@@ -674,7 +674,7 @@ export default function CashierPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={submitting}
-                                                className="bg-primary hover:bg-primary/90 h-14 px-10 text-lg rounded-xl font-black shadow-xl dark:shadow-none min-w-[240px] transition-all transform hover:scale-105 active:scale-95"
+                                                className="bg-indigo-600 hover:bg-indigo-700"
                                             >
                                                 {submitting ? (
                                                     <>

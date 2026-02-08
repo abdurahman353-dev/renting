@@ -72,7 +72,10 @@ const defaultRoutes: SidebarRoute[] = [
         href: "/finance/transactions"
       }
     ]
-  },
+  }
+]
+
+const superAdminRoutes: SidebarRoute[] = [
   {
     label: "Reports",
     icon: FileText,
@@ -92,10 +95,7 @@ const defaultRoutes: SidebarRoute[] = [
         href: "/reports/tenants",
       },
     ]
-  }
-]
-
-const superAdminRoutes: SidebarRoute[] = [
+  },
   {
     label: "Activity",
     icon: FileText,

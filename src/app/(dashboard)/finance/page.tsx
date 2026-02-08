@@ -20,6 +20,7 @@ import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteAr
 import { financeAPI, propertyAPI, unitAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
 import FilterComponent from "./FilterComponent"
+import { toast } from "sonner"
 
 interface Invoice {
     id: string;
@@ -260,11 +261,11 @@ export default function FinancePage() {
                 year: year
             });
             const message = res.message || "Invoices generated successfully";
-            alert(message);
+            toast.warning(message);
             fetchData();
         } catch (error: any) {
             console.error("Generate error:", error);
-            alert(error.response?.data?.message || "Failed to generate invoices");
+            toast.error(error.response?.data?.message || "Failed to generate invoices");
         }
     };
 
@@ -309,13 +310,13 @@ export default function FinancePage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         onClick={handleExport}
                     >
                         <Download className="mr-2 h-4 w-4" /> Export Report
                     </Button>
                     <Button
-                        className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
+                        className="bg-indigo-600 hover:bg-indigo-700"
                         onClick={handleGenerateMonthlyInvoices}
                     >
                         <Plus className="mr-2 h-4 w-4" /> Generate {currentMonthName} Invoices
