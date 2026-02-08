@@ -195,7 +195,7 @@ function TenantsContent() {
 
     const fetchTenants = async () => {
         try {
-            const response = await tenantAPI.getAll();
+            const response = await tenantAPI.getActive();
             setTenants(response);
         } catch (error) {
             console.error("Failed to fetch tenants:", error);
@@ -418,7 +418,7 @@ function TenantsContent() {
     const availableFilterUnits = filterPropertyObj?.units || [];
 
     const handleDeactivate = async (tenantId: number) => {
-        if (!confirm("Are you sure you want to deactivate this tenant? This will make the unit vacant.")) return;
+        if (!confirm("Are you sure you want to deactivate this tenant? This will make the unit vacant. Any outstanding balance will be preserved.")) return;
 
         try {
             await tenantAPI.toggleStatus(tenantId, { status: 'Inactive' });
@@ -443,6 +443,13 @@ function TenantsContent() {
                 </div>
 
                 <div className="flex gap-2">
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.push('/tenants/previous')}
+                        className="text-muted-foreground hover:text-foreground"
+                    >
+                        <Users className="mr-2 h-4 w-4" /> Previous Tenants
+                    </Button>
                     <Button
                         variant="outline"
                         onClick={handleSendReminders}

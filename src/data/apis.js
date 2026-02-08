@@ -201,6 +201,16 @@ export const tenantAPI = {
         return response.data;
     },
 
+    getActive: async () => {
+        const response = await apiClient.get('/tenants/active');
+        return response.data;
+    },
+
+    getHistory: async () => {
+        const response = await apiClient.get('/tenants/history');
+        return response.data;
+    },
+
     getById: async (id) => {
         const response = await apiClient.get(`/tenants/${id}`);
         return response.data;
