@@ -446,7 +446,7 @@ function TenantsContent() {
                     <Button
                         variant="ghost"
                         onClick={() => router.push('/tenants/previous')}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                         <Users className="mr-2 h-4 w-4" /> Previous Tenants
                     </Button>

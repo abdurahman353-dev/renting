@@ -32,6 +32,7 @@ interface Tenant {
     unit?: {
         unit_number: string;
     };
+    previous_balance?: number;
 }
 
 export default function TenantStatementPage() {
@@ -232,7 +233,9 @@ export default function TenantStatementPage() {
                                 <TableBody>
                                     <TableRow>
                                         <TableCell colSpan={4} className="font-medium text-slate-500">Opening Balance</TableCell>
-                                        <TableCell className="text-right font-medium">KES 0</TableCell>
+                                        <TableCell className={`text-right font-medium ${(tenant?.previous_balance || 0) > 0 ? 'text-orange-500' : ''}`}>
+                                            KES {tenant?.previous_balance ? `-${Number(tenant.previous_balance).toLocaleString()}` : '0'}
+                                        </TableCell>
                                     </TableRow>
                                     {transactions.map((txn, index) => (
                                         <TableRow key={index} className="border-border">

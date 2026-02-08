@@ -170,6 +170,7 @@ function PreviousTenantsContent() {
                             <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                                 <TableRow>
                                     <TableHead className="bg-card">Name</TableHead>
+                                    <TableHead className="bg-card">ID Number</TableHead>
                                     <TableHead className="bg-card">Contact</TableHead>
                                     <TableHead className="bg-card">Last Unit</TableHead>
                                     <TableHead className="bg-card">Joined Date</TableHead>
@@ -194,7 +195,9 @@ function PreviousTenantsContent() {
                                         <TableRow key={tenant.id} className="hover:bg-muted/50">
                                             <TableCell className="font-medium">
                                                 <div>{tenant.name}</div>
-                                                <div className="text-xs text-muted-foreground">ID: {tenant.id_number || 'N/A'}</div>
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                                {tenant.id_number || 'N/A'}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center text-sm text-muted-foreground">
@@ -238,7 +241,7 @@ function PreviousTenantsContent() {
                                     );
                                 }) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
+                                        <TableCell colSpan={8} className="h-24 text-center">
                                             No previous tenants found.
                                         </TableCell>
                                     </TableRow>
