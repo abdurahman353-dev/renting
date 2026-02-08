@@ -613,8 +613,9 @@ export default function CashierPage() {
                                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">KES</div>
                                                                 <Input
                                                                     placeholder="0.00"
-                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl"
+                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     type="number"
+                                                                    disabled={selectedInvoices.length === 0}
                                                                     {...field}
                                                                 />
                                                             </div>
