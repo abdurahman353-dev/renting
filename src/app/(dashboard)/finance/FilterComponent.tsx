@@ -99,6 +99,7 @@ export default function FilterComponent({ properties, units, currentFilters, onF
                     <option value="all">All Statuses</option>
                     <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
+                    <option value="REVERSED">Reversed</option>
                 </select>
             </div>
 

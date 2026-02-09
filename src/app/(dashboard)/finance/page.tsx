@@ -440,9 +440,11 @@ export default function FinancePage() {
                                                 <Badge
                                                     className={`px-3 py-1 font-bold rounded-full transition-all duration-300 ${inv.status === "PAID"
                                                         ? "bg-emerald-500/15 text-[#22C55E] border border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:bg-emerald-500/20"
-                                                        : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/40 hover:bg-amber-200"}`}
+                                                        : inv.status === "REVERSED"
+                                                            ? "bg-red-500/15 text-red-500 border border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:bg-red-500/20"
+                                                            : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/40 hover:bg-amber-200"}`}
                                                 >
-                                                    {inv.status === "PAID" ? "PAID" : "PENDING"}
+                                                    {inv.status}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right font-black text-slate-900 dark:text-[#FFFFFF]">KES {(Number(inv.amount) - Number(inv.paid_amount || 0)).toLocaleString()}</TableCell>

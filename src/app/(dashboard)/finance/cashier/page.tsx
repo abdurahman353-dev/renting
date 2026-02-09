@@ -615,7 +615,7 @@ export default function CashierPage() {
                                                                     placeholder="0.00"
                                                                     className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     type="number"
-                                                                    disabled={selectedInvoices.length === 0}
+                                                                    disabled={pendingInvoices.length > 0 && selectedInvoices.length === 0}
                                                                     {...field}
                                                                 />
                                                             </div>

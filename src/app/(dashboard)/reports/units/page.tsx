@@ -55,14 +55,16 @@ export default function UnitsReportPage() {
             return;
         }
 
-        const headers = ["Unit", "Property", "Tenant", "Status", "Amount Paid", "Previous Balances", "Total Balance"];
+        const headers = ["Unit", "Property", "Tenant", "Status", "Monthly Charges", "Amount Paid", "Opening Balance", "Past Arrears", "Total Balance"];
         const rows = data.map((row: any) => [
             `"${row.unit_number}"`,
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
+            row.monthly_invoiced,
             row.amount_paid,
-            row.arrears_bf,
+            row.opening_balance,
+            row.past_arrears,
             row.balance
         ]);
 
@@ -249,9 +251,11 @@ export default function UnitsReportPage() {
                                 <th className="px-8 py-5">Property</th>
                                 <th className="px-8 py-5">Current Tenant</th>
                                 <th className="px-8 py-5 text-center">Occupancy Status</th>
-                                <th className="px-8 py-5 text-right font-black">Amnt Paid (Month)</th>
-                                <th className="px-8 py-5 text-right font-black text-rose-500">Previous Balances</th>
-                                <th className="px-8 py-5 text-right font-black">Running Balance</th>
+                                <th className="px-8 py-5 text-right font-black">Monthly Charges</th>
+                                <th className="px-8 py-5 text-right font-black">Amount Paid</th>
+                                <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
+                                <th className="px-8 py-5 text-right font-black">Total Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -300,11 +304,17 @@ export default function UnitsReportPage() {
                                                 {row.status}
                                             </span>
                                         </td>
+                                        <td className="px-8 py-5 text-right font-black text-slate-600 text-base">
+                                            {Number(row.monthly_invoiced) > 0 ? Number(row.monthly_invoiced).toLocaleString() : '—'}
+                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
-                                            {row.amount_paid > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
+                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
-                                            {Number(row.arrears_bf) !== 0 ? Number(row.arrears_bf).toLocaleString() : '—'}
+                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
+                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {row.balance !== 0 ? Number(row.balance).toLocaleString() : (row.amount_paid > 0 ? '0' : '—')}

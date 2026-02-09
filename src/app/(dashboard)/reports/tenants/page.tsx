@@ -55,14 +55,16 @@ export default function TenantReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Tenant Name", "Phone Number", "Unit", "Amount Paid", "Previous Balances", "Total Balance"];
+        const headers = ["Property Name", "Tenant Name", "Phone Number", "Unit", "Monthly Charges", "Amount Paid", "Opening Balance", "Past Arrears", "Total Balance"];
         const rows = data.map((row: any) => [
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
             `"${row.phone}"`,
             `"${row.unit_number}"`,
+            row.monthly_invoiced,
             row.amount_paid,
-            row.arrears_bf,
+            row.opening_balance,
+            row.past_arrears,
             row.balance
         ]);
 
@@ -244,8 +246,10 @@ export default function TenantReportPage() {
                                 <th className="px-8 py-5">Tenant Identity</th>
                                 <th className="px-8 py-5">Contact Info</th>
                                 <th className="px-8 py-5 text-center">Unit</th>
+                                <th className="px-8 py-5 text-right font-black">Monthly Charges</th>
                                 <th className="px-8 py-5 text-right font-black">Amount Paid</th>
-                                <th className="px-8 py-5 text-right font-black text-rose-500">Previous Balances</th>
+                                <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
                                 <th className="px-8 py-5 text-right font-black">Total Balance</th>
                             </tr>
                         </thead>
@@ -288,11 +292,17 @@ export default function TenantReportPage() {
                                                 {row.unit_number}
                                             </span>
                                         </td>
+                                        <td className="px-8 py-5 text-right font-black text-slate-600 text-base">
+                                            {Number(row.monthly_invoiced) > 0 ? Number(row.monthly_invoiced).toLocaleString() : '—'}
+                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
-                                            {Number(row.arrears_bf) !== 0 ? Number(row.arrears_bf).toLocaleString() : '—'}
+                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
+                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {Number(row.balance).toLocaleString()}

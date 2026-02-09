@@ -55,14 +55,16 @@ export default function PropertyReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Amount Paid", "Previous Balances", "Total Balance"];
+        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Monthly Charges", "Amount Paid", "Opening Balance", "Past Arrears", "Total Balance"];
         const rows = data.map((row: any) => [
             `"${row.name}"`,
             row.total_units,
             row.occupied_units,
             row.vacant_units,
+            row.monthly_invoiced,
             row.amount_paid,
-            row.arrears_bf,
+            row.opening_balance,
+            row.past_arrears,
             row.balance
         ]);
 
@@ -184,8 +186,10 @@ export default function PropertyReportPage() {
                                 <th className="px-6 py-3 text-center">Total Units</th>
                                 <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
                                 <th className="px-6 py-3 text-center text-muted-foreground">Vacant Units</th>
+                                <th className="px-6 py-3 text-right">Monthly Charges</th>
                                 <th className="px-6 py-3 text-right">Amount Paid</th>
-                                <th className="px-6 py-3 text-right text-rose-500">Previous Balances</th>
+                                <th className="px-6 py-3 text-right text-rose-500">Opening Balance</th>
+                                <th className="px-6 py-3 text-right text-amber-600">Past Arrears</th>
                                 <th className="px-6 py-3 text-right">Total Balance</th>
                             </tr>
                         </thead>
@@ -201,11 +205,17 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-center">{row.total_units}</td>
                                         <td className="px-6 py-4 text-center font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">{row.occupied_units}</td>
                                         <td className="px-6 py-4 text-center text-muted-foreground">{row.vacant_units}</td>
-                                        <td className="px-6 py-4 text-right font-medium text-foreground">
+                                        <td className="px-6 py-4 text-right font-medium text-slate-600">
+                                            {Number(row.monthly_invoiced).toLocaleString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
-                                            {Number(row.arrears_bf) !== 0 ? Number(row.arrears_bf).toLocaleString() : '—'}
+                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
+                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {Number(row.balance).toLocaleString()}

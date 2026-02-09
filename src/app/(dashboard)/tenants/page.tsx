@@ -586,7 +586,7 @@ function TenantsContent() {
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="previous_balance" className="sm:text-right">Previous Balances</Label>
+                                                    <Label htmlFor="previous_balance" className="sm:text-right">Opening Balance</Label>
                                                     <Input
                                                         id="previous_balance"
                                                         name="previous_balance"
@@ -797,7 +797,7 @@ function TenantsContent() {
                                 <TableHead className="bg-card">Start Date</TableHead>
                                 <TableHead className="bg-card">Rent (KES)</TableHead>
                                 <TableHead className="bg-card">Deposit (Total)</TableHead>
-                                <TableHead className="bg-card">Previous Balances</TableHead>
+                                <TableHead className="bg-card">Opening Balance</TableHead>
                                 <TableHead className="bg-card">Status</TableHead>
                                 <TableHead className="text-right bg-card">Balance (KES)</TableHead>
                                 <TableHead className="w-[50px] bg-card"></TableHead>
