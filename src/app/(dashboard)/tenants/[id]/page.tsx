@@ -34,6 +34,7 @@ export default function TenantDetailsPage() {
     const [tenant, setTenant] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [reverseModalOpen, setReverseModalOpen] = useState(false);
+    const [unreverseModalOpen, setUnreverseModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchTenant = async () => {
@@ -123,6 +124,12 @@ export default function TenantDetailsPage() {
                             onClick={() => setReverseModalOpen(true)}
                         >
                             <History className="mr-2 h-4 w-4" /> Reverse Invoice
+                        </Button>
+                        <Button
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl px-6 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 active:scale-95"
+                            onClick={() => setUnreverseModalOpen(true)}
+                        >
+                            <History className="mr-2 h-4 w-4" /> Unreverse Invoice
                         </Button>
                     </div>
                 </div>
@@ -323,6 +330,26 @@ export default function TenantDetailsPage() {
                         setReverseModalOpen(false);
                     }}
                 />
+
+                <UnreverseInvoiceModal
+                    open={unreverseModalOpen}
+                    onOpenChange={setUnreverseModalOpen}
+                    tenantId={tenant.id}
+                    invoices={tenant.invoices?.filter((inv: any) => inv.status === 'REVERSED') || []}
+                    onSuccess={() => {
+                        // Refresh tenant data
+                        const fetchTenant = async () => {
+                            try {
+                                const tenantRes = await api.get(`/tenants/${params.id}`);
+                                setTenant(tenantRes.data);
+                            } catch (error) {
+                                console.error("Failed to fetch tenant:", error);
+                            }
+                        };
+                        fetchTenant();
+                        setUnreverseModalOpen(false);
+                    }}
+                />
             </div>
         </div>
     );
@@ -411,6 +438,85 @@ function ReverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess
                     >
                         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Confirm Reversal
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function UnreverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess }: any) {
+    const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleUnreverse = async () => {
+        if (!selectedInvoice) return;
+
+        if (!confirm("Are you sure you want to unreverse this invoice? It will be added back to the tenant's balance along with any reversed payments.")) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.post(`/finance/invoices/${selectedInvoice}/unreverse`);
+            toast.success("Invoice unreversed successfully");
+            onSuccess();
+        } catch (error) {
+            console.error("Failed to unreverse invoice:", error);
+            toast.error("Failed to unreverse invoice");
+        } finally {
+            setLoading(false);
+            setSelectedInvoice(null);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Unreverse Invoice</DialogTitle>
+                    <DialogDescription>
+                        Select an invoice to unreverse. This will restore the invoice and any associated payments, adding them back to the tenant's balance.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-4">
+                    {invoices.length === 0 ? (
+                        <p className="text-center text-muted-foreground">No reversed invoices found.</p>
+                    ) : (
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                            {invoices.map((inv: any) => (
+                                <div
+                                    key={inv.id}
+                                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedInvoice === inv.id ? 'bg-emerald-50 border-emerald-500' : 'hover:bg-slate-50'}`}
+                                    onClick={() => setSelectedInvoice(inv.id)}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-sm">{inv.invoice_number}</p>
+                                            <p className="text-xs text-muted-foreground">{inv.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">Date: {new Date(inv.created_at).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-sm">KES {inv.amount.toLocaleString()}</p>
+                                            <Badge variant="outline" className="text-[10px] mt-1 bg-red-100 text-red-800 border-red-200">{inv.status}</Badge>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        onClick={handleUnreverse}
+                        disabled={!selectedInvoice || loading}
+                    >
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Confirm Unreversal
                     </Button>
                 </DialogFooter>
             </DialogContent>
