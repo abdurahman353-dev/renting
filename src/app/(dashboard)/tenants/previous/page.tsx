@@ -11,8 +11,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft } from "lucide-react"
+import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw } from "lucide-react"
 import { tenantAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -70,6 +78,23 @@ function PreviousTenantsContent() {
             toast.error("Failed to load previous tenants");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleReactivate = async (tenantId: number) => {
+        try {
+            await tenantAPI.toggleStatus(tenantId, { status: 'Active' });
+            toast.success("Tenant Reactivated Successfully");
+            fetchTenants(); // Refresh
+        } catch (error: any) {
+            console.error("Failed to reactivate tenant:", error);
+            const msg = error?.response?.data?.message || "Tenant Reactivation Failed";
+            toast.error(msg, {
+                style: {
+                    background: '#ef4444',
+                    color: '#fff',
+                }
+            });
         }
     };
 
@@ -217,25 +242,32 @@ function PreviousTenantsContent() {
                                                 {tenant.balance.toLocaleString()}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDownloadStatement(tenant.id)}
-                                                        title="Download Statement"
-                                                    >
-                                                        <FileText className="h-4 w-4 text-blue-600" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(tenant.id)}
-                                                        title="Delete Tenant"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handleReactivate(tenant.id)}>
+                                                            <RotateCcw className="mr-2 h-4 w-4 text-green-600" />
+                                                            Reactivate
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDownloadStatement(tenant.id)}>
+                                                            <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                                                            View Statement
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleDelete(tenant.id)}
+                                                            className="text-red-600 focus:text-red-600"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete Permanently
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     );
