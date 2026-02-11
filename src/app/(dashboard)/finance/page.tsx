@@ -30,6 +30,8 @@ interface Invoice {
     amount: number;
     status: string;
     date: string;
+    month?: number;
+    year?: number;
     // Map from backend fields
     tenant_name?: string;
     unit_number?: string;
@@ -48,6 +50,8 @@ interface Payment {
     date: string;
     // Map from backend fields
     tenant_name?: string;
+    unit_number?: string;
+    property_name?: string;
     created_at?: string;
 }
 
@@ -108,9 +112,13 @@ export default function FinancePage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch all invoices and payments for the selected year (or all time if year is empty)
+            // Fetch filtered invoices and payments for lightning quick performance
             const params = {
-                year: filters.year || undefined
+                year: filters.year || undefined,
+                month: filters.month || undefined,
+                status: filters.status !== 'all' ? filters.status : undefined,
+                property_id: filters.property_id !== 'all' ? filters.property_id : undefined,
+                unit_id: filters.unit_id !== 'all' ? filters.unit_id : undefined,
             };
 
             const [invRes, payRes] = await Promise.all([
@@ -184,6 +192,8 @@ export default function FinancePage() {
 
         if (filters.month) {
             filteredInv = filteredInv.filter(inv => {
+                // Prioritize backend month field for pinpoint accuracy
+                if (inv.month) return inv.month.toString() === filters.month;
                 const date = new Date(inv.created_at || inv.date);
                 return (date.getMonth() + 1).toString() === filters.month;
             });
@@ -223,13 +233,13 @@ export default function FinancePage() {
 
     useEffect(() => {
         fetchData();
-    }, [filters.year]); // Re-fetch only when year changes
+    }, [filters.year, filters.month, filters.status, filters.property_id, filters.unit_id]); // Re-fetch when any filter changes
 
     useEffect(() => {
         if (!loading) {
             applyFilters(allInvoices, allPayments);
         }
-    }, [filters.property_id, filters.unit_id, filters.status, filters.month, searchQuery]);
+    }, [searchQuery, allInvoices, allPayments]);
 
     const onFilterChange = (newFilters: any) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
@@ -486,6 +496,8 @@ export default function FinancePage() {
                                     <TableRow className="hover:bg-transparent border-0">
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Payment ID</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Tenant</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Property</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Unit</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Method</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Reference</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Date</TableHead>
@@ -501,6 +513,8 @@ export default function FinancePage() {
                                         <TableRow key={pay.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{pay.id}</TableCell>
                                             <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
+                                            <TableCell>{pay.property_name || '-'}</TableCell>
+                                            <TableCell>{pay.unit_number || '-'}</TableCell>
                                             <TableCell>{pay.method}</TableCell>
                                             <TableCell className="font-mono text-xs">{pay.reference}</TableCell>
                                             <TableCell>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</TableCell>

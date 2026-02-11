@@ -55,16 +55,18 @@ export default function TenantReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Tenant Name", "Phone Number", "Unit", "Monthly Charges", "Amount Paid", "Opening Balance", "Past Arrears", "Total Balance"];
+        const headers = ["Property Name", "Tenant Name", "Status", "Phone Number", "Unit", "Opening Balance", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
+            `"${row.status}"`,
             `"${row.phone}"`,
             `"${row.unit_number}"`,
-            row.monthly_invoiced,
-            row.amount_paid,
             row.opening_balance,
+            row.deposits,
+            row.monthly_rent,
             row.past_arrears,
+            row.amount_paid,
             row.balance
         ]);
 
@@ -244,19 +246,21 @@ export default function TenantReportPage() {
                             <tr>
                                 <th className="px-8 py-5">Property</th>
                                 <th className="px-8 py-5">Tenant Identity</th>
+                                <th className="px-8 py-5">Status</th>
                                 <th className="px-8 py-5">Contact Info</th>
                                 <th className="px-8 py-5 text-center">Unit</th>
-                                <th className="px-8 py-5 text-right font-black">Monthly Charges</th>
-                                <th className="px-8 py-5 text-right font-black">Amount Paid</th>
                                 <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-indigo-500">Deposits</th>
+                                <th className="px-8 py-5 text-right font-black">Monthly Rent</th>
                                 <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
-                                <th className="px-8 py-5 text-right font-black">Total Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-emerald-600">Amount Paid</th>
+                                <th className="px-8 py-5 text-right font-black">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-24 text-center">
+                                <tr key="loading-row">
+                                    <td colSpan={11} className="px-8 py-24 text-center">
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="h-10 w-10 border-4 border-emerald-500/10 border-t-emerald-500 rounded-full animate-spin"></div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Synchronizing Financial Data...</p>
@@ -264,8 +268,8 @@ export default function TenantReportPage() {
                                     </td>
                                 </tr>
                             ) : data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-24 text-center text-slate-400 font-bold uppercase tracking-widest text-xs italic">
+                                <tr key="empty-row">
+                                    <td colSpan={11} className="px-8 py-24 text-center text-slate-400 font-bold uppercase tracking-widest text-xs italic">
                                         No tenant transactions recorded for this period.
                                     </td>
                                 </tr>
@@ -282,6 +286,16 @@ export default function TenantReportPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-5">
+                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${row.status?.toLowerCase() === 'active'
+                                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                                : (row.status?.toLowerCase() === 'inactive'
+                                                    ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                                                    : 'bg-slate-500/10 text-slate-600 border border-slate-500/20')
+                                                }`}>
+                                                {row.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5">
                                             <div className="flex items-center text-muted-foreground font-bold">
                                                 <Phone className="h-3 w-3 mr-2 opacity-50" />
                                                 {row.phone}
@@ -292,17 +306,20 @@ export default function TenantReportPage() {
                                                 {row.unit_number}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-slate-600 text-base">
-                                            {Number(row.monthly_invoiced) > 0 ? Number(row.monthly_invoiced).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
-                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
-                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
                                         </td>
+                                        <td className="px-8 py-5 text-right font-black text-indigo-500 text-base">
+                                            {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-foreground text-base">
+                                            {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
+                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
                                             {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
+                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {Number(row.balance).toLocaleString()}

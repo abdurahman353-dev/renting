@@ -20,7 +20,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw } from "lucide-react"
+import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw, User } from "lucide-react"
 import { tenantAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -253,6 +253,10 @@ function PreviousTenantsContent() {
                                                         <DropdownMenuItem onClick={() => handleReactivate(tenant.id)}>
                                                             <RotateCcw className="mr-2 h-4 w-4 text-green-600" />
                                                             Reactivate
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}`)}>
+                                                            <User className="mr-2 h-4 w-4 text-slate-600" />
+                                                            View Details
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem onClick={() => handleDownloadStatement(tenant.id)}>
                                                             <FileText className="mr-2 h-4 w-4 text-blue-600" />

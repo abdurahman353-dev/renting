@@ -55,16 +55,17 @@ export default function UnitsReportPage() {
             return;
         }
 
-        const headers = ["Unit", "Property", "Tenant", "Status", "Monthly Charges", "Amount Paid", "Opening Balance", "Past Arrears", "Total Balance"];
+        const headers = ["Unit", "Property", "Tenant", "Status", "Opening Balance", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.unit_number}"`,
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
-            row.monthly_invoiced,
-            row.amount_paid,
             row.opening_balance,
+            row.deposits,
+            row.monthly_rent,
             row.past_arrears,
+            row.amount_paid,
             row.balance
         ]);
 
@@ -251,11 +252,12 @@ export default function UnitsReportPage() {
                                 <th className="px-8 py-5">Property</th>
                                 <th className="px-8 py-5">Current Tenant</th>
                                 <th className="px-8 py-5 text-center">Occupancy Status</th>
-                                <th className="px-8 py-5 text-right font-black">Monthly Charges</th>
-                                <th className="px-8 py-5 text-right font-black">Amount Paid</th>
                                 <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-indigo-500">Deposits</th>
+                                <th className="px-8 py-5 text-right font-black">Monthly Rent</th>
                                 <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
-                                <th className="px-8 py-5 text-right font-black">Total Balance</th>
+                                <th className="px-8 py-5 text-right font-black text-emerald-600">Amount Paid</th>
+                                <th className="px-8 py-5 text-right font-black">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -304,17 +306,20 @@ export default function UnitsReportPage() {
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-slate-600 text-base">
-                                            {Number(row.monthly_invoiced) > 0 ? Number(row.monthly_invoiced).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
-                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
-                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
                                         </td>
+                                        <td className="px-8 py-5 text-right font-black text-indigo-500 text-base">
+                                            {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-foreground text-base">
+                                            {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
+                                        </td>
                                         <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
                                             {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
+                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
                                         <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {row.balance !== 0 ? Number(row.balance).toLocaleString() : (row.amount_paid > 0 ? '0' : '—')}
