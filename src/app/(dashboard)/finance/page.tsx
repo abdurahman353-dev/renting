@@ -271,7 +271,11 @@ export default function FinancePage() {
                 year: year
             });
             const message = res.message || "Invoices generated successfully";
-            toast.warning(message);
+            if (res.count > 0) {
+                toast.success(message);
+            } else {
+                toast.error(message);
+            }
             fetchData();
         } catch (error: any) {
             console.error("Generate error:", error);
