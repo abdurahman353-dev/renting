@@ -36,6 +36,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkAuth();
     }, []);
 
+    // Inactivity timer logic
+    useEffect(() => {
+        if (!user || loading) return;
+
+        const INACTIVITY_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+        let timeoutId: NodeJS.Timeout;
+
+        const resetTimer = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                console.log('User inactive for 20 minutes, logging out...');
+                logout();
+            }, INACTIVITY_TIMEOUT);
+        };
+
+        // Events that reset the inactivity timer
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'click'];
+
+        // Initialize timer
+        resetTimer();
+
+        // Add event listeners
+        events.forEach(event => {
+            window.addEventListener(event, resetTimer);
+        });
+
+        // Cleanup
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            events.forEach(event => {
+                window.removeEventListener(event, resetTimer);
+            });
+        };
+    }, [user, loading]);
+
     const checkAuth = () => {
         try {
             const isAuth = authAPI.isAuthenticated();

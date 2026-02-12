@@ -240,21 +240,21 @@ export default function TenantReportPage() {
                         Monthly Tenant Balance Sheet
                     </CardTitle>
                 </CardHeader>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overflow-y-auto h-[calc(200vh-300px)]">
                     <table className="w-full text-sm text-left border-collapse">
-                        <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] bg-muted/50 border-b border-border">
+                        <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.1em] bg-muted/50 border-b border-border">
                             <tr>
-                                <th className="px-8 py-5">Property</th>
-                                <th className="px-8 py-5">Tenant Identity</th>
-                                <th className="px-8 py-5">Status</th>
-                                <th className="px-8 py-5">Contact Info</th>
-                                <th className="px-8 py-5 text-center">Unit</th>
-                                <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
-                                <th className="px-8 py-5 text-right font-black text-indigo-500">Deposits</th>
-                                <th className="px-8 py-5 text-right font-black">Monthly Rent</th>
-                                <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
-                                <th className="px-8 py-5 text-right font-black text-emerald-600">Amount Paid</th>
-                                <th className="px-8 py-5 text-right font-black">Balance</th>
+                                <th className="px-6 py-2">Property</th>
+                                <th className="px-6 py-2">Tenant Identity</th>
+                                <th className="px-6 py-2">Status</th>
+                                <th className="px-6 py-2">Contact Info</th>
+                                <th className="px-6 py-2 text-center">Unit</th>
+                                <th className="px-6 py-2 text-right font-black text-rose-500">Opening Balance</th>
+                                <th className="px-6 py-2 text-right font-black text-indigo-500">Deposits</th>
+                                <th className="px-6 py-2 text-right font-black">Monthly Rent</th>
+                                <th className="px-6 py-2 text-right font-black text-amber-600">Past Arrears</th>
+                                <th className="px-6 py-2 text-right font-black">Amount Paid</th>
+                                <th className="px-6 py-2 text-right font-black">Total Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -276,16 +276,16 @@ export default function TenantReportPage() {
                             ) : (
                                 data.map((row: any) => (
                                     <tr key={row.id} className="hover:bg-muted/50 transition-all group">
-                                        <td className="px-8 py-5 font-bold text-muted-foreground uppercase text-[11px] tracking-wide">{row.property_name}</td>
-                                        <td className="px-8 py-5">
+                                        <td className="px-6 py-6 font-bold text-muted-foreground uppercase text-[11px] tracking-wide">{row.property_name}</td>
+                                        <td className="px-6 py-6">
                                             <div className="flex items-center">
-                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3 group-hover:bg-emerald-600 transition-colors">
+                                                {/* <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3 group-hover:bg-emerald-600 transition-colors">
                                                     <User className="h-4 w-4 text-muted-foreground group-hover:text-white" />
-                                                </div>
-                                                <div className="font-black text-foreground text-base">{row.tenant_name}</div>
+                                                </div> */}
+                                                <div className="font-bold text-foreground text-base">{row.tenant_name}</div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-5">
+                                        <td className="px-6 py-6">
                                             <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${row.status?.toLowerCase() === 'active'
                                                 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                                 : (row.status?.toLowerCase() === 'inactive'
@@ -301,27 +301,27 @@ export default function TenantReportPage() {
                                                 {row.phone}
                                             </div>
                                         </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <span className="bg-foreground text-background px-3 py-1 rounded-lg text-xs font-black shadow-sm group-hover:scale-110 transition-transform inline-block">
+                                        <td className="px-6 py-6 text-center">
+                                            <span className="text-foreground px-2 py-1 text-xs font-bold inline-block">
                                                 {row.unit_number}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
+                                        <td className="px-6 py-6 text-right font-black text-rose-600 text-base">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-indigo-500 text-base">
+                                        <td className="px-6 py-6 text-right font-black text-indigo-500 text-base">
                                             {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-foreground text-base">
+                                        <td className="px-6 py-6 text-right font-black text-foreground text-base">
                                             {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
+                                        <td className="px-6 py-6 text-right font-black text-amber-600 text-base">
                                             {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
+                                        <td className="px-6 py-6 text-right font-black text-emerald-600 text-base">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
-                                        <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                        <td className={`px-6 py-6 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {Number(row.balance).toLocaleString()}
                                         </td>
                                     </tr>
