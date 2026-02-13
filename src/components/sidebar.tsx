@@ -118,11 +118,12 @@ const superAdminRoutes: SidebarRoute[] = [
 
 interface SidebarProps {
   isOpen: boolean
+  isExpanded: boolean
   setIsOpen: (open: boolean) => void
   routes?: SidebarRoute[]
 }
 
-export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps) {
+export function Sidebar({ isOpen, isExpanded, setIsOpen, routes: propRoutes }: SidebarProps) {
   const pathname = usePathname()
   const { isSuperAdmin, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
@@ -132,6 +133,7 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
   const routes = propRoutes || (isSuperAdmin() ? [...defaultRoutes, ...superAdminRoutes] : defaultRoutes)
 
   const toggleMenu = (href: string) => {
+    if (!isExpanded) return; // Don't expand menus if sidebar is collapsed
     setExpandedMenus(prev =>
       prev.includes(href)
         ? prev.filter(item => item !== href)
@@ -144,27 +146,33 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
       {/* Sidebar */}
       <div
         className={cn(
-          "space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border w-64 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed inset-y-0 left-0 z-[40] md:z-1 transition-all duration-300 ease-in-out md:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          isExpanded ? "w-64" : "w-20"
         )}
       >
-        <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar">
-          <Link href="/dashboard" className="flex items-center pl-3 mb-14">
-            <div className="relative w-8 h-8 mr-4">
+        <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar overflow-x-hidden">
+          <Link href="/dashboard" className={cn(
+            "flex items-center mb-14 transition-all duration-300",
+            isExpanded ? "pl-3" : "justify-center"
+          )}>
+            <div className="relative w-8 h-8 flex-shrink-0">
               {/* Logo placeholder */}
               <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
               <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
                 <span className="text-xl font-bold">R</span>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-indigo-400">
-              RentSys
-            </h1>
+            {isExpanded && (
+              <h1 className="text-2xl font-bold text-indigo-400 ml-4 whitespace-nowrap overflow-hidden transition-all duration-300">
+                RentSys
+              </h1>
+            )}
           </Link>
           <div className="space-y-1">
             {routes.map((route) => (
               <div key={route.href}>
-                {route.children ? (
+                {route.children && isExpanded ? (
                   <>
                     <button
                       onClick={() => toggleMenu(route.href)}
@@ -174,17 +182,17 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
                       )}
                     >
                       <div className="flex items-center flex-1">
-                        <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
-                        {route.label}
+                        <route.icon className={cn("h-5 w-5 flex-shrink-0", isExpanded ? "mr-3" : "", route.color)} />
+                        {isExpanded && <span className="whitespace-nowrap">{route.label}</span>}
                       </div>
-                      {expandedMenus.includes(route.href) ? (
+                      {isExpanded && (expandedMenus.includes(route.href) ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
-                      )}
+                      ))}
                     </button>
                     {expandedMenus.includes(route.href) && (
-                      <div className="ml-9 mt-1 space-y-1">
+                      <div className="ml-9 mt-1 space-y-1 transition-all duration-300">
                         {route.children.map((child) => (
                           <Link
                             key={child.href}
@@ -194,7 +202,7 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
                               pathname === child.href ? "text-white bg-white/10" : "text-zinc-400"
                             )}
                           >
-                            {child.label}
+                            <span className="whitespace-nowrap">{child.label}</span>
                           </Link>
                         ))}
                       </div>
@@ -204,13 +212,15 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
                   <Link
                     href={route.href}
                     className={cn(
-                      "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
-                      pathname === route.href ? "text-white bg-white/10" : "text-zinc-400"
+                      "text-sm group flex p-3 w-full font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300",
+                      pathname === route.href ? "text-white bg-white/10" : "text-zinc-400",
+                      isExpanded ? "justify-start" : "justify-center"
                     )}
+                    title={!isExpanded ? route.label : undefined}
                   >
-                    <div className="flex items-center flex-1">
-                      <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
-                      {route.label}
+                    <div className={cn("flex items-center", isExpanded ? "flex-1" : "")}>
+                      <route.icon className={cn("h-5 w-5 flex-shrink-0 transition-all", isExpanded ? "mr-3" : "", route.color)} />
+                      {isExpanded && <span className="whitespace-nowrap">{route.label}</span>}
                     </div>
                   </Link>
                 )}
@@ -218,10 +228,21 @@ export function Sidebar({ isOpen, setIsOpen, routes: propRoutes }: SidebarProps)
             ))}
           </div>
         </div>
-        <div className="px-3 py-2">
-          <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <p className="text-xs text-slate-400 mb-1">Logged in as</p>
-            <p className="text-sm font-medium text-white">{user?.name || "User"}</p>
+        <div className="px-3 py-2 transition-all duration-300">
+          <div className={cn(
+            "bg-slate-800/50 rounded-lg border border-slate-700 transition-all duration-300",
+            isExpanded ? "p-3" : "p-2 flex justify-center"
+          )}>
+            {isExpanded ? (
+              <>
+                <p className="text-xs text-slate-400 mb-1">Logged in as</p>
+                <p className="text-sm font-medium text-white truncate">{user?.name || "User"}</p>
+              </>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs text-white" title={user?.name}>
+                {user?.name?.[0] || "U"}
+              </div>
+            )}
           </div>
         </div>
       </div>

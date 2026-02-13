@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Filter, Building2, Home, User, CheckCircle2, XCircle } from "lucide-react";
+import { Download, Filter, Home, CheckCircle2, XCircle } from "lucide-react";
 import { financeAPI, propertyAPI } from "@/data/apis";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -109,13 +109,13 @@ export default function UnitsReportPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-muted/40">
+        <div className="p-6 space-y-6 min-h-screen bg-muted/40">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground font-outfit">Units Period Report</h2>
+                    <h1 className="text-3xl font-bold text-foreground">Units Period Report</h1>
                     <p className="text-muted-foreground mt-1 text-sm font-medium">
-                        Comprehensive overview of unit occupancy and financial status for {months.find(m => m.value === filters.month)?.label} {filters.year}.
+                        Comprehensive overview of unit occupancy and financial status
                     </p>
                 </div>
                 <Button onClick={handleExport} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95">
@@ -125,7 +125,7 @@ export default function UnitsReportPage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
@@ -179,17 +179,17 @@ export default function UnitsReportPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border transition-all hover:shadow-md">
-                <div className="flex items-center gap-2 mb-6 text-foreground font-bold">
-                    <Filter className="h-4 w-4 text-indigo-600" />
-                    Filter Parameters
+            <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-4 text-foreground font-medium">
+                    <Filter className="h-4 w-4" />
+                    Filters
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Property Select */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Property</label>
+                    <div className="space-y-1">
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Property</label>
                         <select
-                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
+                            className="w-full p-2 border rounded-lg bg-background text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.property_id}
                             onChange={(e) => setFilters({ ...filters, property_id: e.target.value })}
                         >
@@ -201,10 +201,10 @@ export default function UnitsReportPage() {
                     </div>
 
                     {/* Month Select */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Month</label>
+                    <div className="space-y-1">
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Month</label>
                         <select
-                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer hover:bg-muted/50"
+                            className="w-full p-2 border rounded-lg bg-background text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.month}
                             onChange={(e) => setFilters({ ...filters, month: parseInt(e.target.value) })}
                         >
@@ -215,15 +215,15 @@ export default function UnitsReportPage() {
                     </div>
 
                     {/* Year Select */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Year</label>
+                    <div className="space-y-1">
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Year</label>
                         <input
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             maxLength={4}
                             placeholder="YYYY"
-                            className="w-full h-12 px-4 border border-input rounded-xl bg-background text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all hover:bg-muted/50"
+                            className="w-full p-2 border rounded-lg bg-background text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             value={filters.year}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/[^0-9]/g, '');
@@ -237,91 +237,77 @@ export default function UnitsReportPage() {
             </div>
 
             {/* Table */}
-            <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
-                <CardHeader className="bg-muted/30 border-b border-border py-6 px-8">
-                    <CardTitle className="text-xl font-black text-foreground flex items-center">
-                        <Building2 className="mr-3 h-5 w-5 text-muted-foreground" />
-                        Unit Status Breakdown
-                    </CardTitle>
+            <Card className="border-border shadow-sm overflow-hidden bg-card">
+                <CardHeader>
+                    <CardTitle className="text-lg text-foreground font-semibold">Detailed Report</CardTitle>
                 </CardHeader>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse">
-                        <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] bg-muted/50 border-b border-border">
+                <div className="overflow-x-auto overflow-y-auto max-h-[70vh] custom-scrollbar">
+                    <table className="w-full text-sm text-left relative">
+                        <thead className="text-xs text-muted-foreground uppercase bg-slate-50 border-b sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th className="px-8 py-5">Unit Detail</th>
-                                <th className="px-8 py-5">Property</th>
-                                <th className="px-8 py-5">Current Tenant</th>
-                                <th className="px-8 py-5 text-center">Occupancy Status</th>
-                                <th className="px-8 py-5 text-right font-black text-rose-500">Opening Balance</th>
-                                <th className="px-8 py-5 text-right font-black text-indigo-500">Deposits</th>
-                                <th className="px-8 py-5 text-right font-black">Monthly Rent</th>
-                                <th className="px-8 py-5 text-right font-black text-amber-600">Past Arrears</th>
-                                <th className="px-8 py-5 text-right font-black text-emerald-600">Amount Paid</th>
-                                <th className="px-8 py-5 text-right font-black">Balance</th>
+                                <th className="px-6 py-3">Unit Identity</th>
+                                <th className="px-6 py-3">Property</th>
+                                <th className="px-6 py-3">Current Tenant</th>
+                                <th className="px-6 py-3 text-center">Occupancy Status</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Opening Balance</th>
+                                <th className="px-6 py-3 text-right text-indigo-500 font-semibold">Deposits</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Monthly Rent</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-semibold">Past Arrears</th>
+                                <th className="px-6 py-3 text-right text-emerald-600 font-semibold">Amount Paid</th>
+                                <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-20 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="h-10 w-10 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
-                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Assembling Data...</p>
-                                        </div>
-                                    </td>
+                                <tr key="loading-row">
+                                    <td colSpan={10} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
                             ) : data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                                <tr key="empty-row">
+                                    <td colSpan={10} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No metrics found for this period.
                                     </td>
                                 </tr>
                             ) : (
                                 data.map((row: any) => (
-                                    <tr key={row.id} className="hover:bg-muted/50 transition-all duration-200 group">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center">
-                                                <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center mr-3 font-bold text-muted-foreground border border-border group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 transition-colors">
-                                                    {row.unit_number.slice(-2)}
-                                                </div>
-                                                <span className="font-bold text-foreground text-base">{row.unit_number}</span>
-                                            </div>
+                                    <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <span className="font-semibold text-foreground text-base">{row.unit_number}</span>
                                         </td>
-                                        <td className="px-8 py-5 font-bold text-muted-foreground">{row.property_name}</td>
-                                        <td className="px-8 py-5">
+                                        <td className="px-6 py-4 font-medium text-foreground text-xs uppercase">{row.property_name}</td>
+                                        <td className="px-6 py-4">
                                             {row.tenant_name !== 'N/A' ? (
-                                                <div className="flex items-center font-bold text-foreground">
-                                                    <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2"></div>
+                                                <div className="font-semibold text-foreground">
                                                     {row.tenant_name}
                                                 </div>
                                             ) : (
                                                 <span className="text-muted-foreground italic font-medium">No active tenant</span>
                                             )}
                                         </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
                                                 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
                                                 : 'bg-muted text-muted-foreground border-border'
                                                 }`}>
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-rose-600 text-base">
+                                        <td className="px-6 py-4 text-right font-medium text-rose-500">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-indigo-500 text-base">
+                                        <td className="px-6 py-4 text-right font-medium text-indigo-500">
                                             {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-foreground text-base">
+                                        <td className="px-6 py-4 text-right font-medium text-slate-900">
                                             {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-amber-600 text-base">
+                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
                                             {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-emerald-600 text-base">
+                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
                                         </td>
-                                        <td className={`px-8 py-5 text-right font-black text-base ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                        <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                                             {row.balance !== 0 ? Number(row.balance).toLocaleString() : (row.amount_paid > 0 ? '0' : '—')}
                                         </td>
                                     </tr>
