@@ -55,7 +55,7 @@ export default function TenantReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Tenant Name", "Status", "Phone Number", "Unit", "Opening Balance", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const headers = ["Property Name", "Tenant Name", "Status", "Phone Number", "Unit", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
@@ -63,7 +63,9 @@ export default function TenantReportPage() {
             `"${row.phone}"`,
             `"${row.unit_number}"`,
             row.opening_balance,
+            row.agreement_amount,
             row.deposits,
+            row.monthly_rent,
             row.monthly_rent,
             row.past_arrears,
             row.amount_paid,
@@ -247,6 +249,7 @@ export default function TenantReportPage() {
                                 <th className="px-6 py-3">Contact Info</th>
                                 <th className="px-6 py-3 text-center">Unit</th>
                                 <th className="px-6 py-3 text-right text-rose-500 font-semibold">Opening Balance</th>
+                                <th className="px-6 py-3 text-right text-rose-600 font-semibold">Agreement Fee</th>
                                 <th className="px-6 py-3 text-right text-indigo-500 font-semibold">Deposits</th>
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">Monthly Rent</th>
                                 <th className="px-6 py-3 text-right text-amber-600 font-semibold">Past Arrears</th>
@@ -257,11 +260,11 @@ export default function TenantReportPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr key="loading-row">
-                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500">Loading...</td>
+                                    <td colSpan={12} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
                             ) : data.length === 0 ? (
                                 <tr key="empty-row">
-                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500 font-medium">
+                                    <td colSpan={12} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No tenant transactions recorded for this period.
                                     </td>
                                 </tr>
@@ -288,6 +291,9 @@ export default function TenantReportPage() {
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
+                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-indigo-500">
                                             {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}

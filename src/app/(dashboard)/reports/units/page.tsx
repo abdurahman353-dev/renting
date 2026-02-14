@@ -55,13 +55,14 @@ export default function UnitsReportPage() {
             return;
         }
 
-        const headers = ["Unit", "Property", "Tenant", "Status", "Opening Balance", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const headers = ["Unit", "Property", "Tenant", "Status", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.unit_number}"`,
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
             row.opening_balance,
+            row.agreement_amount,
             row.deposits,
             row.monthly_rent,
             row.past_arrears,
@@ -250,6 +251,7 @@ export default function UnitsReportPage() {
                                 <th className="px-6 py-3">Current Tenant</th>
                                 <th className="px-6 py-3 text-center">Occupancy Status</th>
                                 <th className="px-6 py-3 text-right text-rose-500 font-semibold">Opening Balance</th>
+                                <th className="px-6 py-3 text-right text-rose-600 font-semibold">Agreement Fee</th>
                                 <th className="px-6 py-3 text-right text-indigo-500 font-semibold">Deposits</th>
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">Monthly Rent</th>
                                 <th className="px-6 py-3 text-right text-amber-600 font-semibold">Past Arrears</th>
@@ -260,11 +262,11 @@ export default function UnitsReportPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr key="loading-row">
-                                    <td colSpan={10} className="px-6 py-8 text-center text-slate-500">Loading...</td>
+                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
                             ) : data.length === 0 ? (
                                 <tr key="empty-row">
-                                    <td colSpan={10} className="px-6 py-8 text-center text-slate-500 font-medium">
+                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No metrics found for this period.
                                     </td>
                                 </tr>
@@ -294,6 +296,9 @@ export default function UnitsReportPage() {
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
+                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-indigo-500">
                                             {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}

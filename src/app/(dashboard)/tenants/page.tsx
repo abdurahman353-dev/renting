@@ -51,6 +51,7 @@ interface Tenant {
     balance: number;
     previous_balance?: number;
     remaining_previous_balance?: number;
+    agreement_amount?: number;
     unallocated_balance?: number;
     leases?: Array<{
         start_date?: string;
@@ -94,6 +95,7 @@ function TenantsContent() {
         previous_balance: "",
         deposit_amount: "",
         deposit_2_amount: "",
+        agreement_amount: "",
         include_deposit_1: false,
         include_deposit_2: false
     });
@@ -235,6 +237,10 @@ function TenantsContent() {
             value = value.replace(/\D/g, '');
         }
 
+        if (name === 'agreement_amount') {
+            value = value.replace(/\D/g, '');
+        }
+
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
 
@@ -309,6 +315,7 @@ function TenantsContent() {
                 start_date: formData.start_date,
                 rent_amount: formData.rent_amount,
                 previous_balance: formData.previous_balance || 0,
+                agreement_amount: formData.agreement_amount || 0,
                 deposit_amount: formData.include_deposit_1 ? (formData.deposit_amount || 0) : null,
                 deposit_2_amount: formData.include_deposit_2 ? (formData.deposit_2_amount || 0) : null
             };
@@ -340,7 +347,7 @@ function TenantsContent() {
     const resetForm = () => {
         setFormData({
             name: "", id_number: "", phone: "", email: "",
-            property_id: "", unit_id: "", start_date: "", rent_amount: "", previous_balance: "",
+            property_id: "", unit_id: "", start_date: "", rent_amount: "", previous_balance: "", agreement_amount: "",
             deposit_amount: "", deposit_2_amount: "",
             include_deposit_1: false, include_deposit_2: false
         });
@@ -373,6 +380,7 @@ function TenantsContent() {
             start_date: lease?.start_date ? new Date(lease.start_date).toISOString().split('T')[0] : "",
             rent_amount: lease?.rent_amount?.toString() || selectedUnit?.price?.toString() || "",
             previous_balance: tenant.previous_balance?.toString() || "",
+            agreement_amount: tenant.agreement_amount?.toString() || "",
             deposit_amount: d1,
             deposit_2_amount: d2,
             include_deposit_1: !!(lease?.deposit_amount && Number(lease.deposit_amount) > 0),
@@ -598,6 +606,18 @@ function TenantsContent() {
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="agreement_amount" className="sm:text-right">Agreement Fee</Label>
+                                                    <Input
+                                                        id="agreement_amount"
+                                                        name="agreement_amount"
+                                                        type="number"
+                                                        value={formData.agreement_amount}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Optional (Amount)"
+                                                        className="sm:col-span-3"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                                                     <div className="sm:text-right">
                                                         <Label htmlFor="include_deposit_1" className="flex items-center justify-end gap-2 cursor-pointer">
                                                             <Input
@@ -798,6 +818,7 @@ function TenantsContent() {
                                 <TableHead className="bg-card">Rent (KES)</TableHead>
                                 <TableHead className="bg-card">Deposit (Total)</TableHead>
                                 <TableHead className="bg-card">Opening Balance</TableHead>
+                                <TableHead className="bg-card">Agreement Fee</TableHead>
                                 <TableHead className="bg-card">Status</TableHead>
                                 <TableHead className="text-right bg-card">Balance (KES)</TableHead>
                                 <TableHead className="w-[50px] bg-card"></TableHead>
@@ -860,6 +881,9 @@ function TenantsContent() {
                                                 : (tenant.previous_balance ? tenant.previous_balance.toLocaleString() : "0")}
                                         </TableCell>
                                         <TableCell>
+                                            {tenant.agreement_amount ? Number(tenant.agreement_amount).toLocaleString() : "0"}
+                                        </TableCell>
+                                        <TableCell>
                                             <Badge
                                                 className={
                                                     tenant.status?.toUpperCase() === "ACTIVE"
@@ -910,6 +934,9 @@ function TenantsContent() {
 
                                                     <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
                                                         View Statement
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/agreement`)}>
+                                                        View Agreement
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem

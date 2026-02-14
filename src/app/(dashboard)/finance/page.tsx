@@ -32,6 +32,7 @@ interface Invoice {
     date: string;
     month?: number;
     year?: number;
+    type?: string;
     // Map from backend fields
     tenant_name?: string;
     unit_number?: string;
@@ -433,6 +434,7 @@ export default function FinancePage() {
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Property</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Unit</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Date</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Type</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Status</TableHead>
                                         <TableHead className="text-right font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Amount</TableHead>
                                         <TableHead className="w-[50px] bg-slate-50 dark:bg-[#1B2230]"></TableHead>
@@ -450,6 +452,11 @@ export default function FinancePage() {
                                             <TableCell>{inv.property_name || '-'}</TableCell>
                                             <TableCell>{inv.unit_number || inv.unit}</TableCell>
                                             <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize">
+                                                    {inv.type?.replace('_', ' ') || 'Invoice'}
+                                                </Badge>
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge
                                                     className={`px-3 py-1 font-bold rounded-full transition-all duration-300 ${inv.status === "PAID"

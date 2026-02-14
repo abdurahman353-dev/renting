@@ -46,7 +46,7 @@ export function LandingFooter() {
                         <ul className="space-y-4">
                             <li><Link href="/" className="hover:text-blue-500 transition-colors">Home</Link></li>
                             <li><Link href="/property" className="hover:text-blue-500 transition-colors">All Properties</Link></li>
-                            <li><Link href="/contact" className="hover:text-blue-500 transition-colors">Contact Us</Link></li>
+                            <li><Link href="#contact" className="hover:text-blue-500 transition-colors">Contact Us</Link></li>
                         </ul>
                     </div>
 

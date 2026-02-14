@@ -55,14 +55,16 @@ export default function PropertyReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Opening Balance", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.name}"`,
             row.total_units,
             row.occupied_units,
             row.vacant_units,
             row.opening_balance,
+            row.agreement_amount,
             row.deposits,
+            row.monthly_rent,
             row.monthly_rent,
             row.past_arrears,
             row.amount_paid,
@@ -188,6 +190,7 @@ export default function PropertyReportPage() {
                                 <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
                                 <th className="px-6 py-3 text-center text-muted-foreground">Vacant Units</th>
                                 <th className="px-6 py-3 text-right text-rose-500">Opening Balance</th>
+                                <th className="px-6 py-3 text-right text-rose-600">Agreement Fee</th>
                                 <th className="px-6 py-3 text-right text-indigo-500">Deposits</th>
                                 <th className="px-6 py-3 text-right text-slate-900">Monthly Rent</th>
                                 <th className="px-6 py-3 text-right text-amber-600">Past Arrears</th>
@@ -209,6 +212,9 @@ export default function PropertyReportPage() {
                                         <td className="px-6 py-4 text-center text-muted-foreground">{row.vacant_units}</td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
                                             {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
+                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-indigo-500">
                                             {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
