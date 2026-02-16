@@ -13,7 +13,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Users } from "lucide-react"
+import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Users, FileText } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -35,6 +35,14 @@ import { propertyAPI, tenantAPI, communicationAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import { Separator } from "@/components/ui/separator"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 interface Tenant {
     id: number;
@@ -96,13 +104,16 @@ function TenantsContent() {
         deposit_amount: "",
         deposit_2_amount: "",
         agreement_amount: "",
+        overpaid_amount: "",
         include_deposit_1: false,
-        include_deposit_2: false
+        include_deposit_2: false,
+        include_rent: true,
     });
     const [submitting, setSubmitting] = useState(false);
     const [sendingReminders, setSendingReminders] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingTenantId, setEditingTenantId] = useState<number | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     // SMS State
     const [smsOpen, setSmsOpen] = useState(false);
@@ -221,8 +232,8 @@ function TenantsContent() {
 
         if (name === 'id_number') {
             value = value.replace(/\D/g, '');
-            if (value.length > 9) {
-                value = value.slice(0, 9);
+            if (value.length > 8) {
+                value = value.slice(0, 8);
             }
         }
 
@@ -258,6 +269,10 @@ function TenantsContent() {
             }
             return newData;
         });
+
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: "" }));
+        }
     };
 
     const handleCheckboxToggle = (name: 'include_deposit_1' | 'include_deposit_2') => {
@@ -282,75 +297,16 @@ function TenantsContent() {
         });
     };
 
-    const handleRegisterTenant = async () => {
-        if (!formData.name || !formData.id_number || !formData.phone) {
-            alert("Please fill in all required fields (Name, ID Number, Phone)");
-            return;
-        }
 
-        if (formData.id_number.length < 8) {
-            alert("ID Number must be between 8 and 9 digits");
-            return;
-        }
-
-        if (formData.phone.length !== 10) {
-            alert("Phone number must be exactly 10 digits");
-            return;
-        }
-
-        if (!formData.property_id || !formData.unit_id || !formData.start_date || !formData.rent_amount) {
-            alert("Please complete the unit assignment details (Property, Unit, Start Date, Rent Amount)");
-            return;
-        }
-
-        setSubmitting(true);
-        try {
-            const payload = {
-                name: formData.name,
-                id_number: formData.id_number,
-                phone: formData.phone,
-                email: formData.email || null,
-                property_id: formData.property_id,
-                unit_id: formData.unit_id,
-                start_date: formData.start_date,
-                rent_amount: formData.rent_amount,
-                previous_balance: formData.previous_balance || 0,
-                agreement_amount: formData.agreement_amount || 0,
-                deposit_amount: formData.include_deposit_1 ? (formData.deposit_amount || 0) : null,
-                deposit_2_amount: formData.include_deposit_2 ? (formData.deposit_2_amount || 0) : null
-            };
-
-            if (isEditing && editingTenantId) {
-                await tenantAPI.update(editingTenantId, payload);
-                toast.success("successfully updated the desired tenant");
-            } else {
-                await tenantAPI.create(payload);
-                toast.success("Tenant registered successfully");
-            }
-
-            // Refresh list
-            await Promise.all([fetchTenants(), fetchProperties()]);
-
-            // Close dialog
-            setOpen(false);
-            // Reset form
-            resetForm();
-        } catch (error: any) {
-            console.error("Failed to save tenant:", error);
-            const errorMsg = error?.response?.data?.message || error?.message || "Failed to save tenant";
-            alert(errorMsg);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     const resetForm = () => {
         setFormData({
             name: "", id_number: "", phone: "", email: "",
-            property_id: "", unit_id: "", start_date: "", rent_amount: "", previous_balance: "", agreement_amount: "",
+            property_id: "", unit_id: "", start_date: "", rent_amount: "", previous_balance: "", agreement_amount: "", overpaid_amount: "",
             deposit_amount: "", deposit_2_amount: "",
-            include_deposit_1: false, include_deposit_2: false
+            include_deposit_1: false, include_deposit_2: false, include_rent: true
         });
+        setErrors({});
         setIsEditing(false);
         setEditingTenantId(null);
     };
@@ -370,6 +326,24 @@ function TenantsContent() {
             ? lease.deposit_2_amount.toString()
             : (selectedUnit?.deposit_2?.toString() || "0");
 
+        // Logic to determine Include Rent and Overpaid Amount
+        // Check if there is a Rent invoice for the start date month/year
+        let hasRentInvoice = false;
+        if (lease?.start_date) {
+            const startDate = new Date(lease.start_date);
+            const startMonth = startDate.getMonth() + 1;
+            const startYear = startDate.getFullYear();
+
+            hasRentInvoice = tenant.invoices?.some((inv: any) =>
+                inv.type === 'rent' &&
+                inv.month === startMonth &&
+                inv.year === startYear
+            );
+        }
+
+        // Find Overpayment Credit payment
+        const overpayment = tenant.payments?.find((p: any) => p.method === 'Overpayment Credit');
+
         setFormData({
             name: tenant.name,
             id_number: tenant.id_number || "",
@@ -384,7 +358,9 @@ function TenantsContent() {
             deposit_amount: d1,
             deposit_2_amount: d2,
             include_deposit_1: !!(lease?.deposit_amount && Number(lease.deposit_amount) > 0),
-            include_deposit_2: !!(lease?.deposit_2_amount && Number(lease.deposit_2_amount) > 0)
+            include_deposit_2: !!(lease?.deposit_2_amount && Number(lease.deposit_2_amount) > 0),
+            overpaid_amount: overpayment ? overpayment.amount.toString() : "",
+            include_rent: hasRentInvoice // Set based on actual invoice existence
         });
         setIsEditing(true);
         setEditingTenantId(tenant.id);
@@ -393,10 +369,102 @@ function TenantsContent() {
 
     // Filter units based on selected property - only show units that are NOT occupied and NOT under maintenance
     const selectedProperty = properties.find(p => p.id.toString() === formData.property_id);
-    const availableUnits = selectedProperty?.units?.filter((u: any) => {
-        const status = u.status?.toUpperCase();
-        return status !== 'OCCUPIED' && status !== 'MAINTENANCE';
-    }) || [];
+    const availableUnits = selectedProperty?.units?.filter((u: any) =>
+        (u.status?.toLowerCase() === 'available' || u.status?.toLowerCase() === 'vacant' || u.id.toString() === formData.unit_id) // Show currently selected unit even if occupied
+    ) || [];
+
+    const handlePropertyChange = (value: string) => {
+        setFormData(prev => ({ ...prev, property_id: value, unit_id: "" }));
+        if (errors.property_id) setErrors(prev => ({ ...prev, property_id: "" }));
+    }
+
+    const handleUnitChange = (value: string) => {
+        const unit = selectedProperty?.units?.find((u: any) => u.id.toString() === value);
+        if (unit) {
+            setFormData(prev => ({
+                ...prev,
+                unit_id: value,
+                rent_amount: unit.price?.toString() || prev.rent_amount,
+                deposit_amount: unit.deposit_1?.toString() || prev.deposit_amount, // Auto-fill deposit 1
+                deposit_2_amount: unit.deposit_2?.toString() || prev.deposit_2_amount // Auto-fill deposit 2
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, unit_id: value }));
+        }
+        if (errors.unit_id) setErrors(prev => ({ ...prev, unit_id: "" }));
+    }
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        if (!formData.name.trim()) newErrors.name = "Enter name";
+        // ID Validation: 7 or 8 digits
+        // ID Validation: 7 or 8 digits
+        if (!formData.id_number.trim()) {
+            newErrors.id_number = "Enter ID";
+        } else if (!/^\d{7,8}$/.test(formData.id_number)) {
+            newErrors.id_number = "Invalid ID";
+        }
+
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Enter phone number";
+        } else if (!/^(07|01)\d{8}$/.test(formData.phone.replace(/\D/g, ''))) {
+            newErrors.phone = "Enter phone number starting with 07 or 01........";
+        }
+
+        if (!formData.property_id) newErrors.property_id = "Select property";
+        if (!formData.unit_id) newErrors.unit_id = "Select unit";
+        if (!formData.start_date) newErrors.start_date = "Pick date";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleRegisterTenant = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            // ... (rest of logic same)
+            const payload = {
+                name: formData.name,
+                id_number: formData.id_number,
+                phone: formData.phone,
+                email: formData.email || null,
+                property_id: formData.property_id,
+                unit_id: formData.unit_id,
+                start_date: formData.start_date,
+                rent_amount: formData.rent_amount,
+                previous_balance: formData.previous_balance || 0,
+                agreement_amount: formData.agreement_amount || 0,
+                overpaid_amount: formData.overpaid_amount || 0,
+                include_rent: formData.include_rent, // Ensure boolean is sent
+
+                deposit_amount: formData.include_deposit_1 ? (formData.deposit_amount || 0) : null,
+                deposit_2_amount: formData.include_deposit_2 ? (formData.deposit_2_amount || 0) : null
+            };
+
+            if (isEditing && editingTenantId) {
+                await tenantAPI.update(editingTenantId, payload);
+                toast.success("Tenant updated successfully");
+            } else {
+                await tenantAPI.create(payload);
+                toast.success("Tenant registered successfully");
+            }
+            fetchTenants(); // Refresh list to get updated data
+            setOpen(false);
+            resetForm();
+        } catch (error: any) {
+            console.error("Error registering tenant:", error);
+            const errorMsg = error?.response?.data?.message || error?.message || "Failed to save tenant";
+            alert(errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     // Filter tenants based on search and filters
     const filteredTenants = tenants.filter(tenant => {
@@ -460,6 +528,13 @@ function TenantsContent() {
                     </Button>
                     <Button
                         variant="outline"
+                        onClick={() => router.push('/tenants/agreements')}
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                        <FileText className="mr-2 h-4 w-4" /> Agreements
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={handleSendReminders}
                         disabled={sendingReminders}
                         className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
@@ -480,198 +555,261 @@ function TenantsContent() {
                                 <Plus className="mr-2 h-4 w-4" /> Register Tenant
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle>{isEditing ? "Edit Tenant" : "Register New Tenant"}</DialogTitle>
                                 <DialogDescription>
-                                    {isEditing ? "Update tenant profile details." : "Create a new tenant profile."}
+                                    {isEditing ? "Update tenant details." : "Create a new tenant profile."}
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="name" className="sm:text-right">Name *</Label>
-                                    <Input
-                                        id="name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        placeholder="John Doe"
-                                        className="sm:col-span-3"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="id_number" className="sm:text-right">ID No *</Label>
-                                    <Input
-                                        id="id_number"
-                                        name="id_number"
-                                        value={formData.id_number}
-                                        onChange={handleInputChange}
-                                        placeholder="National ID / Passport"
-                                        className="sm:col-span-3"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="phone" className="sm:text-right">Phone *</Label>
-                                    <Input
-                                        id="phone"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        placeholder="07..."
-                                        className="sm:col-span-3"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="email" className="sm:text-right">Email</Label>
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="Optional"
-                                        className="sm:col-span-3"
-                                    />
-                                </div>
-
-                                <div className="border-t pt-4 mt-2">
-                                    <p className="text-sm font-medium text-muted-foreground mb-4">Unit Assignment (Optional)</p>
-                                    <div className="grid gap-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="property_id" className="sm:text-right">Property</Label>
-                                            <select
-                                                id="property_id"
-                                                name="property_id"
-                                                value={formData.property_id}
+                            <div className="flex flex-col gap-6 py-4">
+                                {/* Personal Information Section */}
+                                <div className="space-y-4">
+                                    <div className="space-y-3">
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="name" className={errors.name ? "text-red-500" : ""}>Name *</Label>
+                                            <Input
+                                                id="name"
+                                                name="name"
+                                                value={formData.name}
                                                 onChange={handleInputChange}
-                                                className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                <option value="">Select Property...</option>
-                                                {properties.map((p: any) => (
-                                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                                ))}
-                                            </select>
+                                                placeholder="John Doe"
+                                                className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                            />
+                                            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="unit_id" className="sm:text-right">Unit</Label>
-                                            <select
-                                                id="unit_id"
-                                                name="unit_id"
-                                                value={formData.unit_id}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="id_number" className={errors.id_number ? "text-red-500" : ""}>ID No *</Label>
+                                            <Input
+                                                id="id_number"
+                                                name="id_number"
+                                                value={formData.id_number}
                                                 onChange={handleInputChange}
-                                                disabled={!formData.property_id}
-                                                className="sm:col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                <option value="">Select Unit...</option>
-                                                {availableUnits.map((u: any) => (
-                                                    <option key={u.id} value={u.id}>Unit {u.unit_number} (KES {u.price})</option>
-                                                ))}
-                                            </select>
+                                                placeholder="National ID / Passport"
+                                                className={errors.id_number ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                            />
+                                            {errors.id_number && <p className="text-sm text-red-500">{errors.id_number}</p>}
                                         </div>
-                                        {formData.unit_id && (
-                                            <>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="start_date" className="sm:text-right">Start Date</Label>
-                                                    <Input
-                                                        id="start_date"
-                                                        name="start_date"
-                                                        type="date"
-                                                        value={formData.start_date}
-                                                        onChange={handleInputChange}
-                                                        className="sm:col-span-3"
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="rent_amount" className="sm:text-right">Rent (KES)</Label>
-                                                    <Input
-                                                        disabled
-                                                        id="rent_amount"
-                                                        name="rent_amount"
-                                                        type="number"
-                                                        value={formData.rent_amount}
-                                                        onChange={handleInputChange}
-                                                        className="sm:col-span-3"
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="previous_balance" className="sm:text-right">Opening Balance</Label>
-                                                    <Input
-                                                        id="previous_balance"
-                                                        name="previous_balance"
-                                                        type="text"
-                                                        value={formData.previous_balance}
-                                                        onChange={handleInputChange}
-                                                        placeholder="Optional (Digits only)"
-                                                        className="sm:col-span-3"
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="agreement_amount" className="sm:text-right">Agreement Fee</Label>
-                                                    <Input
-                                                        id="agreement_amount"
-                                                        name="agreement_amount"
-                                                        type="number"
-                                                        value={formData.agreement_amount}
-                                                        onChange={handleInputChange}
-                                                        placeholder="Optional (Amount)"
-                                                        className="sm:col-span-3"
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <div className="sm:text-right">
-                                                        <Label htmlFor="include_deposit_1" className="flex items-center justify-end gap-2 cursor-pointer">
-                                                            <Input
-                                                                id="include_deposit_1"
-                                                                type="checkbox"
-                                                                className="w-4 h-4"
-                                                                checked={formData.include_deposit_1}
-                                                                onChange={() => handleCheckboxToggle('include_deposit_1')}
-                                                            />
-                                                            Include D1
-                                                        </Label>
-                                                    </div>
-                                                    <div className="sm:col-span-3 flex items-center gap-2">
-                                                        <Input
-                                                            disabled
-                                                            id="deposit_amount"
-                                                            name="deposit_amount"
-                                                            type="number"
-                                                            value={formData.deposit_amount}
-                                                            placeholder="KES 0"
-                                                            className="flex-1"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                                                    <div className="sm:text-right">
-                                                        <Label htmlFor="include_deposit_2" className="flex items-center justify-end gap-2 cursor-pointer">
-                                                            <Input
-                                                                id="include_deposit_2"
-                                                                type="checkbox"
-                                                                className="w-4 h-4"
-                                                                checked={formData.include_deposit_2}
-                                                                onChange={() => handleCheckboxToggle('include_deposit_2')}
-                                                            />
-                                                            Include D2
-                                                        </Label>
-                                                    </div>
-                                                    <div className="sm:col-span-3 flex items-center gap-2">
-                                                        <Input
-                                                            disabled
-                                                            id="deposit_2_amount"
-                                                            name="deposit_2_amount"
-                                                            type="number"
-                                                            value={formData.deposit_2_amount}
-                                                            placeholder="KES 0"
-                                                            className="flex-1"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="phone" className={errors.phone ? "text-red-500" : ""}>Phone *</Label>
+                                            <Input
+                                                id="phone"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                                placeholder="07..."
+                                                className={errors.phone ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                            />
+                                            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                placeholder="Optional"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
+                                <Separator />
+
+                                {/* Unit Assignment Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-medium text-muted-foreground">Unit Assignment (Optional)</h3>
+                                    <div className="space-y-3">
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="property_id" className={errors.property_id ? "text-red-500" : ""}>Property</Label>
+                                            <Select name="property_id" value={formData.property_id} onValueChange={handlePropertyChange}>
+                                                <SelectTrigger className={errors.property_id ? "border-red-500 focus:ring-red-500" : ""}>
+                                                    <SelectValue placeholder="Select Property..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {properties.map((property) => (
+                                                        <SelectItem key={property.id} value={property.id.toString()}>
+                                                            {property.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.property_id && <p className="text-sm text-red-500">{errors.property_id}</p>}
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="unit_id" className={errors.unit_id ? "text-red-500" : ""}>Unit</Label>
+                                            <Select name="unit_id" value={formData.unit_id} onValueChange={handleUnitChange}>
+                                                <SelectTrigger className={errors.unit_id ? "border-red-500 focus:ring-red-500" : ""}>
+                                                    <SelectValue placeholder="Select Unit..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableUnits.map((unit: any) => (
+                                                        <SelectItem key={unit.id} value={unit.id.toString()}>
+                                                            {unit.unit_number} - {unit.type} (KES {unit.price})
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.unit_id && <p className="text-sm text-red-500">{errors.unit_id}</p>}
+                                        </div>
+
+                                        {/* Start Date - Keeping it here as part of assignment */}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="start_date" className={errors.start_date ? "text-red-500" : ""}>Start Date</Label>
+                                            <Input
+                                                id="start_date"
+                                                name="start_date"
+                                                type="date"
+                                                value={formData.start_date}
+                                                onChange={(e) => {
+                                                    handleInputChange(e);
+                                                    if (errors.start_date) setErrors(prev => ({ ...prev, start_date: "" }));
+                                                }}
+                                                className={errors.start_date ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                                required
+                                            />
+                                            {errors.start_date && <p className="text-sm text-red-500">{errors.start_date}</p>}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                {/* Financials Section - Scroll down to see these */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-medium text-muted-foreground">Financials</h3>
+                                    <div className="space-y-4">
+                                        {/* Rent */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="rent_amount">Rent Amount (KES)</Label>
+                                            <div className="flex items-center gap-3">
+                                                <Input
+                                                    id="rent_amount"
+                                                    name="rent_amount"
+                                                    type="number"
+                                                    value={formData.rent_amount}
+                                                    onChange={handleInputChange}
+                                                    disabled
+                                                    className="flex-1"
+                                                />
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <div className="flex items-center space-x-2">
+                                                        <Input
+                                                            id="include_rent"
+                                                            type="checkbox"
+                                                            className="w-4 h-4"
+                                                            checked={formData.include_rent !== false}
+                                                            onChange={(e) => setFormData({ ...formData, include_rent: e.target.checked })}
+                                                        />
+                                                        <Label htmlFor="include_rent" className="text-sm font-normal cursor-pointer">
+                                                            Include Initial Month
+                                                        </Label>
+                                                    </div>
+                                                    <span className="text-[10px] text-muted-foreground text-right w-full max-w-[120px]">
+                                                        {formData.include_rent !== false ? "Initial month invoice created" : "Initial month skipped"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Deposit 1 */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="deposit_amount">Deposit 1 (KES)</Label>
+                                            <div className="flex items-center gap-3">
+                                                <Input
+                                                    id="deposit_amount"
+                                                    name="deposit_amount"
+                                                    type="number"
+                                                    value={formData.deposit_amount}
+                                                    onChange={handleInputChange} // Allow manual edit if needed? Usually read-only from unit but can edit? Assuming disabled based on previous code.
+                                                    disabled
+                                                    className="flex-1"
+                                                    placeholder="0"
+                                                />
+                                                <div className="flex items-center space-x-2">
+                                                    <Input
+                                                        id="include_deposit_1"
+                                                        type="checkbox"
+                                                        className="w-4 h-4"
+                                                        checked={formData.include_deposit_1}
+                                                        onChange={() => handleCheckboxToggle('include_deposit_1')}
+                                                    />
+                                                    <Label htmlFor="include_deposit_1" className="text-sm font-normal cursor-pointer">Include</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Deposit 2 */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="deposit_2_amount">Deposit 2 (KES)</Label>
+                                            <div className="flex items-center gap-3">
+                                                <Input
+                                                    id="deposit_2_amount"
+                                                    name="deposit_2_amount"
+                                                    type="number"
+                                                    value={formData.deposit_2_amount}
+                                                    onChange={handleInputChange}
+                                                    disabled
+                                                    className="flex-1"
+                                                    placeholder="0"
+                                                />
+                                                <div className="flex items-center space-x-2">
+                                                    <Input
+                                                        id="include_deposit_2"
+                                                        type="checkbox"
+                                                        className="w-4 h-4"
+                                                        checked={formData.include_deposit_2}
+                                                        onChange={() => handleCheckboxToggle('include_deposit_2')}
+                                                    />
+                                                    <Label htmlFor="include_deposit_2" className="text-sm font-normal cursor-pointer">Include</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Opening Balance */}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="previous_balance">Opening Balance (Optional)</Label>
+                                            <Input
+                                                id="previous_balance"
+                                                name="previous_balance"
+                                                type="text"
+                                                value={formData.previous_balance}
+                                                onChange={handleInputChange}
+                                                disabled={!!formData.overpaid_amount && Number(formData.overpaid_amount) > 0}
+                                                placeholder="Enter amount..."
+                                            />
+                                        </div>
+
+                                        {/* Overpaid Amount */}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="overpaid_amount">Overpaid Amount (Optional)</Label>
+                                            <Input
+                                                id="overpaid_amount"
+                                                name="overpaid_amount"
+                                                type="number"
+                                                value={formData.overpaid_amount}
+                                                onChange={handleInputChange}
+                                                disabled={!!formData.previous_balance && Number(formData.previous_balance) > 0}
+                                                placeholder="Enter amount..."
+                                            />
+                                        </div>
+
+                                        {/* Agreement Amount */}
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="agreement_amount">Agreement Amount (Optional)</Label>
+                                            <Input
+                                                id="agreement_amount"
+                                                name="agreement_amount"
+                                                type="number"
+                                                value={formData.agreement_amount}
+                                                onChange={handleInputChange}
+                                                placeholder="Enter agreement cost..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -680,13 +818,14 @@ function TenantsContent() {
                                     {isEditing ? "Update" : "Register"}
                                 </Button>
                             </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-            </div>
+
+                        </DialogContent >
+                    </Dialog >
+                </div >
+            </div >
 
             {/* Professional Search and Filters */}
-            <div className="bg-card rounded-xl shadow-lg border border-border p-6">
+            < div className="bg-card rounded-xl shadow-lg border border-border p-6" >
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Enhanced Search Bar */}
                     <div className="flex-1">
@@ -747,60 +886,62 @@ function TenantsContent() {
                 </div>
 
                 {/* Active Filters Display */}
-                {(searchQuery || filterProperty || filterUnit) && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-slate-600">Active Filters:</span>
-                            {searchQuery && (
-                                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
-                                    Search: "{searchQuery}"
-                                    <button
-                                        onClick={() => setSearchQuery("")}
-                                        className="ml-2 hover:text-blue-900"
-                                    >
-                                        ×
-                                    </button>
-                                </Badge>
-                            )}
-                            {filterProperty && (
-                                <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-300 border-0">
-                                    Property: {filterProperty}
-                                    <button
-                                        onClick={() => {
-                                            setFilterProperty("");
-                                            setFilterUnit("");
-                                        }}
-                                        className="ml-2 hover:text-purple-900"
-                                    >
-                                        ×
-                                    </button>
-                                </Badge>
-                            )}
-                            {filterUnit && (
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-300 border-0">
-                                    Unit: {filterUnit}
-                                    <button
-                                        onClick={() => setFilterUnit("")}
-                                        className="ml-2 hover:text-green-900"
-                                    >
-                                        ×
-                                    </button>
-                                </Badge>
-                            )}
-                            <button
-                                onClick={() => {
-                                    setSearchQuery("");
-                                    setFilterProperty("");
-                                    setFilterUnit("");
-                                }}
-                                className="text-sm text-muted-foreground hover:text-foreground underline ml-2"
-                            >
-                                Clear all
-                            </button>
+                {
+                    (searchQuery || filterProperty || filterUnit) && (
+                        <div className="mt-4 pt-4 border-t border-border">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-slate-600">Active Filters:</span>
+                                {searchQuery && (
+                                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
+                                        Search: "{searchQuery}"
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="ml-2 hover:text-blue-900"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                )}
+                                {filterProperty && (
+                                    <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-300 border-0">
+                                        Property: {filterProperty}
+                                        <button
+                                            onClick={() => {
+                                                setFilterProperty("");
+                                                setFilterUnit("");
+                                            }}
+                                            className="ml-2 hover:text-purple-900"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                )}
+                                {filterUnit && (
+                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-300 border-0">
+                                        Unit: {filterUnit}
+                                        <button
+                                            onClick={() => setFilterUnit("")}
+                                            className="ml-2 hover:text-green-900"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setSearchQuery("");
+                                        setFilterProperty("");
+                                        setFilterUnit("");
+                                    }}
+                                    className="text-sm text-muted-foreground hover:text-foreground underline ml-2"
+                                >
+                                    Clear all
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
+            </div >
 
 
 
@@ -934,9 +1075,6 @@ function TenantsContent() {
 
                                                     <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/statement`)}>
                                                         View Statement
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => router.push(`/tenants/${tenant.id}/agreement`)}>
-                                                        View Agreement
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem

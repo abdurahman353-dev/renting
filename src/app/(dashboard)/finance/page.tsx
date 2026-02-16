@@ -295,7 +295,7 @@ export default function FinancePage() {
             inv.amount,
             inv.paid_amount || 0,
             inv.status,
-            (inv.created_at || inv.date) ? new Date(inv.created_at || inv.date).toISOString().replace('T', ' ').substring(0, 16) : '-'
+            (inv.date || (inv.month && inv.year ? `${inv.year}-${String(inv.month).padStart(2, '0')}-01` : inv.created_at)) ? new Date(inv.date || (inv.month && inv.year ? `${inv.year}-${String(inv.month).padStart(2, '0')}-01` : inv.created_at)!).toISOString().replace('T', ' ').substring(0, 16) : '-'
         ]);
 
         let csvContent = "data:text/csv;charset=utf-8,"
@@ -451,7 +451,7 @@ export default function FinancePage() {
                                             <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
                                             <TableCell>{inv.property_name || '-'}</TableCell>
                                             <TableCell>{inv.unit_number || inv.unit}</TableCell>
-                                            <TableCell>{inv.created_at ? formatDate(inv.created_at) : formatDate(inv.date)}</TableCell>
+                                            <TableCell>{inv.date ? formatDate(inv.date) : (inv.month && inv.year ? formatDate(`${inv.year}-${String(inv.month).padStart(2, '0')}-01`) : (inv.created_at ? formatDate(inv.created_at) : '-'))}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="capitalize">
                                                     {inv.type?.replace('_', ' ') || 'Invoice'}
