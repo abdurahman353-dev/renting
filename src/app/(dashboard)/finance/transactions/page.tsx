@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { financeAPI } from '@/data/apis';
 import ReconcileModal from '@/components/ReconcileModal';
+import SimulateTransactionModal from '@/components/SimulateTransactionModal';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -46,6 +47,7 @@ export default function MpesaTransactionsPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
+    const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState<MpesaTransaction | null>(null);
 
     const handleReconcileClick = (transaction: MpesaTransaction) => {
@@ -136,27 +138,37 @@ export default function MpesaTransactionsPage() {
                     </p>
                 </div>
                 {isSuperAdmin() && (
-                    <Button
-                        variant="outline"
-                        onClick={async () => {
-                            const loadingToast = toast.loading('Registering C2B URLs...');
-                            try {
-                                const result = await financeAPI.registerC2BUrls();
-                                toast.success('C2B URLs Registered Successfully!');
-                                toast.info('Safaricom will now send transactions to your backend.');
-                            } catch (error: any) {
-                                console.error('Registration error:', error);
-                                const errorMessage = error.response?.data?.message || 'Registration failed';
-                                toast.error(errorMessage);
-                            } finally {
-                                toast.dismiss(loadingToast);
-                            }
-                        }}
-                        title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
-                    >
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Connect C2B / Register URLs
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsSimulateModalOpen(true)}
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                        >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Simulate Transaction
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={async () => {
+                                const loadingToast = toast.loading('Registering C2B URLs...');
+                                try {
+                                    const result = await financeAPI.registerC2BUrls();
+                                    toast.success('C2B URLs Registered Successfully!');
+                                    toast.info('Safaricom will now send transactions to your backend.');
+                                } catch (error: any) {
+                                    console.error('Registration error:', error);
+                                    const errorMessage = error.response?.data?.message || 'Registration failed';
+                                    toast.error(errorMessage);
+                                } finally {
+                                    toast.dismiss(loadingToast);
+                                }
+                            }}
+                            title="Click this once after deploying to allow Safaricom to send C2B payments to your system."
+                        >
+                            <LinkIcon className="w-4 h-4 mr-2" />
+                            Connect C2B / Register URLs
+                        </Button>
+                    </div>
                 )}
             </div>
 
@@ -387,6 +399,15 @@ export default function MpesaTransactionsPage() {
                     onSuccess={fetchTransactions}
                 />
             )}
+
+            <SimulateTransactionModal
+                isOpen={isSimulateModalOpen}
+                onClose={() => setIsSimulateModalOpen(false)}
+                onSuccess={() => {
+                    // Refresh transactions after a short delay to allow callback to populate
+                    setTimeout(fetchTransactions, 3000);
+                }}
+            />
         </div>
     );
 }

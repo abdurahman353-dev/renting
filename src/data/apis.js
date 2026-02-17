@@ -326,6 +326,10 @@ export const financeAPI = {
         const response = await apiClient.post('/mpesa/reconcile', data);
         return response.data;
     },
+    triggerC2BSimulation: async (data) => {
+        const response = await apiClient.post('/mpesa/simulate-c2b', data);
+        return response.data;
+    },
 };
 
 // ============================================================================
