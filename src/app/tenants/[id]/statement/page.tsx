@@ -43,17 +43,21 @@ export default function TenantStatementPage() {
     const [closingBalance, setClosingBalance] = useState(0);
     const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const componentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchStatement = async () => {
             try {
+                setLoading(true);
+                setError(null);
                 const res = await api.get(`/tenants/${params.id}/statement`);
                 setTransactions(res.data.transactions);
                 setTenant(res.data.tenant);
                 setClosingBalance(res.data.closing_balance);
-            } catch (error) {
-                console.error("Failed to fetch statement:", error);
+            } catch (err: any) {
+                console.error("Failed to fetch statement:", err);
+                setError(err.response?.data?.message || err.message || "Failed to load statement");
             } finally {
                 setLoading(false);
             }
@@ -168,6 +172,15 @@ export default function TenantStatementPage() {
 
     if (loading) {
         return <div className="p-8 text-center text-muted-foreground">Loading statement...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="p-8 text-center space-y-4">
+                <div className="text-red-500 font-medium">{error}</div>
+                <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+            </div>
+        );
     }
 
     if (!tenant) {
