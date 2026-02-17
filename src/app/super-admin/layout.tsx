@@ -43,12 +43,12 @@ export default function SuperAdminLayout({
         <div className="h-full relative">
             {/* Desktop Sidebar */}
             <div className="hidden h-full md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-80 bg-slate-900">
-                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} routes={superAdminRoutes} />
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} routes={superAdminRoutes} isExpanded={true} />
             </div>
 
             {/* Mobile Sidebar */}
             <div className="md:hidden">
-                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} routes={superAdminRoutes} />
+                <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} routes={superAdminRoutes} isExpanded={true} />
             </div>
 
             {/* Main Content Area */}

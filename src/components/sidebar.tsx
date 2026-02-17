@@ -118,12 +118,12 @@ const superAdminRoutes: SidebarRoute[] = [
 
 interface SidebarProps {
   isOpen: boolean
-  isExpanded: boolean
+  isExpanded?: boolean
   setIsOpen: (open: boolean) => void
   routes?: SidebarRoute[]
 }
 
-export function Sidebar({ isOpen, isExpanded, setIsOpen, routes: propRoutes }: SidebarProps) {
+export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRoutes }: SidebarProps) {
   const pathname = usePathname()
   const { isSuperAdmin, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
