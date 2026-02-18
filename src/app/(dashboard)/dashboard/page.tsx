@@ -82,19 +82,30 @@ export default function DashboardPage() {
   }, []);
 
   const getAggregatedData = () => {
-    if (chartView === 'Monthly') return chartData;
+    if (chartView === 'Monthly') {
+      return chartData.map(item => ({
+        ...item,
+        revenue: Number(item.revenue)
+      }));
+    }
 
     // Aggregate by year
     const yearlyMap: { [key: string]: number } = {};
     chartData.forEach(item => {
-      const year = item.month.split(' ').pop() || item.month;
-      yearlyMap[year] = (yearlyMap[year] || 0) + item.revenue;
+      // Robust year extraction: "M Y" -> "Y"
+      const parts = item.month.split(' ');
+      const year = parts.length > 1 ? parts[parts.length - 1] : item.month;
+      // Use Number() to prevent string concatenation (0 + "12" = "012")
+      yearlyMap[year] = (yearlyMap[year] || 0) + Number(item.revenue);
     });
 
-    return Object.keys(yearlyMap).map(year => ({
-      month: year,
-      revenue: yearlyMap[year]
-    }));
+    // Explicitly sort keys to ensure chronological order
+    return Object.keys(yearlyMap)
+      .sort((a, b) => a.localeCompare(b))
+      .map(year => ({
+        month: year,
+        revenue: yearlyMap[year]
+      }));
   };
 
   if (loading) {
@@ -278,7 +289,14 @@ export default function DashboardPage() {
                         color: 'hsl(var(--foreground))'
                       }}
                       itemStyle={{ color: '#6366f1', fontWeight: 'bold' }}
-                      formatter={(value: number) => [`KES ${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value: number) => [
+                        new Intl.NumberFormat('en-KE', {
+                          style: 'currency',
+                          currency: 'KES',
+                          minimumFractionDigits: 2
+                        }).format(value),
+                        'Revenue'
+                      ]}
                       cursor={{ stroke: '#6366f1', strokeWidth: 2, strokeDasharray: '5 5' }}
                     />
                     <Area

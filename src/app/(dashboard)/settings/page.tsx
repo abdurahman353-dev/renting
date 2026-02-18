@@ -42,8 +42,8 @@ export default function SettingsPage() {
 
         // Final validation for phone
         const phone = settings.company_phone || '';
-        if (phone.length !== 10 || !phone.startsWith('07')) {
-            toast.error('Phone number must be exactly 10 digits and start with 07');
+        if (phone.length !== 10 || (!phone.startsWith('07') && !phone.startsWith('01'))) {
+            toast.error('Phone number must be exactly 10 digits and start with 07 or 01');
             return;
         }
 
@@ -55,8 +55,8 @@ export default function SettingsPage() {
             }));
             await superAdminAPI.updateSettings({ settings: payload });
             toast.success('Settings updated successfully');
-            // Instant redirect to Contact page as requested
-            router.push('/contact');
+            // Instant redirect to Home page as requested
+            router.push('/');
         } catch (error) {
             toast.error('Failed to update settings');
         } finally {
