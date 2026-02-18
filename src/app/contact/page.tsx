@@ -31,11 +31,11 @@ export default function ContactPage() {
         message: ''
     });
     const [settings, setSettings] = useState<any>({
-        company_phone: '0729671617',
-        company_email: 'hello@rentsys.com',
-        company_address: 'RentSys Plaza, 4th Floor',
-        company_office_hours: 'Mon-Fri from 8am to 6pm',
-        company_response_time: "We'll respond within 24 hours"
+        company_phone: '',
+        company_email: '',
+        company_address: '',
+        company_office_hours: '',
+        company_response_time: ""
     });
 
     useEffect(() => {

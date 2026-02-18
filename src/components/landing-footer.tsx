@@ -7,10 +7,10 @@ import { publicAPI } from '@/data/apis';
 
 export function LandingFooter() {
     const [settings, setSettings] = useState({
-        company_name: 'RentSys',
-        company_phone: '0729671617',
-        company_email: 'hello@rentsys.com',
-        company_address: 'Nairobi, Kenya'
+        company_name: '',
+        company_phone: '',
+        company_email: '',
+        company_address: ''
     });
 
     useEffect(() => {
