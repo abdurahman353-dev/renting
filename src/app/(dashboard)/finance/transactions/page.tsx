@@ -137,7 +137,7 @@ export default function MpesaTransactionsPage() {
                         View and manage M-Pesa payment transactions
                     </p>
                 </div>
-                {isSuperAdmin() && (
+                {/* {isSuperAdmin() && (
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
@@ -169,7 +169,7 @@ export default function MpesaTransactionsPage() {
                             Connect C2B / Register URLs
                         </Button>
                     </div>
-                )}
+                )} */}
             </div>
 
             {/* Stats Cards */}
