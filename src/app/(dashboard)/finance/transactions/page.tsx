@@ -128,12 +128,12 @@ export default function MpesaTransactionsPage() {
     };
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">M-Pesa Transactions</h2>
-                    <p className="text-muted-foreground mt-2">
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">M-Pesa Transactions</h2>
+                    <p className="text-muted-foreground mt-2 text-sm md:text-base">
                         View and manage M-Pesa payment transactions
                     </p>
                 </div>
@@ -204,51 +204,54 @@ export default function MpesaTransactionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
-                <div className="flex gap-2">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end justify-between">
+                <div className="flex flex-wrap gap-2 w-full lg:w-auto">
                     <Button
                         variant={filter === 'all' ? 'default' : 'outline'}
                         onClick={() => setFilter('all')}
+                        className="flex-1 lg:flex-none py-1 h-9"
                     >
                         All
                     </Button>
                     <Button
                         variant={filter === 'unreconciled' ? 'default' : 'outline'}
                         onClick={() => setFilter('unreconciled')}
+                        className="flex-1 lg:flex-none py-1 h-9"
                     >
                         Unreconciled
                     </Button>
                     <Button
                         variant={filter === 'reconciled' ? 'default' : 'outline'}
                         onClick={() => setFilter('reconciled')}
+                        className="flex-1 lg:flex-none py-1 h-9"
                     >
                         Reconciled
                     </Button>
                 </div>
 
-                <div className="flex gap-2 items-center w-full md:w-auto">
-                    <div className="grid gap-1.5">
+                <div className="flex flex-wrap md:flex-nowrap gap-2 items-center w-full lg:w-auto">
+                    <div className="w-full md:w-[200px]">
                         <Input
                             placeholder="Search tenant, phone..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-[200px]"
+                            className="w-full"
                         />
                     </div>
-                    <div className="grid gap-1.5">
+                    <div className="w-[calc(50%-4px)] md:w-[150px]">
                         <Input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-[150px]"
+                            className="w-full"
                         />
                     </div>
-                    <div className="grid gap-1.5">
+                    <div className="w-[calc(50%-4px)] md:w-[150px]">
                         <Input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-[150px]"
+                            className="w-full"
                         />
                     </div>
                     {(searchQuery || startDate || endDate) && (
@@ -261,6 +264,7 @@ export default function MpesaTransactionsPage() {
                                 setEndDate('');
                             }}
                             title="Clear filters"
+                            className="hidden md:flex"
                         >
                             <XCircle className="w-4 h-4 text-slate-500" />
                         </Button>
