@@ -65,7 +65,6 @@ export default function PropertyReportPage() {
             row.agreement_amount,
             row.deposits,
             row.monthly_rent,
-            row.monthly_rent,
             row.past_arrears,
             row.amount_paid,
             row.balance
