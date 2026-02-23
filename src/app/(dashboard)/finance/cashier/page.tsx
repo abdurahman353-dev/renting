@@ -786,24 +786,6 @@ export default function CashierPage() {
                                                                 {payment.reference}
                                                             </span>
                                                         )}
-                                                        {isSuperAdmin && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleReversePayment(payment.id);
-                                                                }}
-                                                                disabled={reversingId === payment.id}
-                                                            >
-                                                                {reversingId === payment.id ? (
-                                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                                ) : (
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                )}
-                                                            </Button>
-                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
