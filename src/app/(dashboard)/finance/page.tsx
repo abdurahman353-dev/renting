@@ -436,8 +436,7 @@ export default function FinancePage() {
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Date</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Type</TableHead>
                                         <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Status</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Amount</TableHead>
-                                        <TableHead className="w-[50px] bg-slate-50 dark:bg-[#1B2230]"></TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-[#CBD5E1] py-4 bg-slate-50 dark:bg-[#1B2230]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -468,7 +467,6 @@ export default function FinancePage() {
                                                     {inv.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right font-black text-slate-900 dark:text-[#FFFFFF]">KES {(Number(inv.amount) - Number(inv.paid_amount || 0)).toLocaleString()}</TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1">
                                                     <Button
