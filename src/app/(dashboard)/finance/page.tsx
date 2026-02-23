@@ -311,6 +311,19 @@ export default function FinancePage() {
         document.body.removeChild(link);
     };
 
+    const handleResetFilters = () => {
+        setFilters({
+            property_id: "all",
+            unit_id: "all",
+            status: "all",
+            tenant_id: "all",
+            month: "",
+            year: new Date().getFullYear().toString()
+        });
+        setSearchQuery("");
+        toast.info("Filters reset to default");
+    };
+
     // if (loading && allInvoices.length === 0) return <div className="p-8">Loading finance data...</div>;
 
     // Dynamic button label
@@ -368,7 +381,7 @@ export default function FinancePage() {
                 units={units}
                 currentFilters={filters}
                 onFilterChange={onFilterChange}
-                onRefresh={fetchData}
+                onRefresh={handleResetFilters}
             />
 
             <Tabs defaultValue="invoices" onValueChange={setActiveTab} className="space-y-6">
