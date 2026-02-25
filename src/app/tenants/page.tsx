@@ -1114,8 +1114,8 @@ function TenantsContent() {
                                 Send a direct text message to {smsData.phone}.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="py-4">
-                            <Label htmlFor="sms-message">Message</Label>
+                        <div className="py-4 px-4">
+                            <Label className="mb-4" htmlFor="sms-message">Message</Label>
                             <textarea
                                 id="sms-message"
                                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
