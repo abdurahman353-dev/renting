@@ -14,8 +14,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MapPin, Home, Trash2 } from "lucide-react"
+import { Search, Plus, MapPin, Home, Trash2, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { propertyAPI, authAPI } from "@/data/apis"
 
@@ -37,10 +38,11 @@ export default function PropertiesPage() {
     const router = useRouter()
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
-    const [modalOpen, setModalOpen] = useState(false);
     const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
     const [user, setUser] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [deletionError, setDeletionError] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
@@ -50,7 +52,6 @@ export default function PropertiesPage() {
 
     const fetchProperties = async () => {
         try {
-            // const response = await api.get('/properties');
             const response = await propertyAPI.getAll();
             setProperties(response || response.data);
         } catch (error) {
@@ -63,19 +64,23 @@ export default function PropertiesPage() {
     const handleDelete = async () => {
         if (!propertyToDelete) return;
 
+        setIsDeleting(true);
         try {
             await propertyAPI.delete(propertyToDelete.id);
             // Refresh properties
             fetchProperties();
             setPropertyToDelete(null);
+            toast.success("Property deleted successfully");
         } catch (error: any) {
             console.error("Failed to delete property:", error);
             if (error.response && error.response.status === 422 && error.response.data.tenants) {
                 const tenantNames = error.response.data.tenants.map((t: any) => `${t.name} (KES ${t.balance})`).join(', ');
-                alert(`Cannot delete property. The following tenants have pending balances:\n\n${tenantNames}\n\nPlease clear these balances before deleting.`);
+                setDeletionError(`Cannot delete property. The following tenants have pending balances:\n\n${tenantNames}\n\nPlease clear these balances before deleting.`);
             } else {
-                alert("Failed to delete property. Please try again.");
+                setDeletionError("Failed to delete property. Please try again.");
             }
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -210,7 +215,7 @@ export default function PropertiesPage() {
             </div>
 
 
-            <Dialog open={!!propertyToDelete} onOpenChange={(open) => !open && setPropertyToDelete(null)}>
+            <Dialog open={!!propertyToDelete} onOpenChange={(open) => !open && !isDeleting && setPropertyToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Are you absolutely sure?</DialogTitle>
@@ -221,8 +226,37 @@ export default function PropertiesPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPropertyToDelete(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete}>Delete Property</Button>
+                        <Button variant="outline" onClick={() => setPropertyToDelete(null)} disabled={isDeleting}>Cancel</Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : "Delete Property"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!deletionError} onOpenChange={(open) => !open && setDeletionError(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-rose-600 flex items-center gap-2">
+                            <Trash2 className="h-5 w-5" />
+                            Cannot Delete Property
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 whitespace-pre-wrap text-slate-600 dark:text-slate-300">
+                        {deletionError}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            onClick={() => setDeletionError(null)}
+                        >
+                            OK
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

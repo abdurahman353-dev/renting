@@ -83,6 +83,16 @@ export default function UnitsPage() {
         }
     };
 
+    const handleResetFilters = () => {
+        setSearchQuery("");
+        setSelectedProperty("all");
+        setSelectedType("all");
+        setSelectedStatus("all");
+        setMinPrice("");
+        setMaxPrice("");
+        toast.info("Filters reset to default");
+    };
+
     const handleDelete = async () => {
         if (!unitToDelete) return;
 
@@ -214,7 +224,7 @@ export default function UnitsPage() {
                             >
                                 <Filter className="mr-2 h-4 w-4" /> Filters
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => fetchData(false)} title="Refresh Data">
+                            <Button variant="ghost" size="icon" onClick={handleResetFilters} title="Reset Filters">
                                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
