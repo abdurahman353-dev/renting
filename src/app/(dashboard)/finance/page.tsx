@@ -16,6 +16,16 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet, Search } from "lucide-react"
 import { financeAPI, propertyAPI, unitAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
@@ -78,6 +88,7 @@ export default function FinancePage() {
     const [properties, setProperties] = useState<any[]>([]);
     const [units, setUnits] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState("invoices");
+    const [confirmGenerateOpen, setConfirmGenerateOpen] = useState(false);
 
     // Filter states
     const [filters, setFilters] = useState({
@@ -265,21 +276,16 @@ export default function FinancePage() {
         try {
             const res = await financeAPI.generateInvoice({});
             const message = res.message || res.data?.message || "Invoices generated successfully";
-            alert(message);
+            toast.success(message);
             fetchData();
         } catch (error: any) {
-            alert(error.response?.data?.message || "Failed to generate invoices");
+            toast.error(error.response?.data?.message || "Failed to generate invoices");
         }
     };
 
     const handleGenerateMonthlyInvoices = async () => {
         const date = new Date();
-        const monthName = date.toLocaleString('default', { month: 'long' });
         const year = date.getFullYear();
-
-        if (!confirm(`Are you sure you want to generate invoices for ${monthName} ${year}?`)) {
-            return;
-        }
 
         try {
             const res = await financeAPI.generateMonthlyInvoices({
@@ -360,7 +366,7 @@ export default function FinancePage() {
                     </Button>
                     <Button
                         className="bg-indigo-600 hover:bg-indigo-700"
-                        onClick={handleGenerateMonthlyInvoices}
+                        onClick={() => setConfirmGenerateOpen(true)}
                     >
                         <Plus className="mr-2 h-4 w-4" /> Generate {currentMonthName} Invoices
                     </Button>
@@ -564,6 +570,28 @@ export default function FinancePage() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* Monthly Invoice Generation Confirmation Dialog */}
+            <AlertDialog open={confirmGenerateOpen} onOpenChange={setConfirmGenerateOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Generate {currentMonthName} Invoices?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to generate monthly rent invoices for all active leases for {currentMonthName} {new Date().getFullYear()}?
+                            This will also send SMS notifications to tenants about their new invoices.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleGenerateMonthlyInvoices}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            Generate Invoices
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
