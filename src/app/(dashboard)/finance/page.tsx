@@ -40,6 +40,8 @@ interface Invoice {
     created_at?: string;
     paid_amount?: number;
     due_date?: string;
+    property_id?: string;
+    property?: { name: string };
 }
 
 interface Payment {
@@ -84,7 +86,7 @@ export default function FinancePage() {
         status: "all",
         tenant_id: "all",
         month: "",
-        year: new Date().getFullYear().toString()
+        year: ""
     });
 
     // Fetch filter properties and units
@@ -179,12 +181,25 @@ export default function FinancePage() {
         }
 
         if (filters.property_id !== 'all') {
-            filteredInv = filteredInv.filter(inv => inv.property_name && properties.find(p => p.id.toString() === filters.property_id)?.name === inv.property_name);
-            // Note: Payment models might need property linking to filter correctly here if not in tenant_name
+            const selectedProperty = properties.find(p => p.id.toString() === filters.property_id);
+            if (selectedProperty) {
+                const propertyName = selectedProperty.name.toLowerCase();
+                filteredInv = filteredInv.filter(inv =>
+                    (inv.property_name?.toLowerCase() === propertyName) ||
+                    (inv.property?.name?.toLowerCase() === propertyName)
+                );
+            }
         }
 
         if (filters.unit_id !== 'all') {
-            filteredInv = filteredInv.filter(inv => inv.unit_number === units.find(u => u.id.toString() === filters.unit_id)?.unit_number);
+            const selectedUnit = units.find(u => u.id.toString() === filters.unit_id);
+            if (selectedUnit) {
+                const unitNum = selectedUnit.unit_number.toString().toLowerCase();
+                filteredInv = filteredInv.filter(inv =>
+                    (inv.unit_number?.toString().toLowerCase() === unitNum) ||
+                    (inv.unit?.toString().toLowerCase() === unitNum)
+                );
+            }
         }
 
         if (filters.status !== 'all') {

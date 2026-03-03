@@ -25,6 +25,16 @@ import { tenantAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import * as XLSX from 'xlsx'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Tenant {
     id: number;
@@ -64,6 +74,11 @@ function PreviousTenantsContent() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Action dialog states
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [confirmReactivateOpen, setConfirmReactivateOpen] = useState(false);
+    const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
+
     useEffect(() => {
         fetchTenants();
     }, []);
@@ -95,6 +110,9 @@ function PreviousTenantsContent() {
                     color: '#fff',
                 }
             });
+        } finally {
+            setConfirmReactivateOpen(false);
+            setSelectedTenantId(null);
         }
     };
 
@@ -104,8 +122,6 @@ function PreviousTenantsContent() {
     };
 
     const handleDelete = async (tenantId: number) => {
-        if (!confirm("Are you sure you want to PERMANENTLY delete this tenant? This action cannot be undone.")) return;
-
         try {
             await tenantAPI.delete(tenantId);
             toast.success("Tenant deleted successfully");
@@ -114,6 +130,9 @@ function PreviousTenantsContent() {
             console.error("Failed to delete tenant:", error);
             const msg = error?.response?.data?.message || "Failed to delete tenant";
             toast.error(msg);
+        } finally {
+            setConfirmDeleteOpen(false);
+            setSelectedTenantId(null);
         }
     };
 
@@ -250,7 +269,10 @@ function PreviousTenantsContent() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handleReactivate(tenant.id)}>
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setSelectedTenantId(tenant.id);
+                                                            setConfirmReactivateOpen(true);
+                                                        }}>
                                                             <RotateCcw className="mr-2 h-4 w-4 text-green-600" />
                                                             Reactivate
                                                         </DropdownMenuItem>
@@ -264,7 +286,10 @@ function PreviousTenantsContent() {
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(tenant.id)}
+                                                            onClick={() => {
+                                                                setSelectedTenantId(tenant.id);
+                                                                setConfirmDeleteOpen(true);
+                                                            }}
                                                             className="text-red-600 focus:text-red-600"
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
@@ -287,6 +312,49 @@ function PreviousTenantsContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the tenant
+                            account and all associated data from our servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedTenantId(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => selectedTenantId && handleDelete(selectedTenantId)}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Delete Permanently
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Reactivate Confirmation Dialog */}
+            <AlertDialog open={confirmReactivateOpen} onOpenChange={setConfirmReactivateOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Reactivate Tenant?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to reactivate this tenant? They will be moved back to the active tenants list.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedTenantId(null)}>No, Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => selectedTenantId && handleReactivate(selectedTenantId)}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            Yes, Reactivate
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

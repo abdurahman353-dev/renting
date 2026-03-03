@@ -43,6 +43,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Tenant {
     id: number;
@@ -115,6 +125,11 @@ function TenantsContent() {
     const [editingTenantId, setEditingTenantId] = useState<number | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    // Action dialog states
+    const [confirmDeactivateOpen, setConfirmDeactivateOpen] = useState(false);
+    const [confirmRemindersOpen, setConfirmRemindersOpen] = useState(false);
+    const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
+
     // SMS State
     const [smsOpen, setSmsOpen] = useState(false);
     const [smsData, setSmsData] = useState({ phone: "", name: "" });
@@ -143,8 +158,6 @@ function TenantsContent() {
     };
 
     const handleSendReminders = async () => {
-        if (!confirm("Are you sure you want to send balance reminders to all tenants with outstanding balances?")) return;
-
         setSendingReminders(true);
         try {
             await tenantAPI.sendBalanceReminders();
@@ -155,6 +168,7 @@ function TenantsContent() {
             toast.error(msg);
         } finally {
             setSendingReminders(false);
+            setConfirmRemindersOpen(false);
         }
     };
 
@@ -494,8 +508,6 @@ function TenantsContent() {
     const availableFilterUnits = filterPropertyObj?.units || [];
 
     const handleDeactivate = async (tenantId: number) => {
-        if (!confirm("Are you sure you want to deactivate this tenant? This will make the unit vacant. Any outstanding balance will be preserved.")) return;
-
         try {
             await tenantAPI.toggleStatus(tenantId, { status: 'Inactive' });
             toast.success("Tenant deactivated successfully");
@@ -505,6 +517,9 @@ function TenantsContent() {
             console.error("Failed to deactivate tenant:", error);
             const msg = error?.response?.data?.message || "Failed to deactivate tenant";
             alert(msg);
+        } finally {
+            setConfirmDeactivateOpen(false);
+            setSelectedTenantId(null);
         }
     };
 
@@ -535,7 +550,7 @@ function TenantsContent() {
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={handleSendReminders}
+                        onClick={() => setConfirmRemindersOpen(true)}
                         disabled={sendingReminders}
                         className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                     >
@@ -1079,7 +1094,10 @@ function TenantsContent() {
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         className="text-red-600 focus:text-red-600 cursor-pointer"
-                                                        onClick={() => handleDeactivate(tenant.id)}
+                                                        onClick={() => {
+                                                            setSelectedTenantId(tenant.id);
+                                                            setConfirmDeactivateOpen(true);
+                                                        }}
                                                     >
                                                         Deactivate
                                                     </DropdownMenuItem>
@@ -1134,6 +1152,50 @@ function TenantsContent() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div >
+
+            {/* Deactivate Confirmation Dialog */}
+            <AlertDialog open={confirmDeactivateOpen} onOpenChange={setConfirmDeactivateOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Deactivate Tenant?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to deactivate this tenant? This will make the unit vacant.
+                            Any outstanding balance will be preserved.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedTenantId(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => selectedTenantId && handleDeactivate(selectedTenantId)}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Deactivate
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Send Reminders Confirmation Dialog */}
+            <AlertDialog open={confirmRemindersOpen} onOpenChange={setConfirmRemindersOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Send Balance Reminders?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to send balance reminders to all tenants with outstanding balances?
+                            This will send an SMS to each tenant.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleSendReminders}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            Send Reminders
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
     )
 }

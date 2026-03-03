@@ -147,16 +147,16 @@ export default function UnitsReportPage() {
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                <CheckCircle2 className="h-6 w-6 text-blue-600" />
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Occupied</p>
                                 <p className="text-2xl font-black text-foreground">{stats.occupied}</p>
                             </div>
                         </div>
-                        <div className="h-1 w-full bg-emerald-500/10">
-                            <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.occupied / stats.total) * 100}%` : '0%' }}></div>
+                        <div className="h-1 w-full bg-blue-500/10">
+                            <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.occupied / stats.total) * 100}%` : '0%' }}></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -164,16 +164,16 @@ export default function UnitsReportPage() {
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-0">
                         <div className="flex items-center p-6">
-                            <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                                <XCircle className="h-6 w-6 text-amber-600" />
+                            <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                <XCircle className="h-6 w-6 text-emerald-600" />
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Available</p>
                                 <p className="text-2xl font-black text-foreground">{stats.available}</p>
                             </div>
                         </div>
-                        <div className="h-1 w-full bg-amber-500/10">
-                            <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.available / stats.total) * 100}%` : '0%' }}></div>
+                        <div className="h-1 w-full bg-emerald-500/10">
+                            <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: stats.total ? `${(stats.available / stats.total) * 100}%` : '0%' }}></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -288,8 +288,8 @@ export default function UnitsReportPage() {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
-                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
-                                                : 'bg-muted text-muted-foreground border-border'
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/50'
+                                                : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
                                                 }`}>
                                                 {row.status}
                                             </span>
