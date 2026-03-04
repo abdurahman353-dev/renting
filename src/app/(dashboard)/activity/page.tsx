@@ -41,6 +41,10 @@ export default function ActivityLogsPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [severityFilter, setSeverityFilter] = useState('all');
+    const [adminFilter, setAdminFilter] = useState('all');
+    const [actionFilter, setActionFilter] = useState('all');
+    const [admins, setAdmins] = useState<string[]>([]);
+    const [actions, setActions] = useState<string[]>([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
@@ -57,9 +61,32 @@ export default function ActivityLogsPage() {
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
 
-            const data = await superAdminAPI.getActivityLogs(params);
+            // Fetch both logs and all admins in parallel
+            const [data, allAdmins] = await Promise.all([
+                superAdminAPI.getActivityLogs(params),
+                superAdminAPI.getAdmins()
+            ]);
+
             if (Array.isArray(data)) {
                 setActivityLogs(data);
+
+                // Extract unique names from logs (e.g., "System/Guest")
+                const namesFromLogs = data.map((log: Log) => log.admin);
+
+                // Extract names from registered admins
+                const registeredAdminNames = Array.isArray(allAdmins)
+                    ? allAdmins.map((admin: any) => admin.name)
+                    : [];
+
+                // Combine and unique-ify
+                const uniqueAdmins = Array.from(new Set([...registeredAdminNames, ...namesFromLogs]))
+                    .filter(Boolean)
+                    .sort();
+
+                const uniqueActions = Array.from(new Set(data.map((log: Log) => log.action))).sort();
+
+                setAdmins(uniqueAdmins);
+                setActions(uniqueActions);
             }
         } catch (error) {
             console.error('Failed to fetch activity logs:', error);
@@ -91,8 +118,10 @@ export default function ActivityLogsPage() {
             log.details.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter;
+        const matchesAdmin = adminFilter === 'all' || log.admin === adminFilter;
+        const matchesAction = actionFilter === 'all' || log.action === actionFilter;
 
-        return matchesSearch && matchesSeverity;
+        return matchesSearch && matchesSeverity && matchesAdmin && matchesAction;
     });
 
     return (
@@ -108,6 +137,8 @@ export default function ActivityLogsPage() {
                         setEndDate('');
                         setSearchTerm('');
                         setSeverityFilter('all');
+                        setAdminFilter('all');
+                        setActionFilter('all');
                     }} title="Clear all filters">
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
@@ -152,6 +183,30 @@ export default function ActivityLogsPage() {
                             <SelectItem value="Normal">Normal</SelectItem>
                             <SelectItem value="Warning">Warning</SelectItem>
                             <SelectItem value="Critical">Critical</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={adminFilter} onValueChange={setAdminFilter}>
+                        <SelectTrigger className="bg-background border-input w-[160px]">
+                            <SelectValue placeholder="Admin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Admins</SelectItem>
+                            {admins.map(admin => (
+                                <SelectItem key={admin} value={admin}>{admin}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={actionFilter} onValueChange={setActionFilter}>
+                        <SelectTrigger className="bg-background border-input w-[160px]">
+                            <SelectValue placeholder="Action" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Actions</SelectItem>
+                            {actions.map(action => (
+                                <SelectItem key={action} value={action}>{action}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
