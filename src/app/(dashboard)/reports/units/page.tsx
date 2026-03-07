@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Filter, Home, CheckCircle2, XCircle } from "lucide-react";
+import { Download, Filter, Home, CheckCircle2, XCircle, User } from "lucide-react";
 import { financeAPI, propertyAPI } from "@/data/apis";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,22 +55,22 @@ export default function UnitsReportPage() {
             return;
         }
 
-        const headers = ["Unit", "Property", "Tenant", "Status", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const monthLabel = months.find(m => m.value === filters.month)?.label || "";
+        const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
+        const headers = ["Unit", "Tenant", "Status", "Initial Dues", "Rent & Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.unit_number}"`,
-            `"${row.property_name}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
-            row.opening_balance,
-            row.agreement_amount,
-            row.deposits,
-            row.monthly_rent,
-            row.past_arrears,
+            row.initial_dues,
+            row.rent_and_arrears,
             row.amount_paid,
             row.balance
         ]);
 
         const csvContent = [
+            titleRow.join(","),
+            "", // Empty row for spacing
             headers.join(","),
             ...rows.map((r) => r.join(","))
         ].join("\n");
@@ -79,7 +79,7 @@ export default function UnitsReportPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `unit_monthly_report_${filters.year}_${filters.month}.csv`);
+        link.setAttribute("download", `unit_report_${filters.year}_${filters.month}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -246,15 +246,10 @@ export default function UnitsReportPage() {
                     <table className="w-full text-sm text-left relative">
                         <thead className="text-xs text-muted-foreground uppercase bg-slate-50 border-b sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th className="px-6 py-3">Unit Identity</th>
-                                <th className="px-6 py-3">Property</th>
-                                <th className="px-6 py-3">Current Tenant</th>
-                                <th className="px-6 py-3 text-center">Occupancy Status</th>
-                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Opening Balance</th>
-                                <th className="px-6 py-3 text-right text-rose-600 font-semibold">Agreement Fee</th>
-                                <th className="px-6 py-3 text-right text-indigo-500 font-semibold">Deposits</th>
-                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Monthly Rent</th>
-                                <th className="px-6 py-3 text-right text-amber-600 font-semibold">Past Arrears</th>
+                                <th className="px-6 py-3">Unit Info</th>
+                                <th className="px-6 py-3">Occupancy</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Rent & Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-semibold">Amount Paid</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
@@ -274,40 +269,29 @@ export default function UnitsReportPage() {
                                 data.map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <span className="font-semibold text-foreground text-base">{row.unit_number}</span>
+                                            <div className="font-semibold text-foreground text-base">{row.unit_number}</div>
+                                            <div className="text-[10px] text-muted-foreground uppercase truncate max-w-[150px]">{row.property_name}</div>
                                         </td>
-                                        <td className="px-6 py-4 font-medium text-foreground text-xs uppercase">{row.property_name}</td>
                                         <td className="px-6 py-4">
-                                            {row.tenant_name !== 'N/A' ? (
-                                                <div className="font-semibold text-foreground">
-                                                    {row.tenant_name}
-                                                </div>
-                                            ) : (
-                                                <span className="text-muted-foreground italic font-medium">No active tenant</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
-                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/50'
-                                                : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
-                                                }`}>
-                                                {row.status}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`inline-flex items-center w-fit px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm ${row.status.toLowerCase() === 'occupied'
+                                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/50'
+                                                    : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50'
+                                                    }`}>
+                                                    {row.status}
+                                                </span>
+                                                {row.tenant_name !== 'N/A' && (
+                                                    <div className="text-[10px] font-bold text-foreground flex items-center gap-1">
+                                                        <User className="h-3 w-3" /> {row.tenant_name}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
-                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
-                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-indigo-500">
-                                            {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
+                                            {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
-                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
+                                            {Number(row.rent_and_arrears) !== 0 ? Number(row.rent_and_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}

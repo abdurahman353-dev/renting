@@ -55,23 +55,23 @@ export default function TenantReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Tenant Name", "Status", "Phone Number", "Unit", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const monthLabel = months.find(m => m.value === filters.month)?.label || "";
+        const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
+        const headers = ["Property Name", "Status", "Phone Number", "Unit", "Initial Dues", "Rent & Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.property_name}"`,
-            `"${row.tenant_name}"`,
             `"${row.status}"`,
             `"${row.phone}"`,
             `"${row.unit_number}"`,
-            row.opening_balance,
-            row.agreement_amount,
-            row.deposits,
-            row.monthly_rent,
-            row.past_arrears,
+            row.initial_dues,
+            row.rent_and_arrears,
             row.amount_paid,
             row.balance
         ]);
 
         const csvContent = [
+            titleRow.join(","),
+            "", // Empty row for spacing
             headers.join(","),
             ...rows.map((r) => r.join(","))
         ].join("\n");
@@ -80,7 +80,7 @@ export default function TenantReportPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `tenant_monthly_report_${filters.year}_${filters.month}.csv`);
+        link.setAttribute("download", `tenant_report_${filters.year}_${filters.month}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -243,15 +243,11 @@ export default function TenantReportPage() {
                         <thead className="text-xs text-muted-foreground uppercase bg-slate-50 border-b sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th className="px-6 py-3">Property</th>
-                                <th className="px-6 py-3">Tenant Identity</th>
+                                <th className="px-6 py-3">Tenant Info</th>
                                 <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3">Contact Info</th>
                                 <th className="px-6 py-3 text-center">Unit</th>
-                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Opening Balance</th>
-                                <th className="px-6 py-3 text-right text-rose-600 font-semibold">Agreement Fee</th>
-                                <th className="px-6 py-3 text-right text-indigo-500 font-semibold">Deposits</th>
-                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Monthly Rent</th>
-                                <th className="px-6 py-3 text-right text-amber-600 font-semibold">Past Arrears</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Rent & Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-semibold">Amount Paid</th>
                                 <th className="px-6 py-3 text-right font-bold">Total Balance</th>
                             </tr>
@@ -270,8 +266,11 @@ export default function TenantReportPage() {
                             ) : (
                                 data.map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-foreground text-xs uppercase">{row.property_name}</td>
-                                        <td className="px-6 py-4 font-semibold text-foreground">{row.tenant_name}</td>
+                                        <td className="px-6 py-4 font-medium text-foreground text-[10px] uppercase truncate max-w-[120px]">{row.property_name}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-semibold text-foreground">{row.tenant_name}</div>
+                                            <div className="text-[10px] text-muted-foreground">{row.phone}</div>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.status?.toLowerCase() === 'active'
                                                 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
@@ -282,26 +281,14 @@ export default function TenantReportPage() {
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground font-medium text-xs">
-                                            {row.phone}
-                                        </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="text-foreground font-bold">{row.unit_number}</span>
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
-                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
-                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-indigo-500">
-                                            {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
+                                            {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.monthly_rent) > 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
-                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
+                                            {Number(row.rent_and_arrears) !== 0 ? Number(row.rent_and_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}

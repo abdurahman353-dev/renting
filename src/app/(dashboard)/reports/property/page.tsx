@@ -55,22 +55,20 @@ export default function PropertyReportPage() {
             return;
         }
 
-        const headers = ["Property Name", "Total Units", "Occupied Units", "Vacant Units", "Opening Balance", "Agreement Fee", "Deposits", "Monthly Rent", "Past Arrears", "Amount Paid", "Balance"];
+        const monthLabel = months.find(m => m.value === filters.month)?.label || "";
+        const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
+        const headers = ["Property Name", "Initial Dues", "Rent & Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.name}"`,
-            row.total_units,
-            row.occupied_units,
-            row.vacant_units,
-            row.opening_balance,
-            row.agreement_amount,
-            row.deposits,
-            row.monthly_rent,
-            row.past_arrears,
+            row.initial_dues,
+            row.rent_and_arrears,
             row.amount_paid,
             row.balance
         ]);
 
         const csvContent = [
+            titleRow.join(","),
+            "", // Empty row for spacing
             headers.join(","),
             ...rows.map((r) => r.join(","))
         ].join("\n");
@@ -79,7 +77,7 @@ export default function PropertyReportPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `property_monthly_report_${filters.year}_${filters.month}.csv`);
+        link.setAttribute("download", `property_report_${filters.year}_${filters.month}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -184,15 +182,9 @@ export default function PropertyReportPage() {
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
                             <tr>
-                                <th className="px-6 py-3">Property Name</th>
-                                <th className="px-6 py-3 text-center">Total Units</th>
-                                <th className="px-6 py-3 text-center text-emerald-600">Occupied Units</th>
-                                <th className="px-6 py-3 text-center text-muted-foreground">Vacant Units</th>
-                                <th className="px-6 py-3 text-right text-rose-500">Opening Balance</th>
-                                <th className="px-6 py-3 text-right text-rose-600">Agreement Fee</th>
-                                <th className="px-6 py-3 text-right text-indigo-500">Deposits</th>
-                                <th className="px-6 py-3 text-right text-slate-900">Monthly Rent</th>
-                                <th className="px-6 py-3 text-right text-amber-600">Past Arrears</th>
+                                <th className="px-6 py-3">Property (Units T/O/V)</th>
+                                <th className="px-6 py-3 text-right text-rose-500">Initial Dues</th>
+                                <th className="px-6 py-3 text-right text-slate-900">Rent & Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600">Amount Paid</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
@@ -205,24 +197,17 @@ export default function PropertyReportPage() {
                             ) : (
                                 data.map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-foreground">{row.name}</td>
-                                        <td className="px-6 py-4 text-center">{row.total_units}</td>
-                                        <td className="px-6 py-4 text-center font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">{row.occupied_units}</td>
-                                        <td className="px-6 py-4 text-center text-muted-foreground">{row.vacant_units}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-medium text-foreground">{row.name}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {row.total_units} units ({row.occupied_units} Occ / {row.vacant_units} Vac)
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4 text-right font-medium text-rose-500">
-                                            {Number(row.opening_balance) !== 0 ? Number(row.opening_balance).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-rose-600">
-                                            {Number(row.agreement_amount) !== 0 ? Number(row.agreement_amount).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-indigo-500">
-                                            {Number(row.deposits) !== 0 ? Number(row.deposits).toLocaleString() : '—'}
+                                            {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.monthly_rent) !== 0 ? Number(row.monthly_rent).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
-                                            {Number(row.past_arrears) !== 0 ? Number(row.past_arrears).toLocaleString() : '—'}
+                                            {Number(row.rent_and_arrears) !== 0 ? Number(row.rent_and_arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) !== 0 ? Number(row.amount_paid).toLocaleString() : '—'}
