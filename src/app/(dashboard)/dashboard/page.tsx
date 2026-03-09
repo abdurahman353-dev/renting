@@ -174,9 +174,9 @@ export default function DashboardPage() {
             <div className="flex items-center mt-3">
               <div className={`flex items-center gap-1 text-[10px] font-black ${stats.tenantsGrowth >= 0 ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400' : 'text-red-500 bg-red-50 dark:bg-red-950/30 dark:text-red-400'} px-2 py-1 rounded-full border border-blue-100/50 dark:border-blue-900/50`}>
                 <TrendingUp className="h-3 w-3" />
-                {stats.tenantsGrowth > 0 ? '+' : ''}{stats.tenantsGrowth}%
+                {stats.tenantsGrowth > 0 ? '+' : ''}{stats.tenantsGrowth}
               </div>
-              <span className="text-[10px] text-muted-foreground ml-2 font-bold uppercase tracking-tighter">vs last month</span>
+              <span className="text-[10px] text-muted-foreground ml-2 font-bold uppercase tracking-tighter">all time</span>
             </div>
           </CardContent>
         </Card>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                 <TrendingUp className="h-3 w-3" />
                 {stats.occupancyGrowth > 0 ? '+' : ''}{stats.occupancyGrowth}%
               </div>
-              <span className="text-[10px] text-muted-foreground ml-2 font-bold uppercase tracking-tighter">vs last month</span>
+              <span className="text-[10px] text-muted-foreground ml-2 font-bold uppercase tracking-tighter">all time</span>
             </div>
           </CardContent>
         </Card>

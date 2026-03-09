@@ -57,13 +57,14 @@ export default function UnitsReportPage() {
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
-        const headers = ["Unit", "Tenant", "Status", "Initial Dues", "Rent & Arrears", "Amount Paid", "Balance"];
+        const headers = ["Unit", "Tenant", "Status", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Arrears", "Amount Paid", "Balance"];
         const rows = data.map((row: any) => [
             `"${row.unit_number}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
             row.initial_dues,
-            row.rent_and_arrears,
+            row.rent,
+            row.arrears,
             row.amount_paid,
             row.balance
         ]);
@@ -248,8 +249,9 @@ export default function UnitsReportPage() {
                             <tr>
                                 <th className="px-6 py-3">Unit Info</th>
                                 <th className="px-6 py-3">Occupancy</th>
-                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
-                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">Rent & Arrears</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial dues=(Agreement fee+Opening balance)</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
+                                <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-semibold">Amount Paid</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
@@ -291,7 +293,10 @@ export default function UnitsReportPage() {
                                             {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.rent_and_arrears) !== 0 ? Number(row.rent_and_arrears).toLocaleString() : '—'}
+                                            {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-orange-600">
+                                            {Number(row.arrears) !== 0 ? Number(row.arrears).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}

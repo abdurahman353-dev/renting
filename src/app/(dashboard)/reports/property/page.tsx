@@ -9,7 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function PropertyReportPage() {
     const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<{ summary: any, properties: any[] }>({
+        summary: {
+            total_initial_dues: 0,
+            total_rent: 0,
+            total_rent_arrears: 0,
+            total_paid: 0,
+            total_balance: 0,
+            total_overpayment: 0
+        },
+        properties: []
+    });
     const [properties, setProperties] = useState<any[]>([]);
 
     // Default to current month/year
@@ -40,7 +50,12 @@ export default function PropertyReportPage() {
         setLoading(true);
         try {
             const res = await financeAPI.getPropertyReport(filters);
-            setData(res);
+            // Handle both old and new response structures for safety during transition
+            if (res.properties && res.summary) {
+                setData(res);
+            } else {
+                setData({ summary: {}, properties: res });
+            }
         } catch (error) {
             console.error("Failed to fetch report:", error);
             toast.error("Failed to fetch report data");
@@ -50,18 +65,18 @@ export default function PropertyReportPage() {
     };
 
     const handleExport = () => {
-        if (!data || data.length === 0) {
+        if (!data.properties || data.properties.length === 0) {
             toast.error("No data to export");
             return;
         }
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
-        const headers = ["Property Name", "Initial Dues", "Rent & Arrears", "Amount Paid", "Balance"];
-        const rows = data.map((row: any) => [
+        const headers = ["Property Name", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Amount Paid", "Balance"];
+        const rows = data.properties.map((row: any) => [
             `"${row.name}"`,
             row.initial_dues,
-            row.rent_and_arrears,
+            row.rent,
             row.amount_paid,
             row.balance
         ]);
@@ -101,6 +116,17 @@ export default function PropertyReportPage() {
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
 
+    const SummaryCard = ({ title, value, colorClass }: { title: string, value: number, colorClass: string }) => (
+        <Card className="border-border shadow-sm">
+            <CardContent className="pt-6">
+                <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+                <h3 className={`text-2xl font-bold ${colorClass}`}>
+                    KES {Number(value || 0).toLocaleString()}
+                </h3>
+            </CardContent>
+        </Card>
+    );
+
     return (
         <div className="p-6 space-y-6 bg-muted/40 min-h-screen">
             {/* Header */}
@@ -113,6 +139,35 @@ export default function PropertyReportPage() {
                     <Download className="mr-2 h-4 w-4" />
                     Export to Excel
                 </Button>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <SummaryCard
+                    title="Rent Arrears"
+                    value={data.summary?.total_rent_arrears}
+                    colorClass="text-rose-600"
+                />
+                <SummaryCard
+                    title="Initial Dues"
+                    value={data.summary?.total_initial_dues}
+                    colorClass="text-amber-600"
+                />
+                <SummaryCard
+                    title="Total Balance"
+                    value={data.summary?.total_balance}
+                    colorClass={data.summary?.total_balance < 0 ? "text-rose-500" : "text-emerald-500"}
+                />
+                <SummaryCard
+                    title="Total Paid"
+                    value={data.summary?.total_paid}
+                    colorClass="text-emerald-600"
+                />
+                <SummaryCard
+                    title="Total Overpayment"
+                    value={data.summary?.total_overpayment}
+                    colorClass="text-blue-600"
+                />
             </div>
 
             {/* Filters */}
@@ -183,19 +238,19 @@ export default function PropertyReportPage() {
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
                             <tr>
                                 <th className="px-6 py-3">Property (Units T/O/V)</th>
-                                <th className="px-6 py-3 text-right text-rose-500">Initial Dues</th>
-                                <th className="px-6 py-3 text-right text-slate-900">Rent & Arrears</th>
+                                <th className="px-6 py-3 text-right text-amber-600">Initial dues=(Agreement fee+Opening balance)</th>
+                                <th className="px-6 py-3 text-right text-slate-900">(Rent+Deposits)</th>
                                 <th className="px-6 py-3 text-right text-emerald-600">Amount Paid</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
-                            ) : data.length === 0 ? (
-                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
+                                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
+                            ) : data.properties?.length === 0 ? (
+                                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
                             ) : (
-                                data.map((row: any) => (
+                                data.properties?.map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-foreground">{row.name}</div>
@@ -203,11 +258,11 @@ export default function PropertyReportPage() {
                                                 {row.total_units} units ({row.occupied_units} Occ / {row.vacant_units} Vac)
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-medium text-rose-500">
+                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
                                             {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.rent_and_arrears) !== 0 ? Number(row.rent_and_arrears).toLocaleString() : '—'}
+                                            {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-emerald-600">
                                             {Number(row.amount_paid) !== 0 ? Number(row.amount_paid).toLocaleString() : '—'}
