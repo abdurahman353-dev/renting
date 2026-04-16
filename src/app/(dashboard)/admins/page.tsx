@@ -36,6 +36,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { superAdminAPI } from '@/data/apis';
 import { toast } from 'sonner';
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type Admin = {
     id: number;
@@ -53,6 +55,12 @@ export default function AdminManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(15);
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
     const [newAdminPasswordConfirmation, setNewAdminPasswordConfirmation] = useState('');
     const [newAdminRole, setNewAdminRole] = useState('admin');
@@ -85,23 +93,40 @@ export default function AdminManagementPage() {
         }
     }, [isSuperAdmin, authLoading, router]);
 
-    const fetchAdmins = async () => {
+    useEffect(() => {
+        if (isSuperAdmin()) {
+            fetchAdmins(1);
+        }
+    }, [isSuperAdmin, debouncedSearch]);
+
+    const fetchAdmins = async (page = 1) => {
+        setIsLoading(true);
         try {
-            // const response = await api.get('/super-admin/admins');
-            const response = await superAdminAPI.getAdmins()
-            setAdmins(response);
+            const response = await superAdminAPI.getAdmins({
+                page,
+                per_page: perPage,
+                search: debouncedSearch
+            });
+            
+            if (response && response.data) {
+                setAdmins(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
+            } else {
+                setAdmins(Array.isArray(response) ? response : []);
+            }
         } catch (error) {
             console.error('Failed to fetch admins:', error);
+            toast.error("Failed to load administrators");
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (isSuperAdmin()) {
-            fetchAdmins();
-        }
-    }, [isSuperAdmin]);
+    const handlePageChange = (page: number) => {
+        fetchAdmins(page);
+    };
 
     // ... handle functions ...
 
@@ -198,12 +223,13 @@ export default function AdminManagementPage() {
         }
     };
 
-    const filteredAdmins = admins.filter(admin =>
-        admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        admin.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
-    if (isLoading) return <div className="p-8">Loading admins...</div>;
+
+    if (authLoading) return (
+        <div className="min-h-[400px] flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+    );
 
     return (
         <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
@@ -352,7 +378,16 @@ export default function AdminManagementPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredAdmins.length === 0 ? (
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4">
+                                            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                            <p className="text-muted-foreground font-medium">Loading administrators...</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : admins.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="py-20 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
@@ -364,7 +399,7 @@ export default function AdminManagementPage() {
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredAdmins.map((admin) => (
+                            ) : admins.map((admin) => (
                                 <TableRow key={admin.id}>
                                     <TableCell>
                                         <div className="flex flex-col">
@@ -415,6 +450,14 @@ export default function AdminManagementPage() {
                         </TableBody>
                     </Table>
                 </div>
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
+            </div>
                 {/* Confirmation Dialog */}
                 <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
                     <DialogContent className="sm:max-w-[400px] rounded-xl">
@@ -442,7 +485,6 @@ export default function AdminManagementPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </div>
         </div>
     );
 }

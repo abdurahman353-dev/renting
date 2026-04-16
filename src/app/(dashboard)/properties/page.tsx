@@ -19,6 +19,8 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { propertyAPI, authAPI } from "@/data/apis"
+import { PaginationControls } from "@/components/ui/pagination-controls"
+import { useDebounce } from "../../../hooks/use-debounce"
 
 interface Property {
     id: number;
@@ -31,6 +33,7 @@ interface Property {
     units?: any[];
     featured_image_url?: string;
     images?: string;
+    units_count?: number;
     path?: string
 }
 
@@ -41,24 +44,51 @@ export default function PropertiesPage() {
     const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
     const [user, setUser] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(9); // 3x3 grid looks best
     const [deletionError, setDeletionError] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
         setUser(currentUser);
-        fetchProperties();
     }, []);
 
-    const fetchProperties = async () => {
+    useEffect(() => {
+        fetchProperties(1);
+    }, [debouncedSearch]);
+
+    const fetchProperties = async (page = 1) => {
+        setLoading(true);
         try {
-            const response = await propertyAPI.getAll();
-            setProperties(response || response.data);
+            const response = await propertyAPI.getAll({ 
+                page, 
+                per_page: perPage,
+                search: debouncedSearch
+            });
+            
+            if (response && response.data) {
+                setProperties(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
+            } else {
+                setProperties(Array.isArray(response) ? response : []);
+            }
         } catch (error) {
             console.error("Failed to fetch properties:", error);
+            toast.error("Failed to load properties");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchProperties(page);
     };
 
     const handleDelete = async () => {
@@ -84,13 +114,11 @@ export default function PropertiesPage() {
         }
     };
 
-    if (loading) return <div className="p-8">Loading properties...</div>;
-
-    const filteredProperties = properties.filter(property => {
-        const query = searchQuery.toLowerCase();
-        return property.name.toLowerCase().includes(query) ||
-            property.location.toLowerCase().includes(query);
-    });
+    if (loading && properties.length === 0) return (
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
 
     return (
         <div className="p-8 space-y-8 bg-slate-50 dark:bg-[#0F1115] min-h-screen transition-colors duration-300">
@@ -124,8 +152,8 @@ export default function PropertiesPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredProperties.length > 0 ? (
-                    filteredProperties.map((property) => (
+                {properties.length > 0 ? (
+                    properties.map((property) => (
                         <Card
                             key={property.id}
                             onClick={() => router.push(`/properties/${property.id}`)}
@@ -181,7 +209,7 @@ export default function PropertiesPage() {
                                     </div>
                                     <div className="flex items-center text-slate-600 dark:text-[#9CA3AF] font-medium">
                                         <Home className="mr-3 h-5 w-5 text-primary" />
-                                        {property.units?.length || property.total_units || 0} Units Total
+                                        {property.units_count ?? property.units?.length ?? property.total_units ?? 0} Units Total
                                     </div>
                                 </div>
                                 <div className="mt-6 pt-6 border-t border-slate-100 dark:border-[#2A2F3A] flex justify-between items-center">
@@ -199,20 +227,30 @@ export default function PropertiesPage() {
                             </CardContent>
                         </Card>
                     ))
-                ) : properties.length === 0 ? (
+                ) : (
                     <div className="col-span-full py-20 text-center flex flex-col items-center justify-center space-y-4">
                         <div className="bg-muted p-6 rounded-full">
                             <Home className="h-12 w-12 text-muted-foreground" />
                         </div>
-                        <h3 className="text-2xl font-bold text-foreground">Create a Property by clicking add property button</h3>
-                        <p className="text-muted-foreground max-w-sm mx-auto">Start by adding your first property to manage units and tenants effectively.</p>
-                    </div>
-                ) : (
-                    <div className="col-span-full py-12 text-center text-muted-foreground">
-                        No properties found matching your search.
+                        <h3 className="text-2xl font-bold text-foreground">
+                            {debouncedSearch ? "No properties found matching your search" : "Create a Property by clicking add property button"}
+                        </h3>
+                        <p className="text-muted-foreground max-w-sm mx-auto">
+                            {debouncedSearch ? "Try adjusting your search query or filters." : "Start by adding your first property to manage units and tenants effectively."}
+                        </p>
                     </div>
                 )}
             </div>
+
+            {lastPage > 1 && (
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
+            )}
 
 
             <Dialog open={!!propertyToDelete} onOpenChange={(open) => !open && !isDeleting && setPropertyToDelete(null)}>

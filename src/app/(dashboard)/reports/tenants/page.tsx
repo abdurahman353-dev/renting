@@ -6,11 +6,18 @@ import { financeAPI, propertyAPI } from "@/data/apis";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export default function TenantReportPage() {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
+
+    // Pagination States
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(15);
 
     // Default to current month/year
     const [filters, setFilters] = useState({
@@ -24,8 +31,12 @@ export default function TenantReportPage() {
     }, []);
 
     useEffect(() => {
-        fetchReport();
+        fetchReport(1);
     }, [filters]);
+
+    const handlePageChange = (page: number) => {
+        fetchReport(page);
+    };
 
     const loadProperties = async () => {
         try {
@@ -36,11 +47,22 @@ export default function TenantReportPage() {
         }
     };
 
-    const fetchReport = async () => {
+    const fetchReport = async (page = 1) => {
         setLoading(true);
         try {
-            const res = await financeAPI.getTenantReport(filters);
-            setData(res);
+            const res = await financeAPI.getTenantReport({
+                ...filters,
+                page,
+                per_page: perPage
+            });
+            if (res && res.data) {
+                setData(res.data);
+                setCurrentPage(res.current_page);
+                setLastPage(res.last_page);
+                setTotalItems(res.total);
+            } else {
+                setData(Array.isArray(res) ? res : []);
+            }
         } catch (error) {
             console.error("Failed to fetch report:", error);
             toast.error("Failed to fetch tenant report data");
@@ -134,7 +156,7 @@ export default function TenantReportPage() {
                                 <CreditCard className="h-6 w-6 text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Collected</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Collected</p>
                                 <p className="text-2xl font-black text-foreground">{totalPaid.toLocaleString()}</p>
                             </div>
                         </div>
@@ -151,7 +173,7 @@ export default function TenantReportPage() {
                                 <AlertCircle className="h-6 w-6 text-rose-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Outstanding</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Outstanding</p>
                                 <p className="text-2xl font-black text-rose-600">{Math.abs(totalBalance).toLocaleString()}</p>
                             </div>
                         </div>
@@ -168,7 +190,7 @@ export default function TenantReportPage() {
                                 <User className="h-6 w-6 text-indigo-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Active Debtors</p>
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Debtors</p>
                                 <p className="text-2xl font-black text-foreground">{debtors}</p>
                             </div>
                         </div>
@@ -307,6 +329,13 @@ export default function TenantReportPage() {
                         </tbody>
                     </table>
                 </div>
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
             </Card>
         </div>
     );

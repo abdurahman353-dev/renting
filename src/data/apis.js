@@ -109,8 +109,8 @@ export const authAPI = {
 // ============================================================================
 
 export const propertyAPI = {
-    getAll: async () => {
-        const response = await apiClient.get('/properties');
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/properties', { params });
         return response.data;
     },
 
@@ -165,8 +165,8 @@ export const uploadAPI = {
 // ============================================================================
 
 export const unitAPI = {
-    getAll: async () => {
-        const response = await apiClient.get('/properties/units');
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/properties/units', { params });
         return response.data;
     },
 
@@ -196,18 +196,18 @@ export const unitAPI = {
 // ============================================================================
 
 export const tenantAPI = {
-    getAll: async () => {
-        const response = await apiClient.get('/tenants');
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/tenants', { params });
         return response.data;
     },
 
-    getActive: async () => {
-        const response = await apiClient.get('/tenants/active');
+    getActive: async (params = {}) => {
+        const response = await apiClient.get('/tenants/active', { params });
         return response.data;
     },
 
-    getHistory: async () => {
-        const response = await apiClient.get('/tenants/history');
+    getHistory: async (params = {}) => {
+        const response = await apiClient.get('/tenants/history', { params });
         return response.data;
     },
 
@@ -337,8 +337,8 @@ export const financeAPI = {
 // ============================================================================
 
 export const maintenanceAPI = {
-    getAll: async () => {
-        const response = await apiClient.get('/maintenance');
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/maintenance', { params });
         return response.data;
     },
 
@@ -368,8 +368,8 @@ export const maintenanceAPI = {
 // ============================================================================
 
 export const expenseAPI = {
-    getAll: async () => {
-        const response = await apiClient.get('/expenses');
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/expenses', { params });
         return response.data;
     },
 
@@ -399,8 +399,8 @@ export const expenseAPI = {
 // ============================================================================
 
 export const communicationAPI = {
-    getLogs: async () => {
-        const response = await apiClient.get('/communications/logs');
+    getLogs: async (params = {}) => {
+        const response = await apiClient.get('/communications/logs', { params });
         return response.data;
     },
 
@@ -421,8 +421,8 @@ export const communicationAPI = {
 
 export const superAdminAPI = {
     // Admin Management
-    getAdmins: async () => {
-        const response = await apiClient.get('/super-admin/admins');
+    getAdmins: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/admins', { params });
         return response.data;
     },
 

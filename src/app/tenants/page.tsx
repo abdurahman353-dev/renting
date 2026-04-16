@@ -34,6 +34,8 @@ import {
 import { propertyAPI, tenantAPI, communicationAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
+import { PaginationControls } from "@/components/ui/pagination-controls"
+import { useDebounce } from "@/hooks/use-debounce"
 import { Suspense } from "react"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -97,8 +99,15 @@ function TenantsContent() {
 
     // Search and Filter State
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterProperty, setFilterProperty] = useState("");
-    const [filterUnit, setFilterUnit] = useState("");
+    const [filterProperty, setFilterProperty] = useState("all");
+    const [filterUnit, setFilterUnit] = useState("all");
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(15);
+
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -186,9 +195,43 @@ function TenantsContent() {
 
     // Fetch data
     useEffect(() => {
-        fetchTenants();
         fetchProperties();
     }, []);
+
+    useEffect(() => {
+        fetchTenants(1);
+    }, [debouncedSearch, filterProperty, filterUnit]);
+
+    const fetchTenants = async (page = 1) => {
+        setLoading(true);
+        try {
+            const response = await tenantAPI.getActive({
+                page,
+                per_page: perPage,
+                search: debouncedSearch,
+                property_id: filterProperty !== "all" ? properties.find(p => p.name === filterProperty)?.id : undefined,
+                // Unit filtering can be added if backend supports it, but focusing on main filters
+            });
+            
+            if (response && response.data) {
+                setTenants(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
+            } else {
+                setTenants(Array.isArray(response) ? response : []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch tenants:", error);
+            toast.error("Failed to load tenants");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchTenants(page);
+    };
 
     // Handle query parameters for pre-filling
     useEffect(() => {
@@ -220,22 +263,10 @@ function TenantsContent() {
         }
     }, [searchParams, properties]);
 
-    const fetchTenants = async () => {
-        try {
-            const response = await tenantAPI.getActive();
-            setTenants(response);
-        } catch (error) {
-            console.error("Failed to fetch tenants:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const fetchProperties = async () => {
         try {
-            // const response = await api.get('/properties');
             const response = await propertyAPI.getAll()
-            setProperties(response);
+            setProperties(Array.isArray(response) ? response : (response.data || []));
         } catch (error) {
             console.error("Failed to fetch properties:", error);
         }
@@ -481,27 +512,7 @@ function TenantsContent() {
     };
 
     // Filter tenants based on search and filters
-    const filteredTenants = tenants.filter(tenant => {
-        // Search filter
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = !searchQuery ||
-            tenant.name.toLowerCase().includes(searchLower) ||
-            tenant.id_number?.toLowerCase().includes(searchLower) ||
-            tenant.unit?.unit_number?.toLowerCase().includes(searchLower) ||
-            tenant.unit_number?.toLowerCase().includes(searchLower);
 
-        // Property filter
-        const matchesProperty = !filterProperty ||
-            tenant.property?.name === filterProperty ||
-            tenant.property_name === filterProperty;
-
-        // Unit filter
-        const matchesUnit = !filterUnit ||
-            tenant.unit?.unit_number === filterUnit ||
-            tenant.unit_number === filterUnit;
-
-        return matchesSearch && matchesProperty && matchesUnit;
-    });
 
     // Get unique units for the selected property filter
     const filterPropertyObj = properties.find(p => p.name === filterProperty);
@@ -875,7 +886,7 @@ function TenantsContent() {
                         >
                             <option value="">All Properties</option>
                             {properties.map((p: any) => (
-                                <option key={p.id} value={p.name}>{p.name}</option>
+                                <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                         </select>
                     </div>
@@ -894,7 +905,7 @@ function TenantsContent() {
                         >
                             <option value="">All Units</option>
                             {availableFilterUnits.map((u: any) => (
-                                <option key={u.id} value={u.unit_number}>{u.unit_number}</option>
+                                <option key={u.id} value={u.id}>{u.unit_number}</option>
                             ))}
                         </select>
                     </div>
@@ -981,7 +992,15 @@ function TenantsContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredTenants.length > 0 ? filteredTenants.map((tenant) => {
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={13} className="h-24 text-center">
+                                        <div className="flex items-center justify-center gap-2 text-muted-foreground font-medium">
+                                            <Loader2 className="h-5 w-5 animate-spin" /> Loading data...
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : tenants.length > 0 ? tenants.map((tenant) => {
                                 // Get lease information
                                 const lease = tenant.leases?.[0];
                                 const startDate = lease?.start_date ? new Date(lease.start_date).toLocaleDateString() : 'N/A';
@@ -1108,7 +1127,7 @@ function TenantsContent() {
                                 );
                             }) : (
                                 <TableRow>
-                                    <TableCell colSpan={11} className="py-20 text-center">
+                                    <TableCell colSpan={13} className="py-20 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
                                             <div className="bg-muted p-6 rounded-full">
                                                 <Users className="h-12 w-12 text-muted-foreground" />

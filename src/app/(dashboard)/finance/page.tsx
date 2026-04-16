@@ -26,11 +26,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet, Search } from "lucide-react"
+import { FileText, CreditCard, Plus, Download, Send, Eye, DollarSign, BanknoteArrowDown, TrendingUp, Wallet, Search, Loader2 } from "lucide-react"
 import { financeAPI, propertyAPI, unitAPI, tenantAPI } from "@/data/apis"
 import { formatDate } from "@/lib/utils"
 import FilterComponent from "./FilterComponent"
 import { toast } from "sonner"
+import { PaginationControls } from "@/components/ui/pagination-controls"
+import { useDebounce } from "@/hooks/use-debounce"
 
 interface Invoice {
     id: string;
@@ -82,8 +84,18 @@ export default function FinancePage() {
     const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
     const [allPayments, setAllPayments] = useState<Payment[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
-    const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+    
+    // Pagination States
+    const [invoicePage, setInvoicePage] = useState(1);
+    const [invoiceLastPage, setInvoiceLastPage] = useState(1);
+    const [invoiceTotal, setInvoiceTotal] = useState(0);
+    
+    const [paymentPage, setPaymentPage] = useState(1);
+    const [paymentLastPage, setPaymentLastPage] = useState(1);
+    const [paymentTotal, setPaymentTotal] = useState(0);
+    
+    const [perPage] = useState(15);
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
     const [properties, setProperties] = useState<any[]>([]);
     const [units, setUnits] = useState<any[]>([]);
@@ -123,11 +135,13 @@ export default function FinancePage() {
         fetchFilters();
     }, []);
 
-    const fetchData = async () => {
+    const fetchInvoices = async (page = 1) => {
         setLoading(true);
         try {
-            // Fetch filtered invoices and payments for lightning quick performance
             const params = {
+                page,
+                per_page: perPage,
+                search: debouncedSearch,
                 year: filters.year || undefined,
                 month: filters.month || undefined,
                 status: filters.status !== 'all' ? filters.status : undefined,
@@ -135,138 +149,83 @@ export default function FinancePage() {
                 unit_id: filters.unit_id !== 'all' ? filters.unit_id : undefined,
             };
 
-            const [invRes, payRes] = await Promise.all([
-                financeAPI.getInvoices(params),
-                financeAPI.getPayments(params),
-            ]);
-
-            const invoiceData = Array.isArray(invRes) ? invRes : (invRes.data || []);
-            const paymentData = Array.isArray(payRes) ? payRes : (payRes.data || []);
-
-            setAllInvoices(invoiceData);
-            setAllPayments(paymentData);
-
-            // Initial filter call
-            applyFilters(invoiceData, paymentData);
-
-            // Revenue report remains a separate call
-            financeAPI.getRevenueReport().then((revRes: any) => {
-                const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
-                setStats(prev => ({
-                    ...prev,
-                    revenue: revenueData.revenue ?? 0,
-                }));
-            }).catch(console.error);
-
+            const response = await financeAPI.getInvoices(params);
+            
+            if (response && response.data) {
+                setAllInvoices(response.data);
+                setInvoicePage(response.current_page);
+                setInvoiceLastPage(response.last_page);
+                setInvoiceTotal(response.total);
+            } else {
+                setAllInvoices(Array.isArray(response) ? response : []);
+            }
         } catch (error) {
-            console.error("Failed to fetch finance data:", error);
-            setAllInvoices([]);
-            setAllPayments([]);
+            console.error("Failed to fetch invoices:", error);
+            toast.error("Failed to load invoices");
         } finally {
             setLoading(false);
         }
     };
 
-    const applyFilters = (invList: Invoice[], payList: Payment[]) => {
-        let filteredInv = [...invList];
-        let filteredPay = [...payList];
+    const fetchPayments = async (page = 1) => {
+        setLoading(true);
+        try {
+            const params = {
+                page,
+                per_page: perPage,
+                search: debouncedSearch,
+                year: filters.year || undefined,
+                month: filters.month || undefined,
+                property_id: filters.property_id !== 'all' ? filters.property_id : undefined,
+                unit_id: filters.unit_id !== 'all' ? filters.unit_id : undefined,
+            };
 
-        // Apply Search (Lightning Fast)
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
-            filteredInv = filteredInv.filter(inv =>
-                (String(inv.invoice_number || "").toLowerCase().includes(query)) ||
-                (String(inv.tenant_name || "").toLowerCase().includes(query)) ||
-                (String(inv.tenant || "").toLowerCase().includes(query)) ||
-                (String(inv.property_name || "").toLowerCase().includes(query)) ||
-                (String(inv.unit_number || "").toLowerCase().includes(query)) ||
-                (String(inv.unit || "").toLowerCase().includes(query))
-            );
-
-            filteredPay = filteredPay.filter(pay =>
-                (String(pay.reference || "").toLowerCase().includes(query)) ||
-                (String(pay.tenant_name || "").toLowerCase().includes(query)) ||
-                (String(pay.tenant || "").toLowerCase().includes(query)) ||
-                (String(pay.id || "").toLowerCase().includes(query))
-            );
-        }
-
-        if (filters.property_id !== 'all') {
-            const selectedProperty = properties.find(p => p.id.toString() === filters.property_id);
-            if (selectedProperty) {
-                const propertyName = selectedProperty.name.toLowerCase();
-                filteredInv = filteredInv.filter(inv =>
-                    (inv.property_name?.toLowerCase() === propertyName) ||
-                    (inv.property?.name?.toLowerCase() === propertyName)
-                );
+            const response = await financeAPI.getPayments(params);
+            
+            if (response && response.data) {
+                setAllPayments(response.data);
+                setPaymentPage(response.current_page);
+                setPaymentLastPage(response.last_page);
+                setPaymentTotal(response.total);
+            } else {
+                setAllPayments(Array.isArray(response) ? response : []);
             }
+        } catch (error) {
+            console.error("Failed to fetch payments:", error);
+            toast.error("Failed to load payments");
+        } finally {
+            setLoading(false);
         }
-
-        if (filters.unit_id !== 'all') {
-            const selectedUnit = units.find(u => u.id.toString() === filters.unit_id);
-            if (selectedUnit) {
-                const unitNum = selectedUnit.unit_number.toString().toLowerCase();
-                filteredInv = filteredInv.filter(inv =>
-                    (inv.unit_number?.toString().toLowerCase() === unitNum) ||
-                    (inv.unit?.toString().toLowerCase() === unitNum)
-                );
-            }
-        }
-
-        if (filters.status !== 'all') {
-            filteredInv = filteredInv.filter(inv => inv.status === filters.status);
-        }
-
-        if (filters.month) {
-            filteredInv = filteredInv.filter(inv => {
-                // Prioritize backend month field for pinpoint accuracy
-                if (inv.month) return inv.month.toString() === filters.month;
-                const date = new Date(inv.created_at || inv.date);
-                return (date.getMonth() + 1).toString() === filters.month;
-            });
-            filteredPay = filteredPay.filter(pay => {
-                const date = new Date(pay.created_at || pay.date);
-                return (date.getMonth() + 1).toString() === filters.month;
-            });
-        }
-
-        setFilteredInvoices(filteredInv);
-        setFilteredPayments(filteredPay);
-
-        // Recalculate stats based on filtered data for better feedback
-        const totalInvoiced = filteredInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
-        const pendingAmount = filteredInv
-            .filter(inv => inv.status === 'PENDING')
-            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-
-        const today = new Date();
-        const arrearsAmount = filteredInv
-            .filter(inv => {
-                if (inv.status === 'PAID') return false;
-                const rawDate = inv.due_date || inv.created_at || inv.date || new Date().toISOString();
-                const dueDate = new Date(rawDate);
-                const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                return daysDiff > 30;
-            })
-            .reduce((sum, inv) => sum + (Number(inv.amount) - Number(inv.paid_amount || 0)), 0);
-
-        setStats(prev => ({
-            ...prev,
-            totalInvoiced,
-            pending: pendingAmount,
-            arrears: arrearsAmount
-        }));
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [filters.year, filters.month, filters.status, filters.property_id, filters.unit_id]); // Re-fetch when any filter changes
+    const fetchStats = async () => {
+        try {
+            const revRes: any = await financeAPI.getRevenueReport();
+            const revenueData = revRes.revenue !== undefined ? revRes : (revRes.data || {});
+            setStats(prev => ({
+                ...prev,
+                revenue: revenueData.revenue ?? 0,
+            }));
+        } catch (e) {
+            console.error("Failed to fetch revenue report:", e);
+        }
+    };
+
+    const handleInvoicePageChange = (page: number) => {
+        fetchInvoices(page);
+    };
+
+    const handlePaymentPageChange = (page: number) => {
+        fetchPayments(page);
+    };
+
+
 
     useEffect(() => {
-        if (!loading) {
-            applyFilters(allInvoices, allPayments);
-        }
-    }, [searchQuery, allInvoices, allPayments]);
+        fetchInvoices(1);
+        fetchPayments(1);
+        fetchStats();
+    }, [debouncedSearch, filters.year, filters.month, filters.status, filters.property_id, filters.unit_id]);
 
     const onFilterChange = (newFilters: any) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
@@ -277,7 +236,9 @@ export default function FinancePage() {
             const res = await financeAPI.generateInvoice({});
             const message = res.message || res.data?.message || "Invoices generated successfully";
             toast.success(message);
-            fetchData();
+            fetchInvoices(1);
+            fetchPayments(1);
+            fetchStats();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to generate invoices");
         }
@@ -298,7 +259,9 @@ export default function FinancePage() {
             } else {
                 toast.error(message);
             }
-            fetchData();
+            fetchInvoices(1);
+            fetchPayments(1);
+            fetchStats();
         } catch (error: any) {
             console.error("Generate error:", error);
             toast.error(error.response?.data?.message || "Failed to generate invoices");
@@ -308,7 +271,7 @@ export default function FinancePage() {
     const handleExport = () => {
         // Simple CSV Export of current view
         const headers = ["ID", "Tenant", "Unit", "Property", "Amount", "Paid", "Status", "Date"];
-        const rows = filteredInvoices.map((inv: Invoice) => [
+        const rows = allInvoices.map((inv: Invoice) => [
             inv.id,
             inv.tenant_name || inv.tenant || 'Unknown',
             inv.unit_number || inv.unit || 'N/A',
@@ -474,11 +437,20 @@ export default function FinancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredInvoices.length === 0 ? (
+                                    {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">No invoices found.</TableCell>
+                                            <TableCell colSpan={8} className="text-center py-8">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                                    <span className="text-muted-foreground font-medium">Loading invoices...</span>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
-                                    ) : filteredInvoices.map((inv) => (
+                                    ) : allInvoices.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground font-medium">No invoices found matching your filters.</TableCell>
+                                        </TableRow>
+                                    ) : allInvoices.map((inv) => (
                                         <TableRow key={inv.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{inv.invoice_number}</TableCell>
                                             <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
@@ -529,6 +501,13 @@ export default function FinancePage() {
                                 </TableBody>
                             </Table>
                         </div>
+                        <PaginationControls
+                            currentPage={invoicePage}
+                            totalPages={invoiceLastPage}
+                            onPageChange={handleInvoicePageChange}
+                            totalItems={invoiceTotal}
+                            itemsPerPage={perPage}
+                        />
                     </div>
                 </TabsContent>
                 <TabsContent value="payments" className="space-y-4">
@@ -548,11 +527,20 @@ export default function FinancePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredPayments.length === 0 ? (
+                                    {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No payments found.</TableCell>
+                                            <TableCell colSpan={8} className="text-center py-8">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                                    <span className="text-muted-foreground font-medium">Loading payments...</span>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
-                                    ) : filteredPayments.map((pay) => (
+                                    ) : allPayments.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground font-medium">No payments found matching your filters.</TableCell>
+                                        </TableRow>
+                                    ) : allPayments.map((pay) => (
                                         <TableRow key={pay.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{pay.id}</TableCell>
                                             <TableCell>{pay.tenant_name || pay.tenant}</TableCell>
@@ -567,6 +555,13 @@ export default function FinancePage() {
                                 </TableBody>
                             </Table>
                         </div>
+                        <PaginationControls
+                            currentPage={paymentPage}
+                            totalPages={paymentLastPage}
+                            onPageChange={handlePaymentPageChange}
+                            totalItems={paymentTotal}
+                            itemsPerPage={perPage}
+                        />
                     </div>
                 </TabsContent>
             </Tabs>

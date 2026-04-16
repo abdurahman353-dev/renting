@@ -24,6 +24,8 @@ import { Search, Plus, Filter, Loader2, RefreshCw, Download, Trash2 } from "luci
 import { useRouter } from "next/navigation";
 import { unitAPI, propertyAPI, authAPI } from "@/data/apis";
 import { toast } from "sonner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
     Dialog,
     DialogContent,
@@ -61,26 +63,68 @@ export default function UnitsPage() {
     const [minPrice, setMinPrice] = useState("");
     const [maxPrice, setMaxPrice] = useState("");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(25);
+
+    const debouncedSearch = useDebounce(searchQuery, 500);
+    const debouncedMinPrice = useDebounce(minPrice, 500);
+    const debouncedMaxPrice = useDebounce(maxPrice, 500);
+
     useEffect(() => {
         const currentUser = authAPI.getUser();
         setUser(currentUser);
-        fetchData();
+        fetchProperties();
     }, []);
 
-    const fetchData = async (isInitial = true) => {
-        if (isInitial) setLoading(true);
+    useEffect(() => {
+        fetchData(1);
+    }, [debouncedSearch, selectedProperty, selectedType, selectedStatus, debouncedMinPrice, debouncedMaxPrice]);
+
+    const fetchProperties = async () => {
         try {
-            const [unitsData, propertiesData] = await Promise.all([
-                unitAPI.getAll(),
-                propertyAPI.getAll()
-            ]);
-            setUnits(unitsData);
-            setProperties(propertiesData);
+            const data = await propertyAPI.getAll();
+            setProperties(Array.isArray(data) ? data : (data.data || []));
         } catch (error) {
-            console.error("Failed to fetch data", error);
+            console.error("Failed to fetch properties", error);
+        }
+    };
+
+    const fetchData = async (page = 1) => {
+        setLoading(true);
+        try {
+            const params = {
+                page,
+                per_page: perPage,
+                search: debouncedSearch,
+                property_id: selectedProperty,
+                status: selectedStatus,
+                type: selectedType,
+                min_price: debouncedMinPrice,
+                max_price: debouncedMaxPrice
+            };
+            
+            const response = await unitAPI.getAll(params);
+            
+            if (response && response.data) {
+                setUnits(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
+            } else {
+                setUnits(Array.isArray(response) ? response : []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch units", error);
+            toast.error("Failed to load units");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchData(page);
     };
 
     const handleResetFilters = () => {
@@ -111,22 +155,7 @@ export default function UnitsPage() {
         }
     };
 
-    const filteredUnits = units.filter((unit) => {
-        const matchesSearch =
-            unit.unit_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            unit.property?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (unit.active_lease?.tenant?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesProperty = selectedProperty === "all" || unit.property_id.toString() === selectedProperty;
-        const matchesType = selectedType === "all" || normalizeType(unit.type) === selectedType;
-        const matchesStatus = selectedStatus === "all" || unit.status?.toLowerCase() === selectedStatus.toLowerCase();
-
-        const price = parseFloat(unit.price);
-        const matchesMinPrice = !minPrice || price >= parseFloat(minPrice);
-        const matchesMaxPrice = !maxPrice || price <= parseFloat(maxPrice);
-
-        return matchesSearch && matchesProperty && matchesType && matchesStatus && matchesMinPrice && matchesMaxPrice;
-    });
 
     const formatCurrency = (amount: string | number) => {
         return new Intl.NumberFormat('en-KE', {
@@ -151,13 +180,13 @@ export default function UnitsPage() {
     };
 
     const handleExport = () => {
-        if (!filteredUnits || filteredUnits.length === 0) {
+        if (!units || units.length === 0) {
             toast.error("No data to export");
             return;
         }
 
         const headers = ["Unit Number", "Property Name", "Type", "Status", "Price", "Deposit 1", "Deposit 2", "Tenant Name", "Contact"];
-        const rows = filteredUnits.map((unit: any) => [
+        const rows = units.map((unit: any) => [
             `"${unit.unit_number}"`,
             `"${unit.property?.name || 'N/A'}"`,
             `"${unit.type || 'N/A'}"`,
@@ -314,14 +343,14 @@ export default function UnitsPage() {
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ) : filteredUnits.length === 0 ? (
+                                ) : units.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                            No units found matching your filters.
+                                        <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                                            No units found. {debouncedSearch && "Try a different search query."}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredUnits.map((unit) => (
+                                    units.map((unit) => (
                                         <TableRow key={unit.id} className="hover:bg-muted/50 transition-colors">
                                             <TableCell className="font-medium text-foreground">{unit.unit_number}</TableCell>
                                             <TableCell className="text-muted-foreground">{unit.property?.name}</TableCell>
@@ -375,6 +404,13 @@ export default function UnitsPage() {
                         </Table>
                     </div>
                 </CardContent>
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
             </Card>
 
             <Dialog open={!!unitToDelete} onOpenChange={(open) => !open && setUnitToDelete(null)}>

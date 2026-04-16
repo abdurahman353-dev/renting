@@ -20,11 +20,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw, User } from "lucide-react"
+import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw, User, Loader2 } from "lucide-react"
 import { tenantAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import * as XLSX from 'xlsx'
+import { PaginationControls } from "@/components/ui/pagination-controls"
+import { useDebounce } from "@/hooks/use-debounce"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -74,26 +76,49 @@ function PreviousTenantsContent() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(15);
+
+    const debouncedSearch = useDebounce(searchQuery, 500);
+
     // Action dialog states
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [confirmReactivateOpen, setConfirmReactivateOpen] = useState(false);
     const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
 
     useEffect(() => {
-        fetchTenants();
-    }, []);
+        fetchTenants(1);
+    }, [debouncedSearch]);
 
-    const fetchTenants = async () => {
+    const fetchTenants = async (page = 1) => {
         setLoading(true);
         try {
-            const response = await tenantAPI.getHistory();
-            setTenants(response);
+            const response = await tenantAPI.getHistory({
+                page,
+                per_page: perPage,
+                search: debouncedSearch
+            });
+            
+            if (response && response.data) {
+                setTenants(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
+            } else {
+                setTenants(Array.isArray(response) ? response : []);
+            }
         } catch (error) {
             console.error("Failed to fetch tenants:", error);
             toast.error("Failed to load previous tenants");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchTenants(page);
     };
 
     const handleReactivate = async (tenantId: number) => {
@@ -137,7 +162,7 @@ function PreviousTenantsContent() {
     };
 
     const handleExportExcel = () => {
-        const data = filteredTenants.map(t => ({
+        const data = tenants.map(t => ({
             Name: t.name,
             Phone: t.phone,
             'ID Number': t.id_number || 'N/A',
@@ -154,13 +179,7 @@ function PreviousTenantsContent() {
         XLSX.writeFile(wb, "Previous_Tenants.xlsx");
     };
 
-    const filteredTenants = tenants.filter(tenant => {
-        const searchLower = searchQuery.toLowerCase();
-        return !searchQuery ||
-            tenant.name.toLowerCase().includes(searchLower) ||
-            tenant.id_number?.toLowerCase().includes(searchLower) ||
-            tenant.phone.includes(searchLower);
-    });
+
 
     if (loading) return <div className="p-8">Loading previous tenants...</div>;
 
@@ -224,7 +243,15 @@ function PreviousTenantsContent() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredTenants.length > 0 ? filteredTenants.map((tenant) => {
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center">
+                                            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                                <Loader2 className="h-5 w-5 animate-spin" /> Loading data...
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : tenants.length > 0 ? tenants.map((tenant) => {
                                     // Try to find start date from leases if created_at is not enough
                                     const leaseStart = tenant.leases?.[0]?.start_date;
                                     const joinedDate = leaseStart
@@ -311,6 +338,13 @@ function PreviousTenantsContent() {
                         </Table>
                     </div>
                 </div>
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
             </div>
 
             {/* Delete Confirmation Dialog */}

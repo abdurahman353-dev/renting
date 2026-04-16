@@ -134,7 +134,8 @@ export default function CashierPage() {
             setTargetInvoice(invoice);
 
             // Auto-select tenant
-            const tenantsData = await tenantAPI.getAll();
+            const res = await tenantAPI.getAll();
+            const tenantsData = Array.isArray(res) ? res : (res.data || []);
             setTenants(tenantsData);
             const tenant = tenantsData.find((t: Tenant) => t.id === invoice.tenant_id);
             if (tenant) {
@@ -159,7 +160,8 @@ export default function CashierPage() {
             const fetchTenants = async () => {
                 setLoadingTenants(true);
                 try {
-                    const data = await tenantAPI.getAll();
+                    const res = await tenantAPI.getAll();
+                    const data = Array.isArray(res) ? res : (res.data || []);
                     setTenants(data);
                 } catch (error) {
                     console.error("Failed to fetch tenants", error);
@@ -198,9 +200,11 @@ export default function CashierPage() {
 
     const fetchPendingInvoices = async (tenantId: number) => {
         try {
-            const invoices = await financeAPI.getInvoices({
+            const res = await financeAPI.getInvoices({
                 tenant_id: tenantId,
             });
+
+            const invoices = Array.isArray(res) ? res : (res.data || []);
 
             const pending = invoices.filter(
                 (inv: Invoice) => inv.status === "PENDING" || inv.status === "PARTIAL"
@@ -278,7 +282,8 @@ export default function CashierPage() {
             toast.success("Payment recorded successfully");
 
             // Refresh data
-            const updatedTenants = await tenantAPI.getAll();
+            const res = await tenantAPI.getAll();
+            const updatedTenants = Array.isArray(res) ? res : (res.data || []);
             setTenants(updatedTenants);
 
             const updatedSelectedTenant = updatedTenants.find((t: any) => t.id === selectedTenant.id);
@@ -330,7 +335,8 @@ export default function CashierPage() {
                 fetchPaymentHistory(selectedTenant.id);
 
                 // Refresh tenants to get updated balance
-                tenantAPI.getAll().then(data => {
+                tenantAPI.getAll().then(res => {
+                    const data = Array.isArray(res) ? res : (res.data || []);
                     setTenants(data);
                     const updated = data.find((t: any) => t.id === selectedTenant.id);
                     if (updated) setSelectedTenant(updated);

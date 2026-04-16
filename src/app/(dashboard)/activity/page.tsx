@@ -24,6 +24,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type Log = {
     id: string;
@@ -48,45 +50,53 @@ export default function ActivityLogsPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [perPage] = useState(20);
+    const debouncedSearch = useDebounce(searchTerm, 500);
+
     useEffect(() => {
         if (!authLoading && !isSuperAdmin()) {
             router.replace('/dashboard');
         }
     }, [isSuperAdmin, authLoading, router]);
 
-    const fetchActivityLogs = async () => {
+    const fetchActivityLogs = async (page = 1) => {
         setLoading(true);
         try {
-            const params: any = {};
+            const params: any = {
+                page,
+                per_page: perPage,
+                search: debouncedSearch,
+            };
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
+            if (severityFilter !== 'all') params.severity = severityFilter;
 
             // Fetch both logs and all admins in parallel
-            const [data, allAdmins] = await Promise.all([
+            const [response, allAdmins] = await Promise.all([
                 superAdminAPI.getActivityLogs(params),
                 superAdminAPI.getAdmins()
             ]);
 
-            if (Array.isArray(data)) {
-                setActivityLogs(data);
+            if (response && response.data) {
+                setActivityLogs(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotalItems(response.total);
 
-                // Extract unique names from logs (e.g., "System/Guest")
-                const namesFromLogs = data.map((log: Log) => log.admin);
+                // For filtering dropdowns, we still want to show all possible actions if possible
+                // but since we only get paginated data now, we'll use what we have or rethink.
+                // Usually, actions/admins should be from a separate "filters" endpoint, 
+                // but for now we'll stick to a simpler approach or skip dynamic action list if too complex.
+                const uniqueActions = Array.from(new Set(response.data.map((log: Log) => log.action))).sort();
+                // setActions(uniqueActions);
+            }
 
-                // Extract names from registered admins
-                const registeredAdminNames = Array.isArray(allAdmins)
-                    ? allAdmins.map((admin: any) => admin.name)
-                    : [];
-
-                // Combine and unique-ify
-                const uniqueAdmins = Array.from(new Set([...registeredAdminNames, ...namesFromLogs]))
-                    .filter(Boolean)
-                    .sort();
-
-                const uniqueActions = Array.from(new Set(data.map((log: Log) => log.action))).sort();
-
-                setAdmins(uniqueAdmins);
-                setActions(uniqueActions);
+            if (Array.isArray(allAdmins)) {
+                const registeredAdminNames = allAdmins.map((admin: any) => admin.name);
+                setAdmins(registeredAdminNames.sort());
             }
         } catch (error) {
             console.error('Failed to fetch activity logs:', error);
@@ -95,11 +105,15 @@ export default function ActivityLogsPage() {
         }
     };
 
+    const handlePageChange = (page: number) => {
+        fetchActivityLogs(page);
+    };
+
     useEffect(() => {
         if (isSuperAdmin()) {
-            fetchActivityLogs();
+            fetchActivityLogs(1);
         }
-    }, [isSuperAdmin, startDate, endDate]);
+    }, [isSuperAdmin, startDate, endDate, debouncedSearch, severityFilter, adminFilter, actionFilter]);
 
     if (authLoading) {
         return (
@@ -111,18 +125,7 @@ export default function ActivityLogsPage() {
 
     if (!isSuperAdmin()) return null;
 
-    const filteredLogs = activityLogs.filter(log => {
-        const matchesSearch =
-            log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.details.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter;
-        const matchesAdmin = adminFilter === 'all' || log.admin === adminFilter;
-        const matchesAction = actionFilter === 'all' || log.action === actionFilter;
-
-        return matchesSearch && matchesSeverity && matchesAdmin && matchesAction;
-    });
 
     return (
         <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
@@ -237,14 +240,14 @@ export default function ActivityLogsPage() {
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ) : filteredLogs.length === 0 ? (
+                                ) : activityLogs.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                             No logs found matching your criteria.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredLogs.map((log) => (
+                                    activityLogs.map((log) => (
                                         <TableRow key={log.id} className="hover:bg-muted/50 transition-colors">
                                             <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                                                 {log.timestamp}
@@ -278,6 +281,13 @@ export default function ActivityLogsPage() {
                         </Table>
                     </div>
                 </CardContent>
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
             </Card>
         </div>
     );
