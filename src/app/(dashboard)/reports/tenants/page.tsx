@@ -41,7 +41,8 @@ export default function TenantReportPage() {
     const loadProperties = async () => {
         try {
             const res = await propertyAPI.getAll();
-            setProperties(res);
+            // Handle paginated response ({ data: [...] }) or plain array
+            setProperties(Array.isArray(res) ? res : (res.data ?? []));
         } catch (error) {
             console.error(error);
         }

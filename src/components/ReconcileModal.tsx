@@ -67,7 +67,9 @@ export default function ReconcileModal({
     const fetchTenants = async () => {
         setLoadingTenants(true);
         try {
-            const data = await tenantAPI.getAll();
+            const res = await tenantAPI.getAll();
+            // Handle paginated response ({ data: [...] }) or plain array
+            const data: any[] = Array.isArray(res) ? res : (res.data ?? []);
             setTenants(data);
 
             // Try to auto-match tenant by phone

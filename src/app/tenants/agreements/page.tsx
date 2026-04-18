@@ -57,8 +57,10 @@ function AgreementsContent() {
         setLoading(true);
         try {
             const response = await tenantAPI.getAll();
+            // Handle paginated response ({ data: [...] }) or plain array
+            const tenantList: Tenant[] = Array.isArray(response) ? response : (response.data ?? []);
             // Filter tenants who have an agreement amount > 0
-            const withAgreements = response.filter((t: Tenant) => t.agreement_amount && Number(t.agreement_amount) > 0);
+            const withAgreements = tenantList.filter((t: Tenant) => t.agreement_amount && Number(t.agreement_amount) > 0);
             setTenants(withAgreements);
         } catch (error) {
             console.error("Failed to fetch tenants:", error);
