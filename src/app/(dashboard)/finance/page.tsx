@@ -151,13 +151,13 @@ export default function FinancePage() {
 
             const response = await financeAPI.getInvoices(params);
             
-            if (response && response.data) {
+            if (response && Array.isArray(response.data)) {
                 setAllInvoices(response.data);
-                setInvoicePage(response.current_page);
-                setInvoiceLastPage(response.last_page);
-                setInvoiceTotal(response.total);
+                setInvoicePage(response.current_page || 1);
+                setInvoiceLastPage(response.last_page || 1);
+                setInvoiceTotal(response.total || 0);
             } else {
-                setAllInvoices(Array.isArray(response) ? response : []);
+                setAllInvoices(Array.isArray(response) ? response : (response?.data ? (Array.isArray(response.data) ? response.data : []) : []));
             }
         } catch (error) {
             console.error("Failed to fetch invoices:", error);
@@ -182,13 +182,13 @@ export default function FinancePage() {
 
             const response = await financeAPI.getPayments(params);
             
-            if (response && response.data) {
+            if (response && Array.isArray(response.data)) {
                 setAllPayments(response.data);
-                setPaymentPage(response.current_page);
-                setPaymentLastPage(response.last_page);
-                setPaymentTotal(response.total);
+                setPaymentPage(response.current_page || 1);
+                setPaymentLastPage(response.last_page || 1);
+                setPaymentTotal(response.total || 0);
             } else {
-                setAllPayments(Array.isArray(response) ? response : []);
+                setAllPayments(Array.isArray(response) ? response : (response?.data ? (Array.isArray(response.data) ? response.data : []) : []));
             }
         } catch (error) {
             console.error("Failed to fetch payments:", error);
@@ -271,7 +271,7 @@ export default function FinancePage() {
     const handleExport = () => {
         // Simple CSV Export of current view
         const headers = ["ID", "Tenant", "Unit", "Property", "Amount", "Paid", "Status", "Date"];
-        const rows = allInvoices.map((inv: Invoice) => [
+        const rows = (allInvoices || []).map((inv: Invoice) => [
             inv.id,
             inv.tenant_name || inv.tenant || 'Unknown',
             inv.unit_number || inv.unit || 'N/A',
@@ -446,11 +446,11 @@ export default function FinancePage() {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ) : allInvoices.length === 0 ? (
+                                    ) : (!allInvoices || allInvoices.length === 0) ? (
                                         <TableRow>
                                             <TableCell colSpan={8} className="text-center py-8 text-muted-foreground font-medium">No invoices found matching your filters.</TableCell>
                                         </TableRow>
-                                    ) : allInvoices.map((inv) => (
+                                    ) : (allInvoices || []).map((inv) => (
                                         <TableRow key={inv.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{inv.invoice_number}</TableCell>
                                             <TableCell>{inv.tenant_name || inv.tenant}</TableCell>
@@ -536,11 +536,11 @@ export default function FinancePage() {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ) : allPayments.length === 0 ? (
+                                    ) : (!allPayments || allPayments.length === 0) ? (
                                         <TableRow>
                                             <TableCell colSpan={8} className="text-center py-8 text-muted-foreground font-medium">No payments found matching your filters.</TableCell>
                                         </TableRow>
-                                    ) : allPayments.map((pay) => (
+                                    ) : (allPayments || []).map((pay) => (
                                         <TableRow key={pay.id} className="dark:border-[#2A3242] hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors">
                                             <TableCell className="font-medium">{pay.id}</TableCell>
                                             <TableCell>{pay.tenant_name || pay.tenant}</TableCell>

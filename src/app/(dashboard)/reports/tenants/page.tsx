@@ -81,7 +81,7 @@ export default function TenantReportPage() {
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
         const headers = ["Property Name", "Status", "Phone Number", "Unit", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Arrears", "Amount Paid", "Balance"];
-        const rows = data.map((row: any) => [
+        const rows = (data || []).map((row: any) => [
             `"${row.property_name}"`,
             `"${row.status}"`,
             `"${row.phone}"`,
@@ -128,9 +128,9 @@ export default function TenantReportPage() {
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 1, currentYear, currentYear + 1];
 
-    const totalPaid = data.reduce((acc, curr) => acc + Number(curr.amount_paid), 0);
-    const totalBalance = data.reduce((acc, curr) => acc + Number(curr.balance), 0);
-    const debtors = data.filter(d => d.balance < 0).length;
+    const totalPaid = (data || []).reduce((acc, curr) => acc + Number(curr.amount_paid || 0), 0);
+    const totalBalance = (data || []).reduce((acc, curr) => acc + Number(curr.balance || 0), 0);
+    const debtors = (data || []).filter(d => d.balance < 0).length;
 
     return (
         <div className="p-6 space-y-6 min-h-screen bg-muted/40">
@@ -282,14 +282,14 @@ export default function TenantReportPage() {
                                 <tr key="loading-row">
                                     <td colSpan={12} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
-                            ) : data.length === 0 ? (
+                            ) : (!data || data.length === 0) ? (
                                 <tr key="empty-row">
                                     <td colSpan={12} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No tenant transactions recorded for this period.
                                     </td>
                                 </tr>
                             ) : (
-                                data.map((row: any) => (
+                                (data || []).map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4 font-medium text-foreground text-[10px] uppercase truncate max-w-[120px]">{row.property_name}</td>
                                         <td className="px-6 py-4">
