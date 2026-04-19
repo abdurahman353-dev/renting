@@ -40,7 +40,7 @@ export default function PropertyReportPage() {
     const loadProperties = async () => {
         try {
             const res = await propertyAPI.getAll();
-            setProperties(res);
+            setProperties(Array.isArray(res) ? res : (res?.data || []));
         } catch (error) {
             console.error(error);
         }
@@ -51,10 +51,16 @@ export default function PropertyReportPage() {
         try {
             const res = await financeAPI.getPropertyReport(filters);
             // Handle both old and new response structures for safety during transition
-            if (res.properties && res.summary) {
+            if (res?.properties && res?.summary) {
                 setData(res);
-            } else {
+            } else if (res?.data && res?.summary) {
+                setData({ summary: res.summary, properties: res.data });
+            } else if (Array.isArray(res?.data)) {
+                setData({ summary: res?.summary || {}, properties: res.data });
+            } else if (Array.isArray(res)) {
                 setData({ summary: {}, properties: res });
+            } else {
+                setData({ summary: res?.summary || {}, properties: res?.properties || res?.data || [] });
             }
         } catch (error) {
             console.error("Failed to fetch report:", error);
@@ -73,7 +79,7 @@ export default function PropertyReportPage() {
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
         const headers = ["Property Name", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Amount Paid", "Balance"];
-        const rows = data.properties.map((row: any) => [
+        const rows = (data.properties || []).map((row: any) => [
             `"${row.name}"`,
             row.initial_dues,
             row.rent,
@@ -247,10 +253,10 @@ export default function PropertyReportPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
-                            ) : data.properties?.length === 0 ? (
+                            ) : (!data.properties || data.properties.length === 0) ? (
                                 <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
                             ) : (
-                                data.properties?.map((row: any) => (
+                                (data.properties || []).map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-foreground">{row.name}</div>

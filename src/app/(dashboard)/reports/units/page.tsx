@@ -30,7 +30,7 @@ export default function UnitsReportPage() {
     const loadProperties = async () => {
         try {
             const res = await propertyAPI.getAll();
-            setProperties(res);
+            setProperties(Array.isArray(res) ? res : (res?.data || []));
         } catch (error) {
             console.error(error);
         }
@@ -40,7 +40,13 @@ export default function UnitsReportPage() {
         setLoading(true);
         try {
             const res = await financeAPI.getUnitReport(filters);
-            setData(res);
+            if (res && Array.isArray(res.data)) {
+                setData(res.data);
+            } else if (Array.isArray(res)) {
+                setData(res);
+            } else {
+                setData(res?.data || []);
+            }
         } catch (error) {
             console.error("Failed to fetch report:", error);
             toast.error("Failed to fetch unit report data");
@@ -58,7 +64,7 @@ export default function UnitsReportPage() {
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
         const headers = ["Unit", "Tenant", "Status", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Arrears", "Amount Paid", "Balance"];
-        const rows = data.map((row: any) => [
+        const rows = (data || []).map((row: any) => [
             `"${row.unit_number}"`,
             `"${row.tenant_name}"`,
             `"${row.status}"`,
@@ -105,9 +111,9 @@ export default function UnitsReportPage() {
     const years = [currentYear - 1, currentYear, currentYear + 1];
 
     const stats = {
-        total: data.length,
-        occupied: data.filter(u => u.status.toLowerCase() === 'occupied').length,
-        available: data.filter(u => u.status.toLowerCase() !== 'occupied').length,
+        total: (data || []).length,
+        occupied: (data || []).filter(u => u.status?.toLowerCase() === 'occupied').length,
+        available: (data || []).filter(u => u.status?.toLowerCase() !== 'occupied').length,
     };
 
     return (
@@ -261,14 +267,14 @@ export default function UnitsReportPage() {
                                 <tr key="loading-row">
                                     <td colSpan={11} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
-                            ) : data.length === 0 ? (
+                            ) : (!data || data.length === 0) ? (
                                 <tr key="empty-row">
                                     <td colSpan={11} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No metrics found for this period.
                                     </td>
                                 </tr>
                             ) : (
-                                data.map((row: any) => (
+                                (data || []).map((row: any) => (
                                     <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-semibold text-foreground text-base">{row.unit_number}</div>
