@@ -38,7 +38,7 @@ interface GeneratedUnit {
 }
 
 export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existingUnits = [] }: BulkUnitModalProps) {
-    const [prefix, setPrefix] = useState("A");
+    const [prefix, setPrefix] = useState("A-");
     const [startNumber, setStartNumber] = useState(101);
     const [count, setCount] = useState(10);
     const [defaultPrice, setDefaultPrice] = useState<number | string>("");
@@ -61,7 +61,7 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
                 price: defaultPrice,
                 deposit_1: defaultDeposit1,
                 deposit_2: defaultDeposit2,
-                status: "vacant",
+                status: "VACANT",
                 type: defaultType,
                 floor: defaultFloor,
                 size: defaultSize,
