@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Save, Building2, Phone, Mail, MapPin, Clock, Timer } from 'lucide-react';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -47,6 +48,12 @@ export default function SettingsPage() {
             return;
         }
 
+        const whatsapp = settings.company_whatsapp || '';
+        if (whatsapp && (whatsapp.length !== 10 || (!whatsapp.startsWith('07') && !whatsapp.startsWith('01')))) {
+            toast.error('WhatsApp number must be exactly 10 digits and start with 07 or 01');
+            return;
+        }
+
         setSaving(true);
         try {
             const payload = Object.keys(settings).map(key => ({
@@ -65,7 +72,7 @@ export default function SettingsPage() {
     };
 
     const handleChange = (key: string, value: string) => {
-        if (key === 'company_phone') {
+        if (key === 'company_phone' || key === 'company_whatsapp') {
             // Only allow digits and limit to 10
             const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
             setSettings((prev: any) => ({ ...prev, [key]: digitsOnly }));
@@ -138,6 +145,18 @@ export default function SettingsPage() {
                                         onChange={(e) => handleChange('company_email', e.target.value)}
                                         className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
                                         placeholder="hello@rentsys.com"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <Label htmlFor="company_whatsapp" className="text-sm font-bold text-foreground flex items-center gap-2">
+                                        <WhatsAppIcon className="w-4 h-4 text-emerald-500" /> WhatsApp Number
+                                    </Label>
+                                    <Input
+                                        id="company_whatsapp"
+                                        value={settings.company_whatsapp || ''}
+                                        onChange={(e) => handleChange('company_whatsapp', e.target.value)}
+                                        className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                        placeholder="e.g. 07XXXXXXXX"
                                     />
                                 </div>
                                 <div className="space-y-3">

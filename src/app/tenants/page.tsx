@@ -209,8 +209,9 @@ function TenantsContent() {
                 page,
                 per_page: perPage,
                 search: debouncedSearch,
-                property_id: filterProperty !== "all" ? properties.find(p => p.name === filterProperty)?.id : undefined,
-                // Unit filtering can be added if backend supports it, but focusing on main filters
+                // filterProperty now stores the property ID directly
+                property_id: filterProperty && filterProperty !== "all" ? filterProperty : undefined,
+                unit_id: filterUnit && filterUnit !== "all" ? filterUnit : undefined,
             });
             
             if (response && response.data) {
@@ -511,12 +512,8 @@ function TenantsContent() {
         }
     };
 
-    // Filter tenants based on search and filters
-
-
-    // Get unique units for the selected property filter
-    const filterPropertyObj = properties.find(p => p.name === filterProperty);
-    const availableFilterUnits = filterPropertyObj?.units || [];
+    // Get units for the selected property filter
+    const availableFilterUnits = properties.find(p => p.id.toString() === filterProperty)?.units || [];
 
     const handleDeactivate = async (tenantId: number) => {
         try {
@@ -534,7 +531,9 @@ function TenantsContent() {
         }
     };
 
-    if (loading) return <div className="p-8">Loading tenants...</div>;
+    // Derive the selected property name for the active filter badge
+    const filterPropertyObj = properties.find(p => p.id.toString() === filterProperty);
+    const filterPropertyName = filterPropertyObj?.name || filterProperty;
 
     return (
         <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
@@ -930,7 +929,7 @@ function TenantsContent() {
                                 )}
                                 {filterProperty && (
                                     <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-300 border-0">
-                                        Property: {filterProperty}
+                                        Property: {filterPropertyName}
                                         <button
                                             onClick={() => {
                                                 setFilterProperty("");
@@ -944,7 +943,7 @@ function TenantsContent() {
                                 )}
                                 {filterUnit && (
                                     <Badge className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-300 border-0">
-                                        Unit: {filterUnit}
+                                        Unit: {availableFilterUnits.find((u: any) => u.id.toString() === filterUnit)?.unit_number || filterUnit}
                                         <button
                                             onClick={() => setFilterUnit("")}
                                             className="ml-2 hover:text-green-900"
@@ -994,9 +993,11 @@ function TenantsContent() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={13} className="h-24 text-center">
-                                        <div className="flex items-center justify-center gap-2 text-muted-foreground font-medium">
-                                            <Loader2 className="h-5 w-5 animate-spin" /> Loading data...
+                                    <TableCell colSpan={13} className="h-40 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                                            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                                            <span className="font-semibold text-base">Loading tenants...</span>
+                                            <span className="text-sm">Please wait while we fetch the data.</span>
                                         </div>
                                     </TableCell>
                                 </TableRow>

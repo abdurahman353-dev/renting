@@ -11,7 +11,8 @@ import {
   FileText,
   Settings,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Wrench
 } from "lucide-react"
 import { Children, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
@@ -72,7 +73,13 @@ const defaultRoutes: SidebarRoute[] = [
         href: "/finance/transactions"
       }
     ]
-  }
+  },
+  {
+    label: "Repairs",
+    icon: Wrench,
+    href: "/repairs",
+    color: "text-amber-500",
+  },
 ]
 
 const superAdminRoutes: SidebarRoute[] = [

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { publicAPI } from '@/data/apis';
 import { toast } from 'sonner';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 export default function ContactPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +33,7 @@ export default function ContactPage() {
     });
     const [settings, setSettings] = useState<any>({
         company_phone: '',
+        company_whatsapp: '',
         company_email: '',
         company_address: '',
         company_office_hours: '',
@@ -115,7 +117,11 @@ export default function ContactPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Call Us</h3>
-                                            <p className="text-slate-600 font-medium">{settings.company_phone}</p>
+                                            <p className="text-slate-600 font-medium">
+                                                <a href={`tel:${settings.company_phone}`} className="hover:text-blue-600 transition-colors">
+                                                    {settings.company_phone}
+                                                </a>
+                                            </p>
                                             <p className="text-slate-500 text-sm mt-1">{settings.company_office_hours}</p>
                                         </div>
                                     </div>
@@ -130,12 +136,42 @@ export default function ContactPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Email Us</h3>
-                                            <p className="text-slate-600 font-medium">{settings.company_email}</p>
+                                            <p className="text-slate-600 font-medium">
+                                                <a href={`mailto:${settings.company_email}`} className="hover:text-purple-600 transition-colors">
+                                                    {settings.company_email}
+                                                </a>
+                                            </p>
                                             <p className="text-slate-500 text-sm mt-1">{settings.company_response_time}</p>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {settings.company_whatsapp && (
+                                <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-shadow">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                                                <WhatsAppIcon className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-slate-900 mb-2">WhatsApp Us</h3>
+                                                <p className="text-slate-600 font-medium">
+                                                    <a
+                                                        href={`https://wa.me/${settings.company_whatsapp.startsWith('0') ? '254' + settings.company_whatsapp.slice(1) : settings.company_whatsapp}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="hover:text-emerald-600 transition-colors"
+                                                    >
+                                                        {settings.company_whatsapp}
+                                                    </a>
+                                                </p>
+                                                <p className="text-slate-500 text-sm mt-1">Chat with us directly</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-shadow">
                                 <CardContent className="p-8">

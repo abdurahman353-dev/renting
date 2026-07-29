@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Building2, Phone, Mail, MapPin } from 'lucide-react';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { publicAPI } from '@/data/apis';
 
 export function LandingFooter() {
     const [settings, setSettings] = useState({
         company_name: '',
         company_phone: '',
+        company_whatsapp: '',
         company_email: '',
         company_address: ''
     });
@@ -55,12 +57,29 @@ export function LandingFooter() {
                         <ul className="space-y-4">
                             <li className="flex items-center gap-3">
                                 <Phone className="h-5 w-5 text-blue-500" />
-                                {settings.company_phone}
+                                <a href={`tel:${settings.company_phone}`} className="hover:text-blue-500 transition-colors">
+                                    {settings.company_phone}
+                                </a>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail className="h-5 w-5 text-blue-500" />
-                                {settings.company_email}
+                                <a href={`mailto:${settings.company_email}`} className="hover:text-blue-500 transition-colors">
+                                    {settings.company_email}
+                                </a>
                             </li>
+                            {settings.company_whatsapp && (
+                                <li className="flex items-center gap-3">
+                                    <WhatsAppIcon className="h-5 w-5 text-emerald-500" />
+                                    <a
+                                        href={`https://wa.me/${settings.company_whatsapp.startsWith('0') ? '254' + settings.company_whatsapp.slice(1) : settings.company_whatsapp}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-emerald-500 transition-colors"
+                                    >
+                                        {settings.company_whatsapp}
+                                    </a>
+                                </li>
+                            )}
                             <li className="flex items-center gap-3">
                                 <MapPin className="h-5 w-5 text-blue-500" />
                                 {settings.company_address}

@@ -611,14 +611,21 @@ export default function PropertyViewPage() {
                                             <p className="text-xs text-slate-500 font-bold">verified Agency</p>
                                         </div>
                                     </div>
-                                    <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
-                                        <Phone className="w-4 h-4 mr-3" /> {settings?.company_phone}
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
+                                        onClick={() => {
+                                            const phone = settings?.company_phone || property.owner_contact || '';
+                                            if (phone) window.open(`tel:${phone}`);
+                                        }}
+                                    >
+                                        <Phone className="w-4 h-4 mr-3" /> {settings?.company_phone || property.owner_contact}
                                     </Button>
                                     <Button
                                         variant="outline"
                                         className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
                                         onClick={() => {
-                                            const phone = settings?.company_phone || property.owner_contact || '0745621158';
+                                            const phone = settings?.company_whatsapp || settings?.company_phone || property.owner_contact || '0745621158';
                                             const digitsOnly = phone.replace(/\D/g, '');
                                             let cleanPhone = digitsOnly;
                                             if (digitsOnly.startsWith('0')) {
@@ -632,8 +639,15 @@ export default function PropertyViewPage() {
                                     >
                                         <WhatsAppIcon className="w-5 h-5 mr-3 text-emerald-500" /> WhatsApp Agent
                                     </Button>
-                                    <Button variant="outline" className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors">
-                                        <Mail className="w-4 h-4 mr-3" /> {settings?.company_email}
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
+                                        onClick={() => {
+                                            const email = settings?.company_email || property.owner_email || 'hello@rentsys.com';
+                                            window.location.href = `mailto:${email}`;
+                                        }}
+                                    >
+                                        <Mail className="w-4 h-4 mr-3" /> {settings?.company_email || property.owner_email}
                                     </Button>
                                 </div>
                             </Card>

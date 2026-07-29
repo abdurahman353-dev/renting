@@ -541,6 +541,37 @@ export const publicAPI = {
 };
 
 // ============================================================================
+// REPAIRS APIs
+// ============================================================================
+
+export const repairAPI = {
+    getAll: async (params = {}) => {
+        const response = await apiClient.get('/repairs', { params });
+        return response.data;
+    },
+
+    create: async (data) => {
+        const response = await apiClient.post('/repairs', data);
+        return response.data;
+    },
+
+    update: async (id, data) => {
+        const response = await apiClient.put(`/repairs/${id}`, data);
+        return response.data;
+    },
+
+    delete: async (id) => {
+        const response = await apiClient.delete(`/repairs/${id}`);
+        return response.data;
+    },
+
+    charge: async (id) => {
+        const response = await apiClient.post(`/repairs/${id}/charge`);
+        return response.data;
+    },
+};
+
+// ============================================================================
 // MEDIA APIs
 // ============================================================================
 
