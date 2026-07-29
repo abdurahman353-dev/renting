@@ -112,7 +112,7 @@ export default function AddUnitPage() {
             price: "",
             deposit_1: "",
             deposit_2: "",
-            status: "Vacant",
+            status: "VACANT",
             image: "",
             images: [],
             unit_prefix: "",
@@ -141,7 +141,9 @@ export default function AddUnitPage() {
         const fetchProperties = async () => {
             try {
                 const data = await propertyAPI.getAll();
-                setProperties(data);
+                setProperties(data.data);
+                console.log(properties);
+                console.log(Array.isArray(properties));
                 if (propertyIdParam) {
                     form.setValue("property_id", propertyIdParam);
                 }
@@ -460,8 +462,8 @@ export default function AddUnitPage() {
                                                             </FormControl>
                                                             <SelectContent>
                                                                 {/* <SelectItem value="Occupied">Occupied</SelectItem> */}
-                                                                <SelectItem value="Vacant">Vacant</SelectItem>
-                                                                <SelectItem value="Maintenance">Maintenance</SelectItem>
+                                                                <SelectItem value="VACANT">Vacant</SelectItem>
+                                                                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
