@@ -10,6 +10,14 @@ interface User {
     email: string;
     role: string;
     must_change_password: boolean;
+    organization_id?: number | null;
+    organization?: {
+        id: number;
+        name: string;
+        slug: string;
+        status: string;
+        subscription_plan?: string;
+    } | null;
 }
 
 interface AuthContextType {

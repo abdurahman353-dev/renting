@@ -242,11 +242,19 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
           )}>
             {isExpanded ? (
               <>
-                <p className="text-xs text-slate-400 mb-1">Logged in as</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] uppercase font-extrabold text-indigo-400 tracking-wider">
+                    {user?.organization?.name || "RentSys SaaS"}
+                  </p>
+                  <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded font-bold uppercase">
+                    {user?.organization?.status === 'trial' ? 'Trial' : user?.role === 'super_admin' ? 'Super Admin' : 'SaaS'}
+                  </span>
+                </div>
                 <p className="text-sm font-medium text-white truncate">{user?.name || "User"}</p>
+                <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
               </>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs text-white" title={user?.name}>
+              <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs text-white font-bold" title={user?.name}>
                 {user?.name?.[0] || "U"}
               </div>
             )}

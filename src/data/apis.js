@@ -589,5 +589,41 @@ export const mediaAPI = {
     },
 };
 
+// ============================================================================
+// SAAS & SUBSCRIPTION APIs
+// ============================================================================
+
+export const saasAPI = {
+    registerOrganization: async (data) => {
+        const response = await apiClient.post('/auth/register-organization', data);
+        return response.data;
+    },
+
+    getPlans: async () => {
+        const response = await apiClient.get('/saas/plans');
+        return response.data;
+    },
+
+    getSubscriptionStatus: async () => {
+        const response = await apiClient.get('/saas/subscription-status');
+        return response.data;
+    },
+
+    upgradePlan: async (data) => {
+        const response = await apiClient.post('/saas/upgrade', data);
+        return response.data;
+    },
+
+    getSuperAdminOverview: async () => {
+        const response = await apiClient.get('/super-admin/saas/overview');
+        return response.data;
+    },
+
+    updateOrganizationStatus: async (id, data) => {
+        const response = await apiClient.put(`/super-admin/saas/organizations/${id}`, data);
+        return response.data;
+    },
+};
+
 // Export the axios instance for custom requests if needed
 export default apiClient;
