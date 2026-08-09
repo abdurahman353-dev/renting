@@ -103,6 +103,7 @@ export default function PropertyViewPage() {
     };
 
     const fetchProperty = async () => {
+        if (!params?.id) return;
         try {
             const data = await propertyAPI.getById(params.id);
             setProperty(data);
@@ -114,10 +115,10 @@ export default function PropertyViewPage() {
     };
 
     useEffect(() => {
-        if (params.id) {
+        if (params?.id) {
             fetchProperty();
         }
-    }, [params.id]);
+    }, [params?.id]);
 
     const handleEditSuccess = () => {
         fetchProperty();

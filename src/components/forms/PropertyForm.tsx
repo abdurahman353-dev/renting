@@ -185,11 +185,11 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
         setImages(prev => [...prev, ...newImages]);
     };
 
-    const removeImage = (id: string, index: number) => {
+    const removeImage = (id: string) => {
         setImages(prev => {
+            const target = prev.find(img => img.id === id);
             const newImages = prev.filter(img => img.id !== id);
-            // If removed featured, set new featured
-            if (prev[index]?.isFeatured && newImages.length > 0) {
+            if (target?.isFeatured && newImages.length > 0) {
                 newImages[0].isFeatured = true;
             }
             return newImages;
@@ -485,7 +485,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                                             type="button"
                                             size="icon"
                                             variant="destructive"
-                                            onClick={() => removeImage(img.id, index)}
+                                            onClick={() => removeImage(img.id)}
                                             title="Remove image"
                                         >
                                             <Trash2 className="h-4 w-4" />

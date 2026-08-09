@@ -7,7 +7,6 @@ import {
   Wrench,
   Plus,
   Search,
-  Filter,
   Loader2,
   Pencil,
   Trash2,
@@ -17,14 +16,16 @@ import {
   AlertCircle,
   DollarSign,
   Building2,
+  Home,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
   X,
-  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -49,6 +50,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -58,6 +67,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -134,23 +144,21 @@ const EMPTY_FORM: RepairForm = {
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  pending:     { label: "Pending",     color: "bg-yellow-500/15 text-yellow-500 border-yellow-500/30",    icon: Clock          },
-  in_progress: { label: "In Progress", color: "bg-blue-500/15 text-blue-400 border-blue-500/30",          icon: AlertCircle    },
-  completed:   { label: "Completed",   color: "bg-green-500/15 text-green-400 border-green-500/30",       icon: CheckCircle2   },
-  charged:     { label: "Charged",     color: "bg-purple-500/15 text-purple-400 border-purple-500/30",    icon: Receipt        },
+  pending:     { label: "Pending",     color: "bg-yellow-500 hover:bg-yellow-600 text-white border-0",    icon: Clock          },
+  in_progress: { label: "In Progress", color: "bg-blue-500 hover:bg-blue-600 text-white border-0",          icon: AlertCircle    },
+  completed:   { label: "Completed",   color: "bg-green-500 hover:bg-green-600 text-white border-0",       icon: CheckCircle2   },
+  charged:     { label: "Charged",     color: "bg-purple-500 hover:bg-purple-600 text-white border-0",    icon: Receipt        },
 };
 
 const PAID_BY_CONFIG = {
-  tenant:   { label: "Tenant",   color: "bg-rose-500/15 text-rose-400 border-rose-500/30"     },
-  landlord: { label: "Landlord", color: "bg-slate-500/15 text-slate-400 border-slate-500/30"  },
+  tenant:   { label: "Tenant",   color: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-0" },
+  landlord: { label: "Landlord", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-0" },
 };
 
 function StatusBadge({ status }: { status: Repair["status"] }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-  const Icon = cfg.icon;
   return (
-    <Badge variant="outline" className={`gap-1 text-xs ${cfg.color}`}>
-      <Icon className="w-3 h-3" />
+    <Badge className={cfg.color}>
       {cfg.label}
     </Badge>
   );
@@ -159,7 +167,7 @@ function StatusBadge({ status }: { status: Repair["status"] }) {
 function PaidByBadge({ paidBy }: { paidBy: Repair["paid_by"] }) {
   const cfg = PAID_BY_CONFIG[paidBy] ?? PAID_BY_CONFIG.landlord;
   return (
-    <Badge variant="outline" className={`text-xs ${cfg.color}`}>
+    <Badge className={cfg.color}>
       {cfg.label}
     </Badge>
   );
@@ -175,7 +183,7 @@ export default function RepairsPage() {
   const [loading, setLoading] = useState(true);
 
   // filter state
-  const [search, setSearch]             = useState("");
+  const [search, setSearch]                 = useState("");
   const [filterProperty, setFilterProperty] = useState("all");
   const [filterStatus, setFilterStatus]     = useState("all");
   const [filterPaidBy, setFilterPaidBy]     = useState("all");
@@ -226,33 +234,6 @@ export default function RepairsPage() {
   }, [page, search, filterProperty, filterStatus, filterPaidBy]);
 
   useEffect(() => { fetchRepairs(); }, [fetchRepairs]);
-
-  // ── Derived stats ────────────────────────────────────────────────────────
-  const stats = {
-    total:       repairs.length,
-    pending:     repairs.filter((r) => r.status === "pending").length,
-    inProgress:  repairs.filter((r) => r.status === "in_progress").length,
-    completed:   repairs.filter((r) => r.status === "completed").length,
-    charged:     repairs.filter((r) => r.status === "charged").length,
-    totalCost:   repairs.reduce((s, r) => s + Number(r.cost), 0),
-    tenantCost:  repairs.filter((r) => r.paid_by === "tenant").reduce((s, r) => s + Number(r.cost), 0),
-  };
-
-  // ── Unit list filtered by selected property (in modal) ───────────────────
-  const filteredUnits = form.unit_id !== ""
-    ? units
-    : filterProperty !== "all"
-      ? units.filter((u) => String(u.property_id) === filterProperty)
-      : units;
-
-  const modalUnits = units.filter((u) =>
-    filterProperty !== "all" ? String(u.property_id) === filterProperty : true
-  );
-
-  // Tenants linked to selected unit in modal
-  const unitTenants = form.unit_id
-    ? tenants.filter((t) => String(t.unit_id) === form.unit_id || String(t.unit?.id) === form.unit_id)
-    : tenants;
 
   // ── Open modal ───────────────────────────────────────────────────────────
   const openAdd = () => {
@@ -311,10 +292,10 @@ export default function RepairsPage() {
 
       if (editRepair) {
         await repairAPI.update(editRepair.id, payload);
-        toast.success("Repair updated");
+        toast.success("Repair updated successfully");
       } else {
         await repairAPI.create(payload);
-        toast.success("Repair logged");
+        toast.success("Repair logged successfully");
       }
 
       setModalOpen(false);
@@ -332,7 +313,7 @@ export default function RepairsPage() {
     setDeleting(true);
     try {
       await repairAPI.delete(deleteTarget.id);
-      toast.success("Repair deleted");
+      toast.success("Repair deleted successfully");
       setDeleteTarget(null);
       fetchRepairs();
     } catch (err: any) {
@@ -364,218 +345,205 @@ export default function RepairsPage() {
   };
 
   const hasActiveFilters = search || filterProperty !== "all" || filterStatus !== "all" || filterPaidBy !== "all";
+  const filterPropertyObj = properties.find(p => String(p.id) === filterProperty);
+  const filterPropertyName = filterPropertyObj?.name || filterProperty;
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-amber-500" />
-            Unit Repairs
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track repair work, costs, and optional tenant charges
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Unit Repairs</h2>
+          <p className="text-muted-foreground">Manage unit repair requests, costs, and tenant charges.</p>
         </div>
-        <Button id="btn-add-repair" onClick={openAdd} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Log Repair
-        </Button>
+
+        <div className="flex gap-2">
+          <Button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            onClick={openAdd}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Log Repair
+          </Button>
+        </div>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              KES {stats.totalCost.toLocaleString("en-KE", { minimumFractionDigits: 0 })}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{total} repairs tracked</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-yellow-500">{stats.pending}</p>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting action</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-400">{stats.inProgress}</p>
-            <p className="text-xs text-muted-foreground mt-1">Work ongoing</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Charged to Tenants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-purple-400">{stats.charged}</p>
-            <p className="text-xs text-rose-400 mt-1">
-              KES {stats.tenantCost.toLocaleString("en-KE")} billed
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Professional Search and Filters */}
+      <div className="bg-card rounded-xl shadow-lg border border-border p-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Enhanced Search Bar */}
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              Search Repairs
+            </label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
-                id="search-repairs"
-                placeholder="Search title, vendor, unit, tenant…"
+                type="search"
+                placeholder="Search by title, vendor, unit, or tenant..."
+                className="pl-12 pr-4 h-12 text-base border-input focus:border-ring focus:ring-ring rounded-lg shadow-sm"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9"
               />
             </div>
-
-            <Select value={filterProperty} onValueChange={(v) => { setFilterProperty(v); setPage(1); }}>
-              <SelectTrigger id="filter-property" className="w-[180px]">
-                <SelectValue placeholder="All Properties" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
-                {properties.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setPage(1); }}>
-              <SelectTrigger id="filter-status" className="w-[150px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="charged">Charged</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filterPaidBy} onValueChange={(v) => { setFilterPaidBy(v); setPage(1); }}>
-              <SelectTrigger id="filter-paid-by" className="w-[140px]">
-                <SelectValue placeholder="All Payers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Payers</SelectItem>
-                <SelectItem value="tenant">Tenant</SelectItem>
-                <SelectItem value="landlord">Landlord</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {hasActiveFilters && (
-              <Button id="btn-clear-filters" variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
-                <X className="w-4 h-4" /> Clear
-              </Button>
-            )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
+          {/* Property Filter */}
+          <div className="lg:w-64">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <Building2 className="inline w-4 h-4 mr-1" />
+              Property
+            </label>
+            <select
+              value={filterProperty}
+              onChange={(e) => { setFilterProperty(e.target.value); setPage(1); }}
+              className="w-full h-12 px-4 text-base rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none transition-all cursor-pointer hover:border-input"
+            >
+              <option value="all">All Properties</option>
+              {properties.map((p) => (
+                <option key={p.id} value={String(p.id)}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="lg:w-48">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <Wrench className="inline w-4 h-4 mr-1" />
+              Status
+            </label>
+            <select
+              value={filterStatus}
+              onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+              className="w-full h-12 px-4 text-base rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none transition-all cursor-pointer hover:border-input"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="charged">Charged</option>
+            </select>
+          </div>
+
+          {/* Paid By Filter */}
+          <div className="lg:w-48">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <DollarSign className="inline w-4 h-4 mr-1" />
+              Paid By
+            </label>
+            <select
+              value={filterPaidBy}
+              onChange={(e) => { setFilterPaidBy(e.target.value); setPage(1); }}
+              className="w-full h-12 px-4 text-base rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none transition-all cursor-pointer hover:border-input"
+            >
+              <option value="all">All Payers</option>
+              <option value="tenant">Tenant</option>
+              <option value="landlord">Landlord</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active Filters:</span>
+              {search && (
+                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                  Search: "{search}"
+                  <button onClick={() => setSearch("")} className="ml-2 hover:text-blue-900">×</button>
+                </Badge>
+              )}
+              {filterProperty !== "all" && (
+                <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
+                  Property: {filterPropertyName}
+                  <button onClick={() => setFilterProperty("all")} className="ml-2 hover:text-purple-900">×</button>
+                </Badge>
+              )}
+              {filterStatus !== "all" && (
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-0">
+                  Status: {filterStatus.replace("_", " ")}
+                  <button onClick={() => setFilterStatus("all")} className="ml-2 hover:text-green-900">×</button>
+                </Badge>
+              )}
+              {filterPaidBy !== "all" && (
+                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-0">
+                  Payer: {filterPaidBy}
+                  <button onClick={() => setFilterPaidBy("all")} className="ml-2 hover:text-amber-900">×</button>
+                </Badge>
+              )}
+              <button
+                onClick={clearFilters}
+                className="text-sm text-muted-foreground hover:text-foreground underline ml-2"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Table Container */}
+      <div className="rounded-md border border-border bg-card shadow-sm">
+        <div className="max-h-[600px] overflow-y-auto relative">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
               <TableRow>
-                <TableHead>Repair</TableHead>
-                <TableHead>Unit / Property</TableHead>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead className="text-right">Cost (KES)</TableHead>
-                <TableHead>Paid By</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="bg-card">Repair Title</TableHead>
+                <TableHead className="bg-card">Property / Unit</TableHead>
+                <TableHead className="bg-card">Tenant</TableHead>
+                <TableHead className="bg-card">Vendor</TableHead>
+                <TableHead className="bg-card text-right">Cost (KES)</TableHead>
+                <TableHead className="bg-card">Paid By</TableHead>
+                <TableHead className="bg-card">Status</TableHead>
+                <TableHead className="w-[50px] bg-card"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-                      <span>Loading repairs…</span>
+                  <TableCell colSpan={8} className="h-40 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                      <span className="font-semibold text-base">Loading repairs...</span>
+                      <span className="text-sm">Please wait while we fetch the repair records.</span>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : repairs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <Wrench className="w-10 h-10 opacity-30" />
-                      <p className="font-medium">No repairs found</p>
-                      {hasActiveFilters ? (
-                        <Button variant="ghost" size="sm" onClick={clearFilters}>Clear filters</Button>
-                      ) : (
-                        <Button size="sm" onClick={openAdd} className="gap-1">
-                          <Plus className="w-4 h-4" /> Log first repair
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
+              ) : repairs.length > 0 ? (
                 repairs.map((r) => (
-                  <TableRow key={r.id} className="hover:bg-muted/40">
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-sm">{r.title}</p>
-                        {r.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">
-                            {r.description}
-                          </p>
-                        )}
-                        {r.reported_date && (
-                          <p className="text-xs text-muted-foreground">
-                            Reported: {new Date(r.reported_date).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium">{r.unit_number}</p>
-                          <p className="text-xs text-muted-foreground">{r.property_name}</p>
+                  <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      <div>{r.title}</div>
+                      {r.description && (
+                        <div className="text-xs text-muted-foreground line-clamp-1 max-w-[240px]">
+                          {r.description}
                         </div>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      {r.tenant_name ? (
-                        <span className="text-sm">{r.tenant_name}</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                      {r.reported_date && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          Reported: {new Date(r.reported_date).toLocaleDateString()}
+                        </div>
                       )}
                     </TableCell>
 
                     <TableCell>
-                      <span className="text-sm">{r.vendor || <span className="text-muted-foreground text-xs">—</span>}</span>
+                      <div>{r.property_name || "N/A"}</div>
+                      <div className="text-xs text-muted-foreground">Unit: {r.unit_number}</div>
                     </TableCell>
 
-                    <TableCell className="text-right font-mono font-medium">
+                    <TableCell className="text-sm">
+                      {r.tenant_name ? (
+                        <span>{r.tenant_name}</span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-sm">
+                      {r.vendor || <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
+
+                    <TableCell className="text-right font-semibold">
                       {Number(r.cost).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
                     </TableCell>
 
@@ -599,15 +567,9 @@ export default function RepairsPage() {
                             }
                           }}
                         >
-                          <SelectTrigger className="h-auto p-0 border-none bg-transparent hover:bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                          <SelectTrigger className="h-8 border-none bg-transparent p-0 shadow-none focus:ring-0">
                             <SelectValue>
-                              <Badge variant="outline" className={`gap-1 text-xs cursor-pointer hover:brightness-110 transition-all ${STATUS_CONFIG[r.status].color}`}>
-                                {(() => {
-                                  const Icon = STATUS_CONFIG[r.status].icon;
-                                  return <Icon className="w-3 h-3" />;
-                                })()}
-                                {STATUS_CONFIG[r.status].label}
-                              </Badge>
+                              <StatusBadge status={r.status} />
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
@@ -620,119 +582,100 @@ export default function RepairsPage() {
                     </TableCell>
 
                     <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {/* Charge to tenant */}
-                        {r.paid_by === "tenant" && !r.invoice_id && (
-                          r.status === "completed" ? (
-                            <Button
-                              id={`btn-charge-${r.id}`}
-                              variant="outline"
-                              size="sm"
-                              className="gap-1 text-xs border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
-                              onClick={() => setChargeTarget(r)}
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                              Charge
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled
-                              className="gap-1 text-xs opacity-50 cursor-not-allowed border-purple-500/20 text-purple-400/50"
-                              title="Mark as Completed to enable charging"
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                              Charge
-                            </Button>
-                          )
-                        )}
-
-                        {/* View invoice */}
-                        {r.invoice_id && r.invoice && (
-                          <span className="text-xs text-purple-400 font-medium px-2">
-                            {r.invoice.invoice_number}
-                          </span>
-                        )}
-
-                        {/* Edit — disabled for charged */}
-                        {r.status !== "charged" && (
-                          <Button
-                            id={`btn-edit-${r.id}`}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => openEdit(r)}
-                          >
-                            <Pencil className="w-4 h-4" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
-                        )}
-
-                        {/* Delete — disabled for charged */}
-                        {r.status !== "charged" && (
-                          <Button
-                            id={`btn-delete-${r.id}`}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => setDeleteTarget(r)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          {r.status !== "charged" && (
+                            <DropdownMenuItem onClick={() => openEdit(r)}>
+                              <Pencil className="mr-2 h-4 w-4 text-slate-500" /> Edit Repair
+                            </DropdownMenuItem>
+                          )}
+                          {r.paid_by === "tenant" && !r.invoice_id && r.status === "completed" && (
+                            <DropdownMenuItem onClick={() => setChargeTarget(r)}>
+                              <Receipt className="mr-2 h-4 w-4 text-purple-600" /> Charge to Tenant
+                            </DropdownMenuItem>
+                          )}
+                          {r.invoice_id && r.invoice && (
+                            <DropdownMenuItem disabled>
+                              <Receipt className="mr-2 h-4 w-4 text-purple-600" /> {r.invoice.invoice_number}
+                            </DropdownMenuItem>
+                          )}
+                          {r.status !== "charged" && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600 cursor-pointer"
+                                onClick={() => setDeleteTarget(r)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Repair
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-20 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="bg-muted p-6 rounded-full">
+                        <Wrench className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Log unit repairs by clicking Log Repair button</h3>
+                      <p className="text-muted-foreground max-w-sm mx-auto">Keep track of property repairs, costs, and tenant invoices in one place.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
-        </CardContent>
+        </div>
 
-        {/* Pagination */}
+        {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card">
             <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} · {total} repairs
+              Showing page <span className="font-semibold text-foreground">{page}</span> of <span className="font-semibold text-foreground">{totalPages}</span> ({total} total repairs)
             </p>
             <div className="flex gap-2">
               <Button
-                id="btn-prev-page"
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 mr-1" /> Previous
               </Button>
               <Button
-                id="btn-next-page"
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                <ChevronRight className="w-4 h-4" />
+                Next <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
           </div>
         )}
-      </Card>
+      </div>
 
       {/* ── Add / Edit Modal ─────────────────────────────────────────────── */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-amber-500" />
-              {editRepair ? "Edit Repair" : "Log New Repair"}
-            </DialogTitle>
+            <DialogTitle>{editRepair ? "Edit Repair" : "Log New Repair"}</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
-            {/* Title */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium">Title <span className="text-destructive">*</span></label>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-title">Title *</Label>
               <Input
                 id="form-title"
                 placeholder="e.g. Plumbing fix – leaking pipe"
@@ -741,9 +684,8 @@ export default function RepairsPage() {
               />
             </div>
 
-            {/* Property */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Property <span className="text-destructive">*</span></label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-property">Property *</Label>
               <Select
                 value={form.property_id}
                 onValueChange={(v) => {
@@ -753,7 +695,7 @@ export default function RepairsPage() {
                 }}
               >
                 <SelectTrigger id="form-property">
-                  <SelectValue placeholder="Select property…" />
+                  <SelectValue placeholder="Select property..." />
                 </SelectTrigger>
                 <SelectContent>
                   {properties.map((p) => (
@@ -765,9 +707,8 @@ export default function RepairsPage() {
               </Select>
             </div>
 
-            {/* Unit */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Unit <span className="text-destructive">*</span></label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-unit">Unit *</Label>
               <Select
                 value={form.unit_id}
                 disabled={!form.property_id}
@@ -784,7 +725,7 @@ export default function RepairsPage() {
                 }}
               >
                 <SelectTrigger id="form-unit">
-                  <SelectValue placeholder={form.property_id ? "Select unit…" : "Select property first"} />
+                  <SelectValue placeholder={form.property_id ? "Select unit..." : "Select property first"} />
                 </SelectTrigger>
                 <SelectContent>
                   {units
@@ -798,135 +739,51 @@ export default function RepairsPage() {
               </Select>
             </div>
 
-            {/* Unit details confirmation card */}
-            {form.unit_id && (() => {
-              const selectedUnit = units.find((u) => String(u.id) === form.unit_id);
-              const selectedProp = properties.find((p) => String(p.id) === form.property_id) || selectedUnit?.property;
-              const activeTenantName = selectedUnit?.active_lease?.tenant?.name;
-              const activeTenantPhone = selectedUnit?.active_lease?.tenant?.phone;
-              const unitTenant = tenants.find((t) => String(t.unit_id) === form.unit_id || String(t.unit?.id) === form.unit_id);
-              const tenantName = activeTenantName || unitTenant?.name;
-
-              return (
-                <div className="sm:col-span-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.03] p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-amber-500/10 pb-2">
-                    <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5" />
-                      Unit Verification Details
-                    </span>
-                    <Badge variant="outline" className={
-                      selectedUnit?.status?.toLowerCase() === 'occupied'
-                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                        : "bg-green-500/10 text-green-400 border-green-500/20"
-                    }>
-                      {selectedUnit?.status || 'Available'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Property</p>
-                      <p className="font-semibold text-foreground mt-0.5">{selectedProp?.name ?? "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Unit Number</p>
-                      <p className="font-semibold text-foreground mt-0.5">{selectedUnit?.unit_number ?? "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Unit Type</p>
-                      <p className="font-semibold text-foreground mt-0.5">{selectedUnit?.type || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Monthly Rent</p>
-                      <p className="font-semibold text-foreground mt-0.5">
-                        {selectedUnit?.price ? `KES ${Number(selectedUnit.price).toLocaleString("en-KE")}` : "—"}
-                      </p>
-                    </div>
-                    <div className="col-span-2 sm:col-span-4 bg-muted/30 p-2.5 rounded-lg border border-border/50">
-                      <p className="text-xs text-muted-foreground font-medium">Current Occupant / Tenant</p>
-                      {tenantName ? (
-                        <div className="mt-1 flex items-center justify-between">
-                          <p className="font-semibold text-rose-400">{tenantName}</p>
-                          {activeTenantPhone && (
-                            <p className="text-xs text-muted-foreground">{activeTenantPhone}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-green-400 mt-1">Vacant / No Active Tenant</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Paid by */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Paid By <span className="text-destructive">*</span></label>
-              <Select
-                value={form.paid_by}
-                onValueChange={(v: "tenant" | "landlord") => {
-                  setField("paid_by", v);
-                  if (v === "landlord") {
-                    setField("tenant_id", "");
-                  } else if (v === "tenant" && form.unit_id) {
-                    const selectedUnit = units.find((u) => String(u.id) === form.unit_id);
-                    const tenantId = selectedUnit?.active_lease?.tenant?.id;
-                    if (tenantId) {
-                      setField("tenant_id", String(tenantId));
-                    } else {
-                      const unitTenant = tenants.find((t) => String(t.unit_id) === form.unit_id || String(t.unit?.id) === form.unit_id);
-                      if (unitTenant) setField("tenant_id", String(unitTenant.id));
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger id="form-paid-by">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="landlord">Landlord (business expense)</SelectItem>
-                  <SelectItem value="tenant">Tenant (will be charged)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Tenant — only when paid_by=tenant */}
-            {form.paid_by === "tenant" && (
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Assign Tenant</label>
-                <Select value={form.tenant_id} onValueChange={(v) => setField("tenant_id", v)}>
-                  <SelectTrigger id="form-tenant">
-                    <SelectValue placeholder="Select tenant…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {unitTenants.map((t) => (
-                      <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Cost */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Cost (KES) <span className="text-destructive">*</span></label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-cost">Cost (KES) *</Label>
               <Input
                 id="form-cost"
                 type="number"
-                min="0"
-                step="0.01"
                 placeholder="0.00"
                 value={form.cost}
                 onChange={(e) => setField("cost", e.target.value)}
               />
             </div>
 
-            {/* Status */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Status</label>
-              <Select value={form.status} onValueChange={(v: RepairForm["status"]) => setField("status", v)}>
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-paidby">Paid By *</Label>
+              <Select
+                value={form.paid_by}
+                onValueChange={(v: "tenant" | "landlord") => setField("paid_by", v)}
+              >
+                <SelectTrigger id="form-paidby">
+                  <SelectValue placeholder="Select payer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="landlord">Landlord</SelectItem>
+                  <SelectItem value="tenant">Tenant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-vendor">Vendor / Contractor</Label>
+              <Input
+                id="form-vendor"
+                placeholder="e.g. John Plumbing Services"
+                value={form.vendor}
+                onChange={(e) => setField("vendor", e.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-status">Status</Label>
+              <Select
+                value={form.status}
+                onValueChange={(v: "pending" | "in_progress" | "completed") => setField("status", v)}
+              >
                 <SelectTrigger id="form-status">
-                  <SelectValue />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
@@ -936,146 +793,68 @@ export default function RepairsPage() {
               </Select>
             </div>
 
-            {/* Vendor */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Vendor / Contractor</label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="form-description">Description</Label>
               <Input
-                id="form-vendor"
-                placeholder="Who did the work?"
-                value={form.vendor}
-                onChange={(e) => setField("vendor", e.target.value)}
-              />
-            </div>
-
-            {/* Reported date */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Reported Date</label>
-              <Input
-                id="form-reported-date"
-                type="date"
-                value={form.reported_date}
-                onChange={(e) => setField("reported_date", e.target.value)}
-              />
-            </div>
-
-            {/* Completed date */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Completed Date</label>
-              <Input
-                id="form-completed-date"
-                type="date"
-                value={form.completed_date}
-                onChange={(e) => setField("completed_date", e.target.value)}
-              />
-            </div>
-
-            {/* Description */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium">Description</label>
-              <textarea
                 id="form-description"
-                placeholder="Describe the repair work…"
+                placeholder="Detailed description of repair..."
                 value={form.description}
                 onChange={(e) => setField("description", e.target.value)}
-                rows={3}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-              />
-            </div>
-
-            {/* Notes */}
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium">Notes</label>
-              <textarea
-                id="form-notes"
-                placeholder="Any additional notes…"
-                value={form.notes}
-                onChange={(e) => setField("notes", e.target.value)}
-                rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
               />
             </div>
           </div>
 
-          {/* Info banner for tenant charges */}
-          {form.paid_by === "tenant" && (
-            <div className="flex gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 p-3 text-sm text-purple-300">
-              <Receipt className="w-4 h-4 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Tenant will be charged via invoice</p>
-                <p className="text-xs opacity-80 mt-0.5">
-                  Once you mark the repair as <strong>Completed</strong>, click <strong>"Charge"</strong> in the table to create a repair invoice for the tenant.
-                </p>
-              </div>
-            </div>
-          )}
-
           <DialogFooter>
-            <Button id="btn-cancel-modal" variant="outline" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button id="btn-save-repair" onClick={handleSave} disabled={saving} className="gap-2">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {editRepair ? "Save Changes" : "Log Repair"}
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {editRepair ? "Update Repair" : "Log Repair"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete Confirmation ──────────────────────────────────────────── */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      {/* Delete confirmation alert */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Repair?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Repair Record</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>"{deleteTarget?.title}"</strong>. This action cannot be undone.
+              Are you sure you want to delete repair "{deleteTarget?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              id="btn-confirm-delete"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleDelete}
               disabled={deleting}
-              className="bg-destructive hover:bg-destructive/90"
             >
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Charge Confirmation ──────────────────────────────────────────── */}
-      <AlertDialog open={!!chargeTarget} onOpenChange={(open) => { if (!open) setChargeTarget(null); }}>
+      {/* Charge to tenant confirmation alert */}
+      <AlertDialog open={!!chargeTarget} onOpenChange={() => setChargeTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-purple-400" />
-              Charge Tenant?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span className="block">
-                This will create a <strong>repair invoice</strong> of{" "}
-                <strong>KES {Number(chargeTarget?.cost ?? 0).toLocaleString("en-KE")}</strong> for{" "}
-                <strong>{chargeTarget?.tenant_name}</strong>.
-              </span>
-              <span className="block text-xs">
-                • Any available credit balance will be auto-applied.<br />
-                • The invoice will appear in the tenant's financial statement.<br />
-                • The repair will be locked to prevent further edits.
-              </span>
+            <AlertDialogTitle>Charge Repair to Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create an invoice of KES {Number(chargeTarget?.cost ?? 0).toLocaleString()} for tenant "{chargeTarget?.tenant_name ?? "assigned tenant"}" and update status to Charged.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              id="btn-confirm-charge"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={handleCharge}
               disabled={charging}
-              className="bg-purple-600 hover:bg-purple-700"
             >
-              {charging ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Create Invoice &amp; Charge
+              {charging ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Create Invoice & Charge
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -205,7 +205,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Properties */}
-        <Card className="border-none shadow-lg shadow-amber-100/10 bg-card overflow-hidden group hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 cursor-pointer">
+        <Card onClick={() => router.push('/properties')} className="border-none shadow-lg shadow-amber-100/10 bg-card overflow-hidden group hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 cursor-pointer">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">PROPERTIES</CardTitle>
