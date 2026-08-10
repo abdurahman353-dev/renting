@@ -41,9 +41,9 @@ export default function SettingsPage() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Final validation for phone
+        // Phone and WhatsApp validation (only validate if filled)
         const phone = settings.company_phone || '';
-        if (phone.length !== 10 || (!phone.startsWith('07') && !phone.startsWith('01'))) {
+        if (phone && (phone.length !== 10 || (!phone.startsWith('07') && !phone.startsWith('01')))) {
             toast.error('Phone number must be exactly 10 digits and start with 07 or 01');
             return;
         }
@@ -197,6 +197,35 @@ export default function SettingsPage() {
                                     className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
                                     placeholder="We'll respond within 24 hours"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-border">
+                                <div className="space-y-3">
+                                    <Label htmlFor="hero_media_url" className="text-sm font-bold text-foreground flex items-center gap-2">
+                                        Hero Background Video / Image URL
+                                    </Label>
+                                    <Input
+                                        id="hero_media_url"
+                                        value={settings.hero_media_url || ''}
+                                        onChange={(e) => handleChange('hero_media_url', e.target.value)}
+                                        className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                        placeholder="/video/grok-hero.mp4"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Default video: /video/grok-hero.mp4 (or paste MP4 / Cloudinary URL)</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Label htmlFor="company_footer_tagline" className="text-sm font-bold text-foreground flex items-center gap-2">
+                                        Footer Tagline & Description
+                                    </Label>
+                                    <Input
+                                        id="company_footer_tagline"
+                                        value={settings.company_footer_tagline || ''}
+                                        onChange={(e) => handleChange('company_footer_tagline', e.target.value)}
+                                        className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                        placeholder="The complete SaaS solution for modern property management..."
+                                    />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

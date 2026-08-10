@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { authAPI } from '@/data/apis';
+import { authAPI, publicAPI } from '@/data/apis';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,7 @@ function ResetPasswordForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [companyName, setCompanyName] = useState('RentSys');
 
     useEffect(() => {
         const t = searchParams.get('token');
@@ -28,6 +29,20 @@ function ResetPasswordForm() {
         if (t) setToken(t);
         if (e) setEmail(e);
     }, [searchParams]);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data && data.company_name) {
+                    setCompanyName(data.company_name);
+                }
+            } catch (err) {
+                console.error('Failed to load reset-password settings:', err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +83,7 @@ function ResetPasswordForm() {
                         <Link href="/" className="p-2 bg-blue-600 rounded-lg">
                             <Building2 className="h-6 w-6" />
                         </Link>
-                        RentSys
+                        {companyName}
                     </div>
                 </div>
 
@@ -82,7 +97,7 @@ function ResetPasswordForm() {
                 </div>
 
                 <div className="relative z-10 text-sm text-gray-500">
-                    © {new Date().getFullYear()} RentSys. All rights reserved.
+                    © {new Date().getFullYear()} {companyName}. All rights reserved.
                 </div>
             </div>
 

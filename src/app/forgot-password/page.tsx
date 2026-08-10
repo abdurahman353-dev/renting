@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { authAPI } from '@/data/apis';
+import { useState, useEffect } from 'react';
+import { authAPI, publicAPI } from '@/data/apis';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,21 @@ export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [companyName, setCompanyName] = useState('RentSys');
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data && data.company_name) {
+                    setCompanyName(data.company_name);
+                }
+            } catch (err) {
+                console.error("Failed to load forgot-password settings:", err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +58,7 @@ export default function ForgotPasswordPage() {
                         <Link href="/" className="p-2 bg-blue-600 rounded-lg">
                             <Building2 className="h-6 w-6" />
                         </Link>
-                        RentSys
+                        {companyName}
                     </div>
                 </div>
 
@@ -57,7 +72,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <div className="relative z-10 text-sm text-gray-500">
-                    © {new Date().getFullYear()} RentSys. All rights reserved.
+                    © {new Date().getFullYear()} {companyName}. All rights reserved.
                 </div>
             </div>
 

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { Loader2 } from "lucide-react";
+
+// Pages exclusively for landlord admins — super_admin gets redirected away from these
+const LANDLORD_ONLY_PATHS = ["/dashboard", "/properties", "/units", "/tenants", "/finance", "/invoices", "/repairs"];
 
 export default function DashboardLayout({
     children,
@@ -13,6 +16,7 @@ export default function DashboardLayout({
 }) {
     const { isAuthenticated, hasRole, loading, user } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (!loading) {
@@ -22,19 +26,28 @@ export default function DashboardLayout({
                 return;
             }
 
-            // Check if user has admin or super_admin role
+            // Must have at least admin or super_admin role
             if (!hasRole(['admin', 'super_admin'])) {
                 router.replace('/login?error=unauthorized');
                 return;
             }
 
+            // Super admins: redirect away ONLY from landlord-specific pages
+            if (user?.role === 'super_admin') {
+                const isLandlordPage = LANDLORD_ONLY_PATHS.some(p => pathname === p || pathname?.startsWith(p + '/'));
+                if (isLandlordPage) {
+                    router.replace('/super-admin');
+                    return;
+                }
+            }
+
             // Force password change if required
-            if (user?.must_change_password && window.location.pathname !== '/profile') {
+            if (user?.must_change_password && pathname !== '/profile') {
                 router.replace('/profile?change_password=true');
                 return;
             }
         }
-    }, [isAuthenticated, hasRole, loading, router, user]);
+    }, [isAuthenticated, hasRole, loading, router, user, pathname]);
 
     // Show loading state while checking authentication
     if (loading) {
@@ -48,7 +61,7 @@ export default function DashboardLayout({
         );
     }
 
-    // Don't render dashboard if not authenticated or unauthorized
+    // Don't render if not authenticated or not authorized
     if (!isAuthenticated || !hasRole(['admin', 'super_admin'])) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -62,7 +75,6 @@ export default function DashboardLayout({
                     </p>
                     <button
                         onClick={() => {
-                            // Clear possibly stale data
                             sessionStorage.clear();
                             document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                             window.location.href = '/login';

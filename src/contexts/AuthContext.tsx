@@ -108,13 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (userWithFlag.must_change_password) {
                 router.replace('/profile?change_password=true');
+            } else if (userWithFlag.role === 'super_admin') {
+                router.replace('/super-admin');
             } else {
                 router.replace('/dashboard');
-            }
-
-            // Clear browser history to prevent back button
-            if (typeof window !== 'undefined') {
-                window.history.pushState(null, '', window.location.href);
             }
         } catch (error: any) {
             throw new Error(error.response?.data?.message || 'Login failed');

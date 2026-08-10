@@ -5,19 +5,20 @@ import { LandingNavbar } from '@/components/landing-navbar';
 import { LandingFooter } from '@/components/landing-footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from "next/navigation"
-import { publicAPI } from "@/data/apis"
+import { useRouter } from "next/navigation";
+import { publicAPI } from "@/data/apis";
 import {
     Search,
     MapPin,
     Wifi,
     Shield,
-    Zap,
-    Star,
-    Mail,
     ArrowRight,
     Building2,
     Loader2,
+    Home,
+    Phone,
+    Mail,
+    Building,
     CheckCircle2
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -39,8 +40,23 @@ interface Property {
     category?: string;
 }
 
+interface Agency {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    logo_path?: string;
+    properties_count: number;
+    units_count: number;
+    vacant_units_count: number;
+}
+
 export default function AllPropertiesPage() {
     const router = useRouter();
+    const [viewMode, setViewMode] = useState<'agencies' | 'properties'>('agencies');
+    const [agencies, setAgencies] = useState<Agency[]>([]);
+    const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null);
+
     const [allProperties, setAllProperties] = useState<Property[]>([]);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,29 +69,43 @@ export default function AllPropertiesPage() {
 
     // Dynamic Filter Options
     const [locationOptions, setLocationOptions] = useState<string[]>([]);
-    const [typeOptions, setTypeOptions] = useState<string[]>([]);
 
     useEffect(() => {
+        fetchAgencies();
         fetchProperties();
         fetchSearchOptions();
     }, []);
 
+    const fetchAgencies = async () => {
+        try {
+            const data = await publicAPI.getAgencies();
+            if (Array.isArray(data)) setAgencies(data);
+        } catch (err) {
+            console.error("Failed to fetch agencies:", err);
+        }
+    };
+
     const fetchSearchOptions = async () => {
         try {
             const options = await publicAPI.getSearchOptions();
-            if (options) {
-                if (options.locations) setLocationOptions(options.locations);
-                if (options.types) setTypeOptions(options.types);
+            if (options && options.locations) {
+                setLocationOptions(options.locations);
             }
         } catch (error) {
             console.error("Failed to fetch search options", error);
         }
     };
 
-    const fetchProperties = async () => {
+    const fetchProperties = async (agencyId?: number) => {
         setLoading(true);
         try {
-            const response = await publicAPI.getProperties();
+            let response;
+            if (agencyId) {
+                const res = await publicAPI.getAgencyProperties(agencyId);
+                response = res.properties || [];
+            } else {
+                response = await publicAPI.getProperties();
+            }
 
             let propertiesData: Property[] = [];
             if (Array.isArray(response)) {
@@ -93,6 +123,12 @@ export default function AllPropertiesPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSelectAgency = (agency: Agency) => {
+        setSelectedAgency(agency);
+        setViewMode('properties');
+        fetchProperties(agency.id);
     };
 
     const handleSearch = async () => {
@@ -126,169 +162,278 @@ export default function AllPropertiesPage() {
         setSearchType('Property Type');
         setSearchMinPrice('');
         setSearchMaxPrice('');
-        setFilteredProperties(allProperties);
+        setSelectedAgency(null);
+        fetchProperties();
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
             <LandingNavbar />
 
             <main className="pt-32 pb-20">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-                            Find Your Perfect <br />
-                            <span className="text-blue-600">
-                                Available Home
-                            </span>
+                <div className="container mx-auto px-4 max-w-6xl">
+                    {/* Header Banner */}
+                    <div className="text-center mb-10 space-y-3">
+                        <Badge className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 px-3.5 py-1 text-xs uppercase font-bold tracking-wider">
+                            Multi-Tenant House Finder
+                        </Badge>
+                        <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {selectedAgency ? `${selectedAgency.name} Portfolio` : "Registered Agencies & Available Houses"}
                         </h1>
-                        <p className="text-gray-500 max-w-2xl mx-auto">
-                            Discover our full range of premium residential and commercial spaces with advanced search tools.
+                        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-base">
+                            Select a registered real estate management agency or search available vacant units directly.
                         </p>
                     </div>
 
-                    {/* Advanced Search Bar Component */}
-                    <div className="max-w-5xl mx-auto bg-white p-4 rounded-2xl shadow-xl border border-gray-100 mb-20 flex flex-col md:flex-row gap-4 items-end md:items-center">
-                        <div className="flex-1 w-full relative">
-                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Location</label>
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                                <select
-                                    value={searchLocation}
-                                    onChange={(e) => setSearchLocation(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
-                                >
-                                    <option value="">Any Location</option>
-                                    {locationOptions.map((loc, i) => (
-                                        <option key={i} value={loc}>{loc}</option>
-                                    ))}
-                                </select>
-                            </div>
+                    {/* Navigation Tabs */}
+                    <div className="flex justify-center mb-10">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl shadow-sm flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setViewMode('agencies');
+                                    setSelectedAgency(null);
+                                    fetchProperties();
+                                }}
+                                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                    viewMode === 'agencies'
+                                        ? 'bg-indigo-600 text-white shadow-md'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                            >
+                                <Building className="w-4 h-4" />
+                                Registered Agencies ({agencies.length})
+                            </button>
+
+                            <button
+                                onClick={() => setViewMode('properties')}
+                                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                    viewMode === 'properties'
+                                        ? 'bg-indigo-600 text-white shadow-md'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                            >
+                                <Home className="w-4 h-4" />
+                                All Properties & Units ({filteredProperties.length})
+                            </button>
                         </div>
-                        <div className="flex-1 w-full relative">
-                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Property Type</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                                <select
-                                    value={searchType}
-                                    onChange={(e) => setSearchType(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium appearance-none text-gray-600 cursor-pointer"
-                                >
-                                    <option>Property Type</option>
-                                    <option value="1 Bedroom">1 Bedroom</option>
-                                    <option value="2 Bedroom">2 Bedroom</option>
-                                    <option value="3 Bedroom">3 Bedroom</option>
-                                    <option value="Shop">Shop</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Shop & 1 Bedroom">Shop & 1 Bedroom</option>
-                                    <option value="Shop & Shop">Shop & Shop</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex-1 w-full relative">
-                            <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Price Range (KES)</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="number"
-                                    placeholder="Min"
-                                    value={searchMinPrice}
-                                    onChange={(e) => setSearchMinPrice(e.target.value)}
-                                    className="w-1/2 px-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Max"
-                                    value={searchMaxPrice}
-                                    onChange={(e) => setSearchMaxPrice(e.target.value)}
-                                    className="w-1/2 px-4 py-3 rounded-xl bg-gray-50 border-0 focus:ring-2 focus:ring-blue-100 outline-none font-medium text-gray-600"
-                                />
-                            </div>
-                        </div>
-                        <Button
-                            onClick={handleSearch}
-                            className="w-full md:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-lg shadow-lg shadow-blue-600/25 transition-all active:scale-95 mt-4 md:mt-6"
-                        >
-                            Search
-                        </Button>
                     </div>
 
-                    {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
-                            <p className="text-gray-500 font-medium">Updating listings...</p>
-                        </div>
-                    ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredProperties.length > 0 ? (
-                                filteredProperties.map((property) => {
-                                    const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
-                                    const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
-
-                                    return (
-                                        <div key={property.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                                            <div className="relative h-64 overflow-hidden">
-                                                <img
-                                                    src={displayImage}
-                                                    alt={property.name}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                />
-                                                <Badge className="absolute top-4 left-4 bg-white/90 text-blue-800 hover:bg-white border-0 shadow-sm font-semibold">
-                                                    {availableUnits > 0 ? `${availableUnits} Available` : 'Fully Occupied'}
-                                                </Badge>
-                                                {(() => {
-                                                    const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
-                                                    const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : (property.min_rent || 0);
-                                                    const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : (property.max_rent || 0);
-
-                                                    if (minRent || maxRent) {
-                                                        return (
-                                                            <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
-                                                                KES {formatCurrency(String(minRent))}
-                                                                {maxRent > minRent ? ` - ${formatCurrency(String(maxRent))}` : ''}
-                                                                <span className="text-sm font-normal opacity-90">/mo</span>
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })()}
-                                            </div>
-                                            <div className="p-6">
-                                                <h3 className="text-xl font-bold text-gray-900 mb-2 truncate">{property.name}</h3>
-                                                <div className="flex items-center text-gray-500 mb-4 text-sm">
-                                                    <MapPin className="h-4 w-4 mr-2 text-blue-500" />
-                                                    {property.location}
-                                                </div>
-                                                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                                                    <div className="flex gap-3">
-                                                        <Wifi className="h-5 w-5 text-gray-300" />
-                                                        <Shield className="h-5 w-5 text-gray-300" />
+                    {/* View 1: Registered Agencies Grid */}
+                    {viewMode === 'agencies' && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {agencies.length > 0 ? (
+                                    agencies.map((agency) => (
+                                        <div
+                                            key={agency.id}
+                                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                                        >
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-3 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
+                                                        <Building2 className="w-6 h-6" />
                                                     </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="text-blue-600 hover:bg-blue-50 font-bold"
-                                                        onClick={() => router.push(`/property/${property.id}`)}
-                                                    >
-                                                        Details <ArrowRight className="ml-2 h-4 w-4" />
-                                                    </Button>
+                                                    <div>
+                                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">
+                                                            {agency.name}
+                                                        </h3>
+                                                        <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200 font-semibold px-2 py-0">
+                                                            Verified Landlord Account
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
+                                                    {agency.phone && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="w-3.5 h-3.5 text-indigo-500" />
+                                                            <span>{agency.phone}</span>
+                                                        </div>
+                                                    )}
+                                                    {agency.email && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                                                            <span className="truncate">{agency.email}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2 pt-2 text-center">
+                                                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
+                                                        <div className="text-base font-black text-slate-900 dark:text-white">{agency.properties_count}</div>
+                                                        <div className="text-[10px] text-slate-500 font-medium">Properties</div>
+                                                    </div>
+                                                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
+                                                        <div className="text-base font-black text-emerald-600 dark:text-emerald-400">{agency.vacant_units_count}</div>
+                                                        <div className="text-[10px] text-slate-500 font-medium">Vacant Units</div>
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            <Button
+                                                onClick={() => handleSelectAgency(agency)}
+                                                className="mt-6 w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
+                                            >
+                                                View Agency Properties <ArrowRight className="w-4 h-4 ml-1.5" />
+                                            </Button>
                                         </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="col-span-full py-20 text-center">
-                                    <div className="p-6 bg-gray-50 rounded-3xl inline-block mb-4">
-                                        <Search className="h-12 w-12 text-blue-200" />
+                                    ))
+                                ) : (
+                                    <div className="col-span-full py-16 text-center text-slate-500">
+                                        No registered agencies available yet.
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Matching Properties</h3>
-                                    <p className="text-gray-500">We couldn't find any properties matching your search criteria.</p>
-                                    <Button
-                                        variant="outline"
-                                        className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50 h-11 px-8 font-semibold rounded-xl"
-                                        onClick={clearFilters}
-                                    >
-                                        Reset All Filters
-                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* View 2: Properties & Vacant Units Grid */}
+                    {viewMode === 'properties' && (
+                        <div className="space-y-8">
+                            {/* Advanced Search Bar Component */}
+                            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-end md:items-center">
+                                <div className="flex-1 w-full relative">
+                                    <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Location</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                        <select
+                                            value={searchLocation}
+                                            onChange={(e) => setSearchLocation(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-0 focus:ring-2 focus:ring-indigo-100 outline-none font-medium appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                                        >
+                                            <option value="">Any Location</option>
+                                            {locationOptions.map((loc, i) => (
+                                                <option key={i} value={loc}>{loc}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 w-full relative">
+                                    <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Property Type</label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                        <select
+                                            value={searchType}
+                                            onChange={(e) => setSearchType(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-0 focus:ring-2 focus:ring-indigo-100 outline-none font-medium appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                                        >
+                                            <option>Property Type</option>
+                                            <option value="1 Bedroom">1 Bedroom</option>
+                                            <option value="2 Bedroom">2 Bedroom</option>
+                                            <option value="3 Bedroom">3 Bedroom</option>
+                                            <option value="Shop">Shop</option>
+                                            <option value="Office">Office</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 w-full relative">
+                                    <label className="text-xs font-bold text-slate-400 mb-1.5 ml-2 block uppercase tracking-wider">Price Range (KES)</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Min"
+                                            value={searchMinPrice}
+                                            onChange={(e) => setSearchMinPrice(e.target.value)}
+                                            className="w-1/2 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-0 focus:ring-2 focus:ring-indigo-100 outline-none font-medium text-slate-700 dark:text-slate-200"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Max"
+                                            value={searchMaxPrice}
+                                            onChange={(e) => setSearchMaxPrice(e.target.value)}
+                                            className="w-1/2 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-0 focus:ring-2 focus:ring-indigo-100 outline-none font-medium text-slate-700 dark:text-slate-200"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={handleSearch}
+                                    className="w-full md:w-auto h-12 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95"
+                                >
+                                    Search
+                                </Button>
+                            </div>
+
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-20">
+                                    <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+                                    <p className="text-slate-500 font-medium">Loading properties...</p>
+                                </div>
+                            ) : (
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {filteredProperties.length > 0 ? (
+                                        filteredProperties.map((property) => {
+                                            const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
+                                            const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
+
+                                            return (
+                                                <div key={property.id} className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-slate-800">
+                                                    <div className="relative h-64 overflow-hidden">
+                                                        <img
+                                                            src={displayImage}
+                                                            alt={property.name}
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                        />
+                                                        <Badge className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 font-bold border-0 shadow-md">
+                                                            {availableUnits > 0 ? `${availableUnits} Vacant Units` : 'Fully Occupied'}
+                                                        </Badge>
+                                                        {(() => {
+                                                            const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];
+                                                            const minRent = unitPrices.length > 0 ? Math.min(...unitPrices) : (property.min_rent || 0);
+                                                            const maxRent = unitPrices.length > 0 ? Math.max(...unitPrices) : (property.max_rent || 0);
+
+                                                            if (minRent || maxRent) {
+                                                                return (
+                                                                    <div className="absolute bottom-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg">
+                                                                        KES {formatCurrency(String(minRent))}
+                                                                        {maxRent > minRent ? ` - ${formatCurrency(String(maxRent))}` : ''}
+                                                                        <span className="text-xs font-normal opacity-90">/mo</span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                    </div>
+                                                    <div className="p-6">
+                                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 truncate">{property.name}</h3>
+                                                        <div className="flex items-center text-slate-500 mb-4 text-sm font-medium">
+                                                            <MapPin className="h-4 w-4 mr-2 text-indigo-500" />
+                                                            {property.location}
+                                                        </div>
+                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                                            <div className="flex gap-3">
+                                                                <Wifi className="h-5 w-5 text-slate-300" />
+                                                                <Shield className="h-5 w-5 text-slate-300" />
+                                                            </div>
+                                                            <Button
+                                                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl"
+                                                                onClick={() => router.push(`/property/${property.id}`)}
+                                                            >
+                                                                Details & Vacant Units <ArrowRight className="ml-2 h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="col-span-full py-20 text-center">
+                                            <div className="p-6 bg-slate-100 dark:bg-slate-800 rounded-3xl inline-block mb-4">
+                                                <Search className="h-12 w-12 text-indigo-400" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Matching Properties</h3>
+                                            <p className="text-slate-500">We couldn't find any properties matching your search criteria.</p>
+                                            <Button
+                                                variant="outline"
+                                                className="mt-6 border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-11 px-8 font-semibold rounded-xl"
+                                                onClick={clearFilters}
+                                            >
+                                                Reset All Filters
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

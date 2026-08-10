@@ -7,7 +7,7 @@ import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
 import { useAuth } from "@/contexts/AuthContext"
 import api from "@/lib/api"
 import { formatDate } from "@/lib/utils"
-import apiClient, { communicationAPI } from "@/data/apis"
+import apiClient, { communicationAPI, publicAPI } from "@/data/apis"
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -30,6 +30,19 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
     const [isNotifOpen, setIsNotifOpen] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
+    const [companyName, setCompanyName] = useState('RentSys')
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data && data.company_name) setCompanyName(data.company_name);
+            } catch (err) {
+                console.error('Failed to load top-nav settings:', err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const dropdownRef = useRef<HTMLDivElement>(null)
     const notifRef = useRef<HTMLDivElement>(null)
@@ -186,7 +199,7 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                                                             cleanPhone = '254' + digitsOnly;
                                                         }
 
-                                                        const waText = `Hello ${details.from || ''}, I'm responding to your inquiry about "${details.subject || 'RentSys'}" via RentSys. \n\nYour message: "${details.content || ''}"`;
+                                                        const waText = `Hello ${details.from || ''}, I'm responding to your inquiry about "${details.subject || companyName}" via ${companyName}. \n\nYour message: "${details.content || ''}"`;
                                                         const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
 
                                                         return (

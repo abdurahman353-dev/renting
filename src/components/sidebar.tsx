@@ -14,8 +14,9 @@ import {
   ChevronRight,
   Wrench
 } from "lucide-react"
-import { Children, useState } from "react"
+import { Children, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import { publicAPI } from "@/data/apis"
 
 
 interface SidebarRoute {
@@ -123,6 +124,39 @@ const superAdminRoutes: SidebarRoute[] = [
   },
 ]
 
+const pureSuperAdminRoutes: SidebarRoute[] = [
+  {
+    label: "SaaS Master Control",
+    icon: LayoutDashboard,
+    href: "/super-admin",
+    color: "text-amber-400 font-bold",
+  },
+  {
+    label: "Landing & Settings",
+    icon: Settings,
+    href: "/settings",
+    color: "text-indigo-400",
+  },
+  {
+    label: "Platform Activity",
+    icon: FileText,
+    href: "/activity",
+    color: "text-emerald-400",
+  },
+  {
+    label: "System Admins",
+    icon: Users,
+    href: "/admins",
+    color: "text-pink-400",
+  },
+  {
+    label: "Landlord Demo View",
+    icon: Building2,
+    href: "/dashboard",
+    color: "text-slate-400",
+  },
+]
+
 interface SidebarProps {
   isOpen: boolean
   isExpanded?: boolean
@@ -134,10 +168,25 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
   const pathname = usePathname()
   const { isSuperAdmin, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
+  const [companyName, setCompanyName] = useState("")
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await publicAPI.getSettings();
+        if (data && data.company_name) {
+          setCompanyName(data.company_name);
+        }
+      } catch (err) {
+        console.error("Failed to load sidebar settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // If routes are passed as props, use them. 
-  // Otherwise, use defaultRoutes and conditionally add superAdminRoutes.
-  const routes = propRoutes || (isSuperAdmin() ? [...defaultRoutes, ...superAdminRoutes] : defaultRoutes)
+  // Super Admin gets pure SaaS Owner navigation.
+  const routes = propRoutes || (isSuperAdmin() ? pureSuperAdminRoutes : defaultRoutes)
 
   const toggleMenu = (href: string) => {
     if (!isExpanded) return; // Don't expand menus if sidebar is collapsed
@@ -147,6 +196,9 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
         : [...prev, href]
     )
   }
+
+  const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "R";
+  const displayTitle = companyName || "";
 
   return (
     <>
@@ -167,12 +219,12 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
               {/* Logo placeholder */}
               <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
               <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
-                <span className="text-xl font-bold">R</span>
+                <span className="text-xl font-bold">{brandLetter}</span>
               </div>
             </div>
             {isExpanded && (
               <h1 className="text-2xl font-bold text-indigo-400 ml-4 whitespace-nowrap overflow-hidden transition-all duration-300">
-                RentSys
+                {displayTitle}
               </h1>
             )}
           </Link>
@@ -244,7 +296,7 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
               <>
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[10px] uppercase font-extrabold text-indigo-400 tracking-wider">
-                    {user?.organization?.name || "RentSys SaaS"}
+                    {user?.organization?.name || companyName || "SaaS Platform"}
                   </p>
                   <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded font-bold uppercase">
                     {user?.organization?.status === 'trial' ? 'Trial' : user?.role === 'super_admin' ? 'Super Admin' : 'SaaS'}

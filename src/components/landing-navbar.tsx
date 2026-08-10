@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function LandingNavbar() {
-    const [companyName, setCompanyName] = useState('RentSys');
+    const [companyName, setCompanyName] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
             try {
                 const data = await publicAPI.getSettings();
-                if (data && data.company_name) {
-                    setCompanyName(data.company_name);
+                if (data) {
+                    setCompanyName(data.company_name || '');
                 }
             } catch (error) {
                 console.error("Failed to fetch navbar settings:", error);
@@ -70,11 +70,19 @@ export function LandingNavbar() {
                     >
                         Contact
                     </button>
-                    {/* <Link href="/login">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
-                            Login
-                        </Button>
-                    </Link> */}
+                    
+                    <div className="flex items-center gap-3 ml-4">
+                        <Link href="/login">
+                            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 font-medium">
+                                Landlord Login
+                            </Button>
+                        </Link>
+                        <Link href="/register">
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 shadow-sm shadow-blue-600/30">
+                                Start Free Trial
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -128,13 +136,18 @@ export function LandingNavbar() {
                     >
                         Contact
                     </button>
-                    {/* <div className="pt-2 border-t border-gray-100">
+                    <div className="pt-3 border-t border-gray-100 space-y-2">
                         <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6">
-                                Login
+                            <Button variant="outline" className="w-full border-blue-600 text-blue-600 font-bold py-5">
+                                Landlord Login
                             </Button>
                         </Link>
-                    </div> */}
+                        <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5">
+                                Start 14-Day Free Trial
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             )}
         </nav>

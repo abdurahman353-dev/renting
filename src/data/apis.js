@@ -442,12 +442,12 @@ export const superAdminAPI = {
     },
 
     suspendAdmin: async (id) => {
-        const response = await apiClient.post(`/super-admin/admins/${id}/suspend`);
+        const response = await apiClient.post(`/super-admin/users/${id}/suspend`);
         return response.data;
     },
 
     activateAdmin: async (id) => {
-        const response = await apiClient.post(`/super-admin/admins/${id}/activate`);
+        const response = await apiClient.post(`/super-admin/users/${id}/activate`);
         return response.data;
     },
 
@@ -531,6 +531,16 @@ export const publicAPI = {
 
     submitContactForm: async (data) => {
         const response = await axios.post(`${API_BASE_URL}/public/contact`, data);
+        return response.data;
+    },
+
+    getAgencies: async () => {
+        const response = await axios.get(`${API_BASE_URL}/public/agencies`);
+        return response.data;
+    },
+
+    getAgencyProperties: async (id) => {
+        const response = await axios.get(`${API_BASE_URL}/public/agencies/${id}/properties`);
         return response.data;
     },
 
@@ -621,6 +631,11 @@ export const saasAPI = {
 
     updateOrganizationStatus: async (id, data) => {
         const response = await apiClient.put(`/super-admin/saas/organizations/${id}`, data);
+        return response.data;
+    },
+
+    getOrganizationsWithUsers: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/organizations', { params });
         return response.data;
     },
 };

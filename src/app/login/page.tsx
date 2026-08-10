@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as z from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { AlertCircle, Eye, EyeOff, Loader2, Building2, ShieldCheck } from 'lucid
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { publicAPI } from '@/data/apis';
 
 // Zod schema for login form validation
 const loginSchema = z.object({
@@ -27,9 +28,24 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const router = useRouter();
     const [password, setPassword] = useState('');
+    const [companyName, setCompanyName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await publicAPI.getSettings();
+                if (data && data.company_name) {
+                    setCompanyName(data.company_name);
+                }
+            } catch (err) {
+                console.error("Failed to load login page settings:", err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,8 +58,7 @@ export default function LoginPage() {
 
             // Attempt login with validated data
             await login(validatedData.email, validatedData.password);
-            toast.success("login successfull. redirecting to dashboard")
-            router.push('/dashboard');
+            toast.success("Login successful. Welcome back!");
 
         } catch (err) {
             // Handle Zod validation errors
@@ -75,7 +90,7 @@ export default function LoginPage() {
                         <Link href="/" className="p-2 bg-blue-600 rounded-lg">
                             <Building2 className="h-6 w-6" />
                         </Link>
-                        RentSys
+                        {companyName}
                     </div>
                 </div>
 
@@ -89,7 +104,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="relative z-10 text-sm text-gray-500">
-                    © {new Date().getFullYear()} RentSys. All rights reserved.
+                    © {new Date().getFullYear()} {companyName}. All rights reserved.
                 </div>
             </div>
 

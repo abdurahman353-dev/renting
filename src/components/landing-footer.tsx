@@ -12,7 +12,8 @@ export function LandingFooter() {
         company_phone: '',
         company_whatsapp: '',
         company_email: '',
-        company_address: ''
+        company_address: '',
+        company_footer_tagline: ''
     });
 
     useEffect(() => {
@@ -20,7 +21,14 @@ export function LandingFooter() {
             try {
                 const data = await publicAPI.getSettings();
                 if (data) {
-                    setSettings(prev => ({ ...prev, ...data }));
+                    setSettings({
+                        company_name: data.company_name || '',
+                        company_phone: data.company_phone || '',
+                        company_whatsapp: data.company_whatsapp || '',
+                        company_email: data.company_email || '',
+                        company_address: data.company_address || '',
+                        company_footer_tagline: data.company_footer_tagline || ''
+                    });
                 }
             } catch (error) {
                 console.error("Failed to fetch footer settings:", error);
@@ -30,66 +38,93 @@ export function LandingFooter() {
     }, []);
 
     return (
-        <footer id="contact" className="bg-[#0B1120] text-gray-400 py-16 mt-20">
-            <div className="container mx-auto px-4">
+        <footer id="contact" className="bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 py-16 border-t border-slate-200 dark:border-slate-800">
+            <div className="container mx-auto px-4 max-w-6xl">
                 <div className="grid md:grid-cols-3 gap-12 mb-12">
                     <div className="space-y-4">
                         <Link href="/" className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-blue-600 rounded-lg text-white">
+                            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/20">
                                 <Building2 className="h-5 w-5" />
                             </div>
-                            <span className="text-xl font-bold text-white">{settings.company_name}</span>
+                            {settings.company_name && (
+                                <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                                    {settings.company_name}
+                                </span>
+                            )}
                         </Link>
-                        <p className="leading-relaxed">The complete solution for modern property management. Making renting simple, transparent, and secure for everyone.</p>
+                        {settings.company_footer_tagline && (
+                            <p className="leading-relaxed text-sm text-slate-600 dark:text-slate-400">
+                                {settings.company_footer_tagline}
+                            </p>
+                        )}
                     </div>
 
                     <div>
-                        <h4 className="text-white font-bold mb-6">Quick Links</h4>
-                        <ul className="space-y-4">
-                            <li><Link href="/" className="hover:text-blue-500 transition-colors">Home</Link></li>
-                            <li><Link href="/property" className="hover:text-blue-500 transition-colors">All Properties</Link></li>
-                            <li><Link href="#contact" className="hover:text-blue-500 transition-colors">Contact Us</Link></li>
+                        <h4 className="text-slate-900 dark:text-white font-bold text-base mb-5 tracking-tight">Quick Links</h4>
+                        <ul className="space-y-3 font-medium text-sm">
+                            <li><Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Home</Link></li>
+                            <li><Link href="/property" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">All Properties & Units</Link></li>
+                            <li><Link href="/register" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Landlord Registration</Link></li>
+                            <li><Link href="/login" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Landlord Login</Link></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 className="text-white font-bold mb-6">Contact Us</h4>
-                        <ul className="space-y-4">
-                            <li className="flex items-center gap-3">
-                                <Phone className="h-5 w-5 text-blue-500" />
-                                <a href={`tel:${settings.company_phone}`} className="hover:text-blue-500 transition-colors">
-                                    {settings.company_phone}
-                                </a>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                <Mail className="h-5 w-5 text-blue-500" />
-                                <a href={`mailto:${settings.company_email}`} className="hover:text-blue-500 transition-colors">
-                                    {settings.company_email}
-                                </a>
-                            </li>
+                        <h4 className="text-slate-900 dark:text-white font-bold text-base mb-5 tracking-tight">Contact Us</h4>
+                        <ul className="space-y-3 font-medium text-sm">
+                            {settings.company_phone && (
+                                <li className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                                        <Phone className="h-4 w-4" />
+                                    </div>
+                                    <a href={`tel:${settings.company_phone}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                        {settings.company_phone}
+                                    </a>
+                                </li>
+                            )}
+                            {settings.company_email && (
+                                <li className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                                        <Mail className="h-4 w-4" />
+                                    </div>
+                                    <a href={`mailto:${settings.company_email}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                        {settings.company_email}
+                                    </a>
+                                </li>
+                            )}
                             {settings.company_whatsapp && (
                                 <li className="flex items-center gap-3">
-                                    <WhatsAppIcon className="h-5 w-5 text-emerald-500" />
+                                    <div className="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                                        <WhatsAppIcon className="h-4 w-4" />
+                                    </div>
                                     <a
                                         href={`https://wa.me/${settings.company_whatsapp.startsWith('0') ? '254' + settings.company_whatsapp.slice(1) : settings.company_whatsapp}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:text-emerald-500 transition-colors"
+                                        className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                                     >
                                         {settings.company_whatsapp}
                                     </a>
                                 </li>
                             )}
-                            <li className="flex items-center gap-3">
-                                <MapPin className="h-5 w-5 text-blue-500" />
-                                {settings.company_address}
-                            </li>
+                            {settings.company_address && (
+                                <li className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                                        <MapPin className="h-4 w-4" />
+                                    </div>
+                                    <span>{settings.company_address}</span>
+                                </li>
+                            )}
                         </ul>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm">© {new Date().getFullYear()} {settings.company_name}. All rights reserved.</p>
+                <div className="border-t border-slate-200 dark:border-slate-900 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
+                    <p>© {new Date().getFullYear()} {settings.company_name}. All rights reserved.</p>
+                    <div className="flex gap-6">
+                        <Link href="/register" className="hover:text-indigo-600 transition-colors">Landlord Terms</Link>
+                        <Link href="/" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
+                    </div>
                 </div>
             </div>
         </footer>

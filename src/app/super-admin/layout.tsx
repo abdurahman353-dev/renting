@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
-import { ShieldCheck, Users, Activity, Settings, LayoutDashboard } from "lucide-react";
+import { ShieldCheck, Users, Activity, Settings, LayoutDashboard, Building2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function SuperAdminLayout({
     children,
@@ -11,33 +14,67 @@ export default function SuperAdminLayout({
     children: React.ReactNode;
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { isAuthenticated, loading, user } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading) {
+            if (!isAuthenticated) {
+                router.replace('/login');
+                return;
+            }
+            // Only super_admin can access this portal
+            if (user?.role !== 'super_admin') {
+                router.replace('/login?error=unauthorized');
+                return;
+            }
+        }
+    }, [isAuthenticated, loading, router, user]);
 
     const superAdminRoutes = [
         {
-            label: "Dashboard",
+            label: "SaaS Master Control",
             icon: LayoutDashboard,
             href: "/super-admin",
-            color: "text-sky-500",
+            color: "text-amber-400 font-bold",
         },
         {
-            label: "Admins",
-            icon: Users,
-            href: "/super-admin/admins",
-            color: "text-violet-500",
-        },
-        {
-            label: "Activity Logs",
-            icon: Activity,
-            href: "/super-admin/activity",
-            color: "text-pink-700",
-        },
-        {
-            label: "Settings",
+            label: "Landing & Settings",
             icon: Settings,
-            href: "/super-admin/settings",
-            color: "text-gray-500",
+            href: "/settings",
+            color: "text-indigo-400",
+        },
+        {
+            label: "Platform Activity",
+            icon: Activity,
+            href: "/activity",
+            color: "text-emerald-400",
+        },
+        {
+            label: "System Admins",
+            icon: Users,
+            href: "/admins",
+            color: "text-pink-400",
+        },
+        {
+            label: "Landlord Demo View",
+            icon: Building2,
+            href: "/dashboard",
+            color: "text-slate-400",
         },
     ];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+                <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || user?.role !== 'super_admin') {
+        return null;
+    }
 
     return (
         <div className="h-full relative">
