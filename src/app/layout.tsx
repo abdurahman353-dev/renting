@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import NextTopLoader from 'nextjs-toploader';
 
 
 const roboto = Roboto({
@@ -34,6 +35,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <NextTopLoader color="#4f46e5" showSpinner={false} />
             {children}
             <Toaster
               position="top-right"
