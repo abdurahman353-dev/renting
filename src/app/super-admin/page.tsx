@@ -27,16 +27,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { saasAPI } from "@/data/apis";
+import Cookies from "js-cookie";
+import { saasAPI, superAdminAPI } from "@/data/apis";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useDebounce } from "@/hooks/use-debounce";
+import { CreditCard, Wallet, MoreVertical, ExternalLink, Shield } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function SuperAdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [overview, setOverview] = useState<any>(null);
     const [selectedOrg, setSelectedOrg] = useState<any>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [registerModalOpen, setRegisterModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [planFilter, setPlanFilter] = useState("all");
@@ -48,16 +58,74 @@ export default function SuperAdminDashboard() {
     const [extendDays, setExtendDays] = useState(14);
     const [updating, setUpdating] = useState(false);
 
+    // Register Landlord Form State
+    const [regForm, setRegForm] = useState({
+        company_name: "",
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        password_confirmation: "",
+        plan: "starter",
+        start_mode: "trial",
+        amount_paid: "",
+        mpesa_reference: "",
+    });
+    const [registering, setRegistering] = useState(false);
+
+    // Record Payment State
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [paymentOrg, setPaymentOrg] = useState<any>(null);
+    const [paymentForm, setPaymentForm] = useState({
+        amount_paid: '',
+        mpesa_reference: '',
+        plan: 'starter',
+        note: '',
+    });
+    const [recordingPayment, setRecordingPayment] = useState(false);
+
+    // Adjust Wallet State
+    const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+    const [adjustOrg, setAdjustOrg] = useState<any>(null);
+    const [adjustForm, setAdjustForm] = useState({
+        mode: 'add', // 'add', 'deduct', 'set'
+        amount: '',
+        reason: '',
+    });
+    const [adjusting, setAdjusting] = useState(false);
+
+    // View Details State
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [viewOrg, setViewOrg] = useState<any>(null);
+
+    // Dynamic Plans state
+    const [plans, setPlans] = useState<any[]>([]);
+
     const debouncedSearch = useDebounce(searchTerm, 300);
 
     const fetchOverview = async () => {
         setLoading(true);
         try {
-            const data = await saasAPI.getSuperAdminOverview();
+            const [data, plansData] = await Promise.all([
+                saasAPI.getSuperAdminOverview(),
+                saasAPI.getPlans()
+            ]);
             setOverview(data);
-        } catch (error) {
+            if (plansData && Array.isArray(plansData)) {
+                setPlans(plansData);
+            }
+        } catch (error: any) {
             console.error("Failed to load SaaS overview:", error);
-            toast.error("Failed to load SaaS platform metrics.");
+            if (error.response?.status === 403) {
+                toast.error("Super Admin session invalid or expired. Re-authenticating...");
+                Cookies.remove("admin_token");
+                sessionStorage.removeItem("admin_user");
+                if (typeof window !== "undefined") {
+                    window.location.href = "/login?error=unauthorized";
+                }
+            } else {
+                toast.error("Failed to load SaaS platform metrics.");
+            }
         } finally {
             setLoading(false);
         }
@@ -99,6 +167,137 @@ export default function SuperAdminDashboard() {
         }
     };
 
+    const handleRegisterAgency = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!regForm.company_name || !regForm.name || !regForm.email || !regForm.phone || !regForm.password) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+        if (regForm.password !== regForm.password_confirmation) {
+            toast.error("Passwords do not match.");
+            return;
+        }
+
+        setRegistering(true);
+        try {
+            await saasAPI.registerOrganization(regForm);
+            toast.success(`Landlord Organization '${regForm.company_name}' registered successfully.`);
+            setRegisterModalOpen(false);
+            setRegForm({
+                company_name: "",
+                name: "",
+                email: "",
+                phone: "",
+                password: "",
+                password_confirmation: "",
+                plan: "starter",
+                start_mode: "trial",
+                amount_paid: "",
+                mpesa_reference: "",
+            });
+            fetchOverview();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to register organization.");
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const openPaymentModal = (org: any) => {
+        setPaymentOrg(org);
+        setPaymentForm({
+            amount_paid: '',
+            mpesa_reference: '',
+            plan: org.subscription_plan || 'starter',
+            note: '',
+        });
+        setPaymentModalOpen(true);
+    };
+
+    const handleRecordPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!paymentOrg || !paymentForm.amount_paid) {
+            toast.error('Please enter the amount paid.');
+            return;
+        }
+        setRecordingPayment(true);
+        try {
+            const result = await superAdminAPI.recordSubscriptionPayment({
+                organization_id: paymentOrg.id,
+                amount_paid:     parseFloat(paymentForm.amount_paid),
+                mpesa_reference: paymentForm.mpesa_reference || undefined,
+                plan:            paymentForm.plan,
+                note:            paymentForm.note || undefined,
+            });
+            toast.success(result.message ?? `Payment recorded for ${paymentOrg.name}.`);
+            setPaymentModalOpen(false);
+            fetchOverview();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to record payment.');
+        } finally {
+            setRecordingPayment(false);
+        }
+    };
+
+    const openAdjustWalletModal = (org: any) => {
+        setAdjustOrg(org);
+        setAdjustForm({
+            mode: 'add',
+            amount: '',
+            reason: '',
+        });
+        setAdjustModalOpen(true);
+    };
+
+    const handleAdjustWallet = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!adjustOrg || !adjustForm.amount) {
+            toast.error('Please enter the adjustment amount.');
+            return;
+        }
+        if (!adjustForm.reason.trim()) {
+            toast.error('Please provide a reason for the adjustment.');
+            return;
+        }
+        setAdjusting(true);
+        try {
+            const result = await superAdminAPI.adjustWalletBalance({
+                organization_id: adjustOrg.id,
+                mode:            adjustForm.mode,
+                amount:          parseFloat(adjustForm.amount),
+                reason:          adjustForm.reason,
+            });
+            toast.success(result.message ?? `Wallet balance adjusted for ${adjustOrg.name}.`);
+            setAdjustModalOpen(false);
+            fetchOverview();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to adjust wallet balance.');
+        } finally {
+            setAdjusting(false);
+        }
+    };
+
+    const openViewDetailsModal = (org: any) => {
+        setViewOrg(org);
+        setDetailsModalOpen(true);
+    };
+
+    const toggleOrgStatus = async (org: any) => {
+        const newStatus = org.status === 'suspended' ? 'active' : 'suspended';
+        try {
+            await saasAPI.updateOrganizationStatus(org.id, { status: newStatus });
+            toast.success(`Organization '${org.name}' status set to ${newStatus}.`);
+            if (viewOrg?.id === org.id) {
+                setViewOrg({ ...viewOrg, status: newStatus });
+            }
+            fetchOverview();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to update organization status.');
+        }
+    };
+
+
+
     if (loading) {
         return (
             <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
@@ -138,11 +337,12 @@ export default function SuperAdminDashboard() {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Link href="/register">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md">
-                            <Plus className="mr-2 h-4 w-4" /> Register New Agency / Landlord
-                        </Button>
-                    </Link>
+                    <Button
+                        onClick={() => setRegisterModalOpen(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md"
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> Register New Agency / Landlord
+                    </Button>
                 </div>
             </div>
 
@@ -221,6 +421,7 @@ export default function SuperAdminDashboard() {
                 </Card>
             </div>
 
+
             {/* Filter & Search Bar for Enterprise Agency Management */}
             <Card className="border-none shadow-md bg-card">
                 <CardContent className="p-6">
@@ -284,6 +485,7 @@ export default function SuperAdminDashboard() {
                                 <TableHead>Super Admin (Owner)</TableHead>
                                 <TableHead>Subscription Tier</TableHead>
                                 <TableHead>Unit Limit</TableHead>
+                                <TableHead>Wallet Balance</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Registered</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
@@ -327,6 +529,31 @@ export default function SuperAdminDashboard() {
                                             <span>{org.max_units || 25}</span> <span className="text-xs text-muted-foreground font-normal">units</span>
                                         </TableCell>
                                         <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex flex-col">
+                                                    <span className={`font-bold text-sm ${
+                                                        (org.wallet_balance ?? 0) > 0 ? 'text-emerald-600' : 'text-red-500'
+                                                    }`}>
+                                                        KES {Number(org.wallet_balance ?? 0).toLocaleString()}
+                                                    </span>
+                                                    {org.plan_expires_at && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Expires {new Date(org.plan_expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-7 w-7 text-slate-400 hover:text-indigo-600"
+                                                    title="Correct / Adjust Wallet Balance"
+                                                    onClick={() => openAdjustWalletModal(org)}
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
                                             {org.status === 'active' ? (
                                                 <Badge className="bg-emerald-500 text-white border-0 font-bold text-xs">Active</Badge>
                                             ) : org.status === 'trial' ? (
@@ -339,26 +566,47 @@ export default function SuperAdminDashboard() {
                                             {new Date(org.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="font-bold text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                                                    onClick={() => openEditModal(org)}
-                                                >
-                                                    <Edit3 className="w-3.5 h-3.5 mr-1" /> Manage Plan
-                                                </Button>
-                                                <Link href={`/property`}>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="text-xs text-slate-600 hover:text-indigo-600"
-                                                        title="View Marketplace Listings"
-                                                    >
-                                                        <Eye className="w-3.5 h-3.5 mr-1" /> Listings
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                        <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                                                     </Button>
-                                                </Link>
-                                            </div>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 shadow-xl">
+                                                    <DropdownMenuItem onClick={() => openViewDetailsModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                        <Eye className="w-4 h-4 text-indigo-500" /> View Full Account Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => openPaymentModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                        <CreditCard className="w-4 h-4 text-emerald-500" /> Record Top-Up Payment
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => openAdjustWalletModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                        <Wallet className="w-4 h-4 text-amber-500" /> Correct Wallet Balance
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => openEditModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                        <Edit3 className="w-4 h-4 text-blue-500" /> Manage Plan & Capacity
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onClick={() => toggleOrgStatus(org)}
+                                                        className={`font-semibold text-xs gap-2 py-2 cursor-pointer ${
+                                                            org.status === 'suspended' ? 'text-emerald-600' : 'text-red-600'
+                                                        }`}
+                                                    >
+                                                        {org.status === 'suspended' ? (
+                                                            <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Activate Account</>
+                                                        ) : (
+                                                            <><Ban className="w-4 h-4 text-red-500" /> Suspend Account</>
+                                                        )}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem asChild className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                        <Link href="/property">
+                                                            <ExternalLink className="w-4 h-4 text-slate-500" /> View Marketplace Listings
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -389,16 +637,27 @@ export default function SuperAdminDashboard() {
                                 className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
                                 value={editPlan}
                                 onChange={(e) => {
-                                    const plan = e.target.value;
-                                    setEditPlan(plan);
-                                    if (plan === 'enterprise') setEditMaxUnits(1000);
-                                    else if (plan === 'growth') setEditMaxUnits(100);
-                                    else setEditMaxUnits(25);
+                                    const planId = e.target.value;
+                                    setEditPlan(planId);
+                                    const targetPlan = plans.find(p => p.id === planId);
+                                    if (targetPlan && targetPlan.max_units) {
+                                        setEditMaxUnits(targetPlan.max_units);
+                                    }
                                 }}
                             >
-                                <option value="starter">Starter Plan (Up to 25 Units - KES 1,500/mo)</option>
-                                <option value="growth">Growth Plan (Up to 100 Units - KES 3,500/mo)</option>
-                                <option value="enterprise">Enterprise Plan (Up to 1,000 Units - KES 7,500/mo)</option>
+                                {plans && plans.length > 0 ? (
+                                    plans.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name} ({p.max_units ? `Up to ${Number(p.max_units).toLocaleString()} Units` : 'Unlimited'} - KES {Number(p.monthly_price).toLocaleString()}/mo)
+                                        </option>
+                                    ))
+                                ) : (
+                                    <>
+                                        <option value="starter">Starter Plan</option>
+                                        <option value="growth">Growth Plan</option>
+                                        <option value="enterprise">Enterprise Plan</option>
+                                    </>
+                                )}
                             </select>
                         </div>
 
@@ -461,6 +720,504 @@ export default function SuperAdminDashboard() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Register New Landlord Agency Modal */}
+            <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
+                <DialogContent className="max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
+                            <Building2 className="w-5 h-5 text-indigo-600" />
+                            Register New Landlord / Agency
+                        </DialogTitle>
+                        <DialogDescription>
+                            Create a new subscriber organization and owner account. Real-time platform metrics will update immediately.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleRegisterAgency} className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Company / Agency Name *</Label>
+                            <Input
+                                placeholder="e.g. Apex Property Managers"
+                                value={regForm.company_name}
+                                onChange={(e) => setRegForm({ ...regForm, company_name: e.target.value })}
+                                className="h-10 rounded-xl"
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="font-bold text-sm">Owner Name *</Label>
+                                <Input
+                                    placeholder="John Doe"
+                                    value={regForm.name}
+                                    onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
+                                    className="h-10 rounded-xl"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="font-bold text-sm">Phone *</Label>
+                                <Input
+                                    placeholder="+254 700 000 000"
+                                    value={regForm.phone}
+                                    onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+                                    className="h-10 rounded-xl"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Owner Email *</Label>
+                            <Input
+                                type="email"
+                                placeholder="owner@agency.com"
+                                value={regForm.email}
+                                onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                                className="h-10 rounded-xl"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Subscription Plan</Label>
+                            <select
+                                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+                                value={regForm.plan}
+                                onChange={(e) => setRegForm({ ...regForm, plan: e.target.value })}
+                            >
+                                {plans && plans.length > 0 ? (
+                                    plans.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name} ({p.max_units ? `Up to ${Number(p.max_units).toLocaleString()} Units` : 'Unlimited'} — KES {Number(p.monthly_price).toLocaleString()}/mo)
+                                        </option>
+                                    ))
+                                ) : (
+                                    <>
+                                        <option value="starter">Starter Plan</option>
+                                        <option value="growth">Growth Plan</option>
+                                        <option value="enterprise">Enterprise Plan</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
+
+                        {/* Initial Mode Toggle */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Initial Access Mode *</Label>
+                            <select
+                                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+                                value={regForm.start_mode}
+                                onChange={(e) => setRegForm({ ...regForm, start_mode: e.target.value })}
+                            >
+                                <option value="trial">🎁 14-Day Free Trial (No upfront payment required)</option>
+                                <option value="active">💳 Immediate Paid Subscription (Unlocked for 30 days)</option>
+                            </select>
+                        </div>
+
+                        {/* Additional fields if registering as Paid Immediately */}
+                        {regForm.start_mode === 'active' && (
+                            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 rounded-xl space-y-3">
+                                <div className="space-y-1">
+                                    <Label className="font-bold text-xs text-emerald-800 dark:text-emerald-300">Initial Payment Amount (KES)</Label>
+                                    <Input
+                                        type="number"
+                                        placeholder={String(plans.find(p => p.id === regForm.plan)?.monthly_price ?? 1500)}
+                                        value={regForm.amount_paid}
+                                        onChange={(e) => setRegForm({ ...regForm, amount_paid: e.target.value })}
+                                        className="h-9 rounded-lg font-bold text-sm bg-background"
+                                    />
+                                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400">If left blank, defaults to plan fee.</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="font-bold text-xs text-emerald-800 dark:text-emerald-300">M-Pesa Reference (Optional)</Label>
+                                    <Input
+                                        placeholder="e.g. QKL5XXXXX"
+                                        value={regForm.mpesa_reference}
+                                        onChange={(e) => setRegForm({ ...regForm, mpesa_reference: e.target.value })}
+                                        className="h-9 rounded-lg font-mono text-sm bg-background"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="font-bold text-sm">Password *</Label>
+                                <Input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={regForm.password}
+                                    onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
+                                    className="h-10 rounded-xl"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="font-bold text-sm">Confirm Password *</Label>
+                                <Input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={regForm.password_confirmation}
+                                    onChange={(e) => setRegForm({ ...regForm, password_confirmation: e.target.value })}
+                                    className="h-10 rounded-xl"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-3">
+                            <Button type="button" variant="outline" onClick={() => setRegisterModalOpen(false)} className="rounded-xl font-bold">
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
+                                disabled={registering}
+                            >
+                                {registering ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Register Landlord Organization
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+            {/* Record Payment Dialog */}
+            <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+                <DialogContent className="max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
+                            <CreditCard className="w-5 h-5 text-emerald-600" />
+                            Record Payment
+                        </DialogTitle>
+                        <DialogDescription>
+                            Recording payment for <span className="font-bold text-foreground">{paymentOrg?.name}</span>.
+                            Current wallet balance: <span className="font-bold text-emerald-600">KES {Number(paymentOrg?.wallet_balance ?? 0).toLocaleString()}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleRecordPayment} className="space-y-4 py-2">
+                        {/* Amount */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Amount Paid (KES) *</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                step="any"
+                                placeholder="e.g. 1500"
+                                value={paymentForm.amount_paid}
+                                onChange={(e) => setPaymentForm({ ...paymentForm, amount_paid: e.target.value })}
+                                className="h-10 rounded-xl font-bold text-lg"
+                                required
+                            />
+                        </div>
+
+                        {/* M-Pesa Reference */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">M-Pesa Reference</Label>
+                            <Input
+                                placeholder="e.g. QKL5XXXXX"
+                                value={paymentForm.mpesa_reference}
+                                onChange={(e) => setPaymentForm({ ...paymentForm, mpesa_reference: e.target.value })}
+                                className="h-10 rounded-xl font-mono"
+                            />
+                        </div>
+
+                        {/* Plan Override */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Plan (override if switching)</Label>
+                            <select
+                                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+                                value={paymentForm.plan}
+                                onChange={(e) => setPaymentForm({ ...paymentForm, plan: e.target.value })}
+                            >
+                                {plans && plans.length > 0 ? (
+                                    plans.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name} — KES {Number(p.monthly_price).toLocaleString()}/mo ({p.max_units ? `${Number(p.max_units).toLocaleString()} units` : 'Unlimited'})
+                                        </option>
+                                    ))
+                                ) : (
+                                    <>
+                                        <option value="starter">Starter Plan</option>
+                                        <option value="growth">Growth Plan</option>
+                                        <option value="enterprise">Enterprise Plan</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
+
+                        {/* Note */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Note (optional)</Label>
+                            <Input
+                                placeholder="e.g. Paid via M-Pesa on 13 Aug"
+                                value={paymentForm.note}
+                                onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
+                                className="h-10 rounded-xl"
+                            />
+                        </div>
+
+                        {/* Info Banner */}
+                        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
+                            <p className="font-bold mb-1">💡 How this works:</p>
+                            <ul className="space-y-1 text-xs list-disc list-inside">
+                                <li>Amount is added to the wallet balance.</li>
+                                <li>If balance ≥ plan fee → account unlocked for 30 days.</li>
+                                <li>Any extra credit carries over to next month.</li>
+                            </ul>
+                        </div>
+
+                        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-1">
+                            <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)} className="rounded-xl font-bold">
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md"
+                                disabled={recordingPayment}
+                            >
+                                {recordingPayment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                                Record Payment & Unlock
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Adjust / Correct Wallet Balance Dialog */}
+            <Dialog open={adjustModalOpen} onOpenChange={setAdjustModalOpen}>
+                <DialogContent className="max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
+                            <Wallet className="w-5 h-5 text-indigo-600" />
+                            Correct / Adjust Wallet Balance
+                        </DialogTitle>
+                        <DialogDescription>
+                            Fix typos or manually adjust credit for <span className="font-bold text-foreground">{adjustOrg?.name}</span>.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleAdjustWallet} className="space-y-4 py-2">
+                        {/* Current Balance Display */}
+                        <div className="bg-slate-100 dark:bg-slate-800/80 p-3 rounded-xl flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground font-medium">Current Balance:</span>
+                            <span className="font-bold text-base text-foreground">
+                                KES {Number(adjustOrg?.wallet_balance ?? 0).toLocaleString()}
+                            </span>
+                        </div>
+
+                        {/* Mode Selector */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Adjustment Type *</Label>
+                            <select
+                                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+                                value={adjustForm.mode}
+                                onChange={(e) => setAdjustForm({ ...adjustForm, mode: e.target.value })}
+                            >
+                                <option value="add">➕ Add Credit (+ Increase Balance)</option>
+                                <option value="deduct">➖ Deduct Credit (- Reduce Balance)</option>
+                                <option value="set">✏️ Set Exact Balance (= Override Balance)</option>
+                            </select>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">
+                                {adjustForm.mode === 'add' ? 'Amount to Add (KES) *'
+                                 : adjustForm.mode === 'deduct' ? 'Amount to Deduct (KES) *'
+                                 : 'New Exact Balance (KES) *'}
+                            </Label>
+                            <Input
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder={adjustForm.mode === 'add' ? 'e.g. 10000' : adjustForm.mode === 'deduct' ? 'e.g. 10000' : 'e.g. 15000'}
+                                value={adjustForm.amount}
+                                onChange={(e) => setAdjustForm({ ...adjustForm, amount: e.target.value })}
+                                className="h-10 rounded-xl font-bold text-lg"
+                                required
+                            />
+                        </div>
+
+                        {/* Live Balance Preview */}
+                        {adjustForm.amount !== '' && (
+                            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 rounded-xl flex justify-between items-center text-xs">
+                                <span className="text-indigo-700 dark:text-indigo-300 font-semibold">Resulting Balance:</span>
+                                <span className="font-bold text-sm text-indigo-900 dark:text-indigo-200">
+                                    KES {(() => {
+                                        const cur = Number(adjustOrg?.wallet_balance ?? 0);
+                                        const amt = parseFloat(adjustForm.amount || '0');
+                                        if (adjustForm.mode === 'add') return (cur + amt).toLocaleString();
+                                        if (adjustForm.mode === 'deduct') return Math.max(0, cur - amt).toLocaleString();
+                                        return Math.max(0, amt).toLocaleString();
+                                    })()}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Reason */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Reason for Adjustment *</Label>
+                            <Input
+                                placeholder="e.g. Added bonus credit of KES 10,000 / Reduced duplicate top-up"
+                                value={adjustForm.reason}
+                                onChange={(e) => setAdjustForm({ ...adjustForm, reason: e.target.value })}
+                                className="h-10 rounded-xl"
+                                required
+                            />
+                        </div>
+
+                        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-1">
+                            <Button type="button" variant="outline" onClick={() => setAdjustModalOpen(false)} className="rounded-xl font-bold">
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
+                                disabled={adjusting}
+                            >
+                                {adjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Save Adjustment
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* View Full Account Details Dialog */}
+            <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+                <DialogContent className="sm:max-w-[600px] rounded-2xl p-6">
+                    <DialogHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                                    <Building2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <DialogTitle className="text-xl font-extrabold text-foreground">
+                                        {viewOrg?.name}
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-muted-foreground">
+                                        Registered on {viewOrg?.created_at ? new Date(viewOrg.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                                    </DialogDescription>
+                                </div>
+                            </div>
+                            <Badge className={`capitalize font-bold text-xs ${
+                                viewOrg?.status === 'active' ? 'bg-emerald-500 text-white'
+                                : viewOrg?.status === 'trial' ? 'bg-amber-500 text-white'
+                                : 'bg-red-500 text-white'
+                            }`}>
+                                {viewOrg?.status}
+                            </Badge>
+                        </div>
+                    </DialogHeader>
+
+                    {viewOrg && (
+                        <div className="space-y-5 py-2">
+                            {/* Super Admin / Owner Account Info */}
+                            <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 space-y-3">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-indigo-500" /> Account Owner (Super Admin)
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Owner Name</p>
+                                        <p className="font-bold text-foreground">{viewOrg.super_admin_user?.name || viewOrg.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Email</p>
+                                        <p className="font-semibold text-foreground font-mono text-xs">{viewOrg.email || viewOrg.super_admin_user?.email || '—'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Phone</p>
+                                        <p className="font-semibold text-foreground font-mono text-xs">{viewOrg.phone || '—'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Last Login</p>
+                                        <p className="font-semibold text-foreground text-xs">
+                                            {viewOrg.super_admin_user?.last_login_at
+                                                ? new Date(viewOrg.super_admin_user.last_login_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })
+                                                : 'Never'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Plan & Financial Summary */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/60 rounded-xl p-3 space-y-1">
+                                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Subscription Tier</p>
+                                    <p className="text-lg font-extrabold capitalize text-foreground">{viewOrg.subscription_plan || 'Starter'}</p>
+                                    <p className="text-xs text-muted-foreground">Capacity: {viewOrg.max_units || 25} Units max</p>
+                                </div>
+                                <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 rounded-xl p-3 space-y-1">
+                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Wallet Balance</p>
+                                    <p className="text-lg font-extrabold text-emerald-600">KES {Number(viewOrg.wallet_balance ?? 0).toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {viewOrg.plan_expires_at
+                                            ? `Expires ${new Date(viewOrg.plan_expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}`
+                                            : viewOrg.trial_ends_at
+                                                ? `Trial ends ${new Date(viewOrg.trial_ends_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}`
+                                                : 'No expiry date set'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Modal Action Buttons */}
+                            <div className="pt-2 flex flex-wrap gap-2 border-t border-slate-200 dark:border-slate-700">
+                                <Button
+                                    size="sm"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-1 text-xs"
+                                    onClick={() => {
+                                        setDetailsModalOpen(false);
+                                        openPaymentModal(viewOrg);
+                                    }}
+                                >
+                                    <CreditCard className="w-3.5 h-3.5" /> Record Payment
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="font-bold rounded-xl gap-1 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                                    onClick={() => {
+                                        setDetailsModalOpen(false);
+                                        openAdjustWalletModal(viewOrg);
+                                    }}
+                                >
+                                    <Wallet className="w-3.5 h-3.5" /> Correct Wallet
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="font-bold rounded-xl gap-1 text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                    onClick={() => {
+                                        setDetailsModalOpen(false);
+                                        openEditModal(viewOrg);
+                                    }}
+                                >
+                                    <Edit3 className="w-3.5 h-3.5" /> Manage Plan
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className={`font-bold rounded-xl gap-1 text-xs border-slate-200 ${
+                                        viewOrg.status === 'suspended' ? 'text-emerald-600 hover:bg-emerald-50' : 'text-red-600 hover:bg-red-50'
+                                    }`}
+                                    onClick={() => toggleOrgStatus(viewOrg)}
+                                >
+                                    {viewOrg.status === 'suspended' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                                    {viewOrg.status === 'suspended' ? 'Activate Account' : 'Suspend Account'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+
         </div>
     );
 }

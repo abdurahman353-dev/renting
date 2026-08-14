@@ -30,18 +30,28 @@ export default function RegisterOrganizationPage() {
     const [selectedPlan, setSelectedPlan] = useState<"starter" | "growth" | "enterprise">("starter");
     const [companyBrandName, setCompanyBrandName] = useState("");
 
+    const [plans, setPlans] = useState<any[]>([]);
+    const [plansLoading, setPlansLoading] = useState(true);
+
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchSettingsAndPlans = async () => {
+            setPlansLoading(true);
             try {
                 const data = await publicAPI.getSettings();
                 if (data && data.company_name) {
                     setCompanyBrandName(data.company_name);
                 }
+                const plansData = await saasAPI.getPlans();
+                if (plansData && Array.isArray(plansData) && plansData.length > 0) {
+                    setPlans(plansData);
+                }
             } catch (err) {
-                console.error("Failed to load register page settings:", err);
+                console.error("Failed to load register page settings or plans:", err);
+            } finally {
+                setPlansLoading(false);
             }
         };
-        fetchSettings();
+        fetchSettingsAndPlans();
     }, []);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -156,13 +166,22 @@ export default function RegisterOrganizationPage() {
                 plan: selectedPlan,
             });
 
-            if (response.token) {
-                Cookies.set("admin_token", response.token, { expires: 30 });
-                sessionStorage.setItem("user", JSON.stringify(response.user));
-            }
+            // Check if current session is Super Admin
+            const currentUserStr = typeof window !== "undefined" ? sessionStorage.getItem("admin_user") : null;
+            const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+            const isSuperAdmin = currentUser?.role === 'super_admin';
 
-            toast.success("Welcome! Your 14-day free trial organization is ready.");
-            router.push("/dashboard");
+            if (!isSuperAdmin) {
+                if (response.token) {
+                    Cookies.set("admin_token", response.token, { expires: 30 });
+                    sessionStorage.setItem("admin_user", JSON.stringify(response.user));
+                }
+                toast.success("Welcome! Your 14-day free trial organization is ready.");
+                router.push("/dashboard");
+            } else {
+                toast.success(`Landlord organization '${form.company_name}' registered successfully.`);
+                router.push("/super-admin");
+            }
         } catch (error: any) {
             console.error("Registration failed:", error);
             const msg = error.response?.data?.message || "Registration failed. Please check your information.";
@@ -219,65 +238,47 @@ export default function RegisterOrganizationPage() {
                                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                                     Select Subscription Tier
                                 </Label>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    {/* Starter */}
-                                    <div
-                                        onClick={() => setSelectedPlan("starter")}
-                                        className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                                            selectedPlan === "starter"
-                                                ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-600/30"
-                                                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-bold text-slate-900 dark:text-white text-sm">Starter</span>
-                                            {selectedPlan === "starter" && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                                        </div>
-                                        <div className="text-base font-black text-indigo-600 dark:text-indigo-400">
-                                            KES 1,500<span className="text-xs text-slate-500 font-normal">/mo</span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Up to 25 Units · 5 Properties</p>
+                                {plansLoading ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 animate-pulse space-y-2 h-[95px]">
+                                                <div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                                <div className="h-5 w-1/2 bg-indigo-100 dark:bg-indigo-950/50 rounded"></div>
+                                                <div className="h-3 w-4/5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                            </div>
+                                        ))}
                                     </div>
-
-                                    {/* Growth */}
-                                    <div
-                                        onClick={() => setSelectedPlan("growth")}
-                                        className={`p-3.5 rounded-xl border cursor-pointer transition-all relative ${
-                                            selectedPlan === "growth"
-                                                ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-600/30"
-                                                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <Badge className="absolute -top-2.5 right-2 bg-indigo-600 text-white text-[9px] px-2 py-0 border-0 shadow-sm">Popular</Badge>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-bold text-slate-900 dark:text-white text-sm">Growth</span>
-                                            {selectedPlan === "growth" && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                                        </div>
-                                        <div className="text-base font-black text-indigo-600 dark:text-indigo-400">
-                                            KES 3,500<span className="text-xs text-slate-500 font-normal">/mo</span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Up to 100 Units · 20 Properties</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {plans.map((plan) => (
+                                            <div
+                                                key={plan.id}
+                                                onClick={() => setSelectedPlan(plan.id)}
+                                                className={`p-3.5 rounded-xl border cursor-pointer transition-all relative ${
+                                                    selectedPlan === plan.id
+                                                        ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-600/30"
+                                                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
+                                                }`}
+                                            >
+                                                {plan.badge && (
+                                                    <Badge className="absolute -top-2.5 right-2 bg-indigo-600 text-white text-[9px] px-2 py-0 border-0 shadow-sm">
+                                                        {plan.badge}
+                                                    </Badge>
+                                                )}
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="font-bold text-slate-900 dark:text-white text-sm">{plan.name}</span>
+                                                    {selectedPlan === plan.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                                                </div>
+                                                <div className="text-base font-black text-indigo-600 dark:text-indigo-400">
+                                                    KES {Number(plan.monthly_price).toLocaleString()}<span className="text-xs text-slate-500 font-normal">/mo</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                                                    Up to {Number(plan.max_units).toLocaleString()} Units · {Number(plan.max_properties).toLocaleString()} Properties
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
-
-                                    {/* Enterprise */}
-                                    <div
-                                        onClick={() => setSelectedPlan("enterprise")}
-                                        className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                                            selectedPlan === "enterprise"
-                                                ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-600/30"
-                                                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-bold text-slate-900 dark:text-white text-sm">Enterprise</span>
-                                            {selectedPlan === "enterprise" && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                                        </div>
-                                        <div className="text-base font-black text-indigo-600 dark:text-indigo-400">
-                                            KES 7,500<span className="text-xs text-slate-500 font-normal">/mo</span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Up to 1,000 Units · 200 Properties</p>
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Form Inputs Grid */}

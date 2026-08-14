@@ -6,7 +6,7 @@ import { LandingNavbar } from '@/components/landing-navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from "next/navigation";
-import { publicAPI } from "@/data/apis";
+import { publicAPI, saasAPI } from "@/data/apis";
 import {
     Building2,
     CheckCircle2,
@@ -29,18 +29,29 @@ export default function SaaSProductLandingPage() {
         hero_media_url: '/video/grok-hero.mp4'
     });
 
+    const [plans, setPlans] = useState<any[]>([]);
+    const [plansLoading, setPlansLoading] = useState(true);
+
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchSettingsAndPlans = async () => {
+            setPlansLoading(true);
             try {
                 const data = await publicAPI.getSettings();
                 if (data) {
                     setSettings((prev: any) => ({ ...prev, ...data }));
                 }
+
+                const plansData = await saasAPI.getPlans();
+                if (plansData && Array.isArray(plansData) && plansData.length > 0) {
+                    setPlans(plansData);
+                }
             } catch (err) {
-                console.error("Failed to load settings:", err);
+                console.error("Failed to load settings or plans:", err);
+            } finally {
+                setPlansLoading(false);
             }
         };
-        fetchSettings();
+        fetchSettingsAndPlans();
     }, []);
 
     const videoSrc = settings.hero_media_url || '/video/grok-hero.mp4';
@@ -193,100 +204,88 @@ export default function SaaSProductLandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Starter */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col justify-between hover:border-indigo-500 transition-all shadow-lg hover:shadow-xl">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Starter Plan</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Ideal for individual landlords.</p>
-                                <div className="mt-6 text-3xl md:text-4xl font-black text-indigo-600 dark:text-indigo-400">
-                                    KES 1,500 <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">/ month</span>
+                    {plansLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col justify-between shadow-lg animate-pulse min-h-[420px] space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+                                        <div className="h-3 w-3/4 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+                                        <div className="h-10 w-2/3 bg-indigo-100 dark:bg-indigo-950/40 rounded-lg mt-6"></div>
+                                        <div className="space-y-3 pt-6">
+                                            <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+                                            <div className="h-4 w-4/6 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+                                            <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+                                            <div className="h-4 w-3/6 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+                                        </div>
+                                    </div>
+                                    <div className="h-12 w-full bg-slate-200 dark:bg-slate-800 rounded-xl mt-8"></div>
                                 </div>
-                                <ul className="mt-6 space-y-3.5 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 25 Units
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 5 Properties
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> M-Pesa Auto Matching
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> SMS Reminders & Leases
-                                    </li>
-                                </ul>
-                            </div>
-                            <Link href="/register" className="mt-8">
-                                <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md">
-                                    Start 14-Day Free Trial
-                                </Button>
-                            </Link>
+                            ))}
                         </div>
-
-                        {/* Growth */}
-                        <div className="bg-white dark:bg-slate-900 border-2 border-indigo-600 rounded-2xl p-8 flex flex-col justify-between relative shadow-2xl shadow-indigo-600/10">
-                            <Badge className="absolute -top-3 right-6 bg-indigo-600 text-white text-xs font-bold border-0 shadow-md">
-                                Most Popular
-                            </Badge>
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Growth Plan</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">For growing landlords & agencies.</p>
-                                <div className="mt-6 text-3xl md:text-4xl font-black text-indigo-600 dark:text-indigo-400">
-                                    KES 3,500 <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">/ month</span>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {plans.map((plan) => {
+                            const isPopular = plan.badge || plan.id === 'growth';
+                            return (
+                                <div
+                                    key={plan.id}
+                                    className={`bg-white dark:bg-slate-900 rounded-2xl p-8 flex flex-col justify-between relative shadow-lg hover:shadow-xl transition-all ${
+                                        isPopular
+                                            ? 'border-2 border-indigo-600 shadow-2xl shadow-indigo-600/10'
+                                            : 'border border-slate-200 dark:border-slate-800 hover:border-indigo-500'
+                                    }`}
+                                >
+                                    {isPopular && (
+                                        <Badge className="absolute -top-3 right-6 bg-indigo-600 text-white text-xs font-bold border-0 shadow-md">
+                                            {plan.badge || 'Most Popular'}
+                                        </Badge>
+                                    )}
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{plan.name}</h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{plan.description}</p>
+                                        <div className="mt-6 text-3xl md:text-4xl font-black text-indigo-600 dark:text-indigo-400">
+                                            KES {Number(plan.monthly_price).toLocaleString()} <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">/ month</span>
+                                        </div>
+                                        <ul className="mt-6 space-y-3.5 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                                            {plan.features && Array.isArray(plan.features) ? (
+                                                plan.features.map((feature: string, i: number) => {
+                                                    let text = feature;
+                                                    if (/^Up to .* Units$/i.test(feature)) {
+                                                        text = `Up to ${Number(plan.max_units).toLocaleString()} Units`;
+                                                    } else if (/^Up to .* Properties$/i.test(feature)) {
+                                                        text = `Up to ${Number(plan.max_properties).toLocaleString()} Properties`;
+                                                    }
+                                                    return (
+                                                        <li key={i} className="flex items-center gap-2.5">
+                                                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> {text}
+                                                        </li>
+                                                    );
+                                                })
+                                            ) : (
+                                                <>
+                                                    <li className="flex items-center gap-2.5">
+                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> Up to {Number(plan.max_units).toLocaleString()} Units
+                                                    </li>
+                                                    <li className="flex items-center gap-2.5">
+                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> Up to {Number(plan.max_properties).toLocaleString()} Properties
+                                                    </li>
+                                                </>
+                                            )}
+                                        </ul>
+                                    </div>
+                                    <Link href="/register" className="mt-8">
+                                        <Button className={`w-full h-12 text-white font-bold rounded-xl shadow-md ${
+                                            isPopular ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20' : 'bg-indigo-600 hover:bg-indigo-700'
+                                        }`}>
+                                            Start 14-Day Free Trial
+                                        </Button>
+                                    </Link>
                                 </div>
-                                <ul className="mt-6 space-y-3.5 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 100 Units
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 20 Properties
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Advanced Financial Reports
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Priority Support & Roles
-                                    </li>
-                                </ul>
-                            </div>
-                            <Link href="/register" className="mt-8">
-                                <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20">
-                                    Start 14-Day Free Trial
-                                </Button>
-                            </Link>
-                        </div>
-
-                        {/* Enterprise */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col justify-between hover:border-indigo-500 transition-all shadow-lg hover:shadow-xl">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Enterprise Plan</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">For large estate management firms.</p>
-                                <div className="mt-6 text-3xl md:text-4xl font-black text-indigo-600 dark:text-indigo-400">
-                                    KES 7,500 <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">/ month</span>
-                                </div>
-                                <ul className="mt-6 space-y-3.5 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 1,000 Units
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 200 Properties
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Custom Paybill Integration
-                                    </li>
-                                    <li className="flex items-center gap-2.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Dedicated Account Manager
-                                    </li>
-                                </ul>
-                            </div>
-                            <Link href="/register" className="mt-8">
-                                <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md">
-                                    Start 14-Day Free Trial
-                                </Button>
-                            </Link>
-                        </div>
+                            );
+                        })}
                     </div>
+                    )}
                 </div>
             </section>
 

@@ -16,7 +16,7 @@ import { Search, Filter, Calendar, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { superAdminAPI } from '@/data/apis';
+import { activityAPI, adminAPI } from '@/data/apis';
 import {
     Select,
     SelectContent,
@@ -56,12 +56,6 @@ export default function ActivityLogsPage() {
     const [perPage] = useState(20);
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    useEffect(() => {
-        if (!authLoading && !isSuperAdmin()) {
-            router.replace('/dashboard');
-        }
-    }, [isSuperAdmin, authLoading, router]);
-
     const fetchActivityLogs = async (page = 1) => {
         setLoading(true);
         try {
@@ -74,10 +68,10 @@ export default function ActivityLogsPage() {
             if (endDate) params.end_date = endDate;
             if (severityFilter !== 'all') params.severity = severityFilter;
 
-            // Fetch both logs and all admins in parallel
-            const [response, allAdmins] = await Promise.all([
-                superAdminAPI.getActivityLogs(params),
-                superAdminAPI.getAdmins()
+            // Fetch both logs and admins in parallel
+            const [response, allAdminsResponse] = await Promise.all([
+                activityAPI.getActivityLogs(params),
+                adminAPI.getAdmins()
             ]);
 
             if (response && response.data) {
@@ -85,15 +79,9 @@ export default function ActivityLogsPage() {
                 setCurrentPage(response.current_page);
                 setLastPage(response.last_page);
                 setTotalItems(response.total);
-
-                // For filtering dropdowns, we still want to show all possible actions if possible
-                // but since we only get paginated data now, we'll use what we have or rethink.
-                // Usually, actions/admins should be from a separate "filters" endpoint, 
-                // but for now we'll stick to a simpler approach or skip dynamic action list if too complex.
-                const uniqueActions = Array.from(new Set(response.data.map((log: Log) => log.action))).sort();
-                // setActions(uniqueActions);
             }
 
+            const allAdmins = allAdminsResponse?.data || allAdminsResponse || [];
             if (Array.isArray(allAdmins)) {
                 const registeredAdminNames = allAdmins.map((admin: any) => admin.name);
                 setAdmins(registeredAdminNames.sort());
@@ -110,10 +98,10 @@ export default function ActivityLogsPage() {
     };
 
     useEffect(() => {
-        if (isSuperAdmin()) {
+        if (!authLoading) {
             fetchActivityLogs(1);
         }
-    }, [isSuperAdmin, startDate, endDate, debouncedSearch, severityFilter, adminFilter, actionFilter]);
+    }, [authLoading, startDate, endDate, debouncedSearch, severityFilter, adminFilter, actionFilter]);
 
     if (authLoading) {
         return (
@@ -122,8 +110,6 @@ export default function ActivityLogsPage() {
             </div>
         );
     }
-
-    if (!isSuperAdmin()) return null;
 
 
 

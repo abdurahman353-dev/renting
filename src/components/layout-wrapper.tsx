@@ -3,15 +3,28 @@ import { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { usePreventBack } from "@/hooks/usePreventBack";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
     const [isExpanded, setIsExpanded] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     // Prevent back button navigation
     usePreventBack();
+
+    // Mandatory Password Change Screen Layout (No Sidebar, No TopNav background API calls)
+    if (user?.must_change_password) {
+        return (
+            <div className="h-full relative font-inter bg-slate-50 dark:bg-slate-900 min-h-screen">
+                <main className="w-full min-h-screen flex items-center justify-center p-4">
+                    {children}
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full relative font-inter">

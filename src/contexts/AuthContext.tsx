@@ -10,6 +10,7 @@ interface User {
     email: string;
     role: string;
     must_change_password: boolean;
+    is_owner?: boolean;
     organization_id?: number | null;
     organization?: {
         id: number;
@@ -29,6 +30,7 @@ interface AuthContextType {
     hasRole: (roles: string | string[]) => boolean;
     isAdmin: () => boolean;
     isSuperAdmin: () => boolean;
+    isOwner: () => boolean;
     updateUser: (user: User) => void;
 }
 
@@ -150,6 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return hasRole('super_admin');
     };
 
+    // Check if user is primary organization owner or super admin
+    const isOwner = (): boolean => {
+        if (!user) return false;
+        return user.role === 'super_admin' || user.is_owner === true;
+    };
+
     const updateUser = (userData: User) => {
         authAPI.updateUser(userData);
         setUser(userData);
@@ -164,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasRole,
         isAdmin,
         isSuperAdmin,
+        isOwner,
         updateUser,
     };
 

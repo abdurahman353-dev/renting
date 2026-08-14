@@ -32,12 +32,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid
+        const isSuperAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin');
+        if (error.response?.status === 401 || (error.response?.status === 403 && isSuperAdminRoute)) {
+            // Token expired, invalid, or insufficient privilege for super-admin portal
             Cookies.remove('admin_token');
             sessionStorage.removeItem('admin_user');
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+                window.location.href = '/login?error=session_expired';
             }
         }
         return Promise.reject(error);
@@ -416,44 +417,91 @@ export const communicationAPI = {
 };
 
 // ============================================================================
-// SUPER ADMIN APIs
+// ADMIN / TEAM MANAGEMENT APIs
 // ============================================================================
 
-export const superAdminAPI = {
-    // Admin Management
+export const adminAPI = {
     getAdmins: async (params = {}) => {
-        const response = await apiClient.get('/super-admin/admins', { params });
+        const response = await apiClient.get('/admins', { params });
         return response.data;
     },
 
     createAdmin: async (data) => {
-        const response = await apiClient.post('/super-admin/admins', data);
+        const response = await apiClient.post('/admins', data);
         return response.data;
     },
 
     updateAdmin: async (id, data) => {
-        const response = await apiClient.post(`/super-admin/admins/${id}`, data);
+        const response = await apiClient.put(`/admins/${id}`, data);
         return response.data;
     },
 
     deleteAdmin: async (id) => {
-        const response = await apiClient.delete(`/super-admin/admins/${id}`);
+        const response = await apiClient.delete(`/admins/${id}`);
         return response.data;
     },
 
     suspendAdmin: async (id) => {
-        const response = await apiClient.post(`/super-admin/users/${id}/suspend`);
+        const response = await apiClient.post(`/admins/${id}/suspend`);
         return response.data;
     },
 
     activateAdmin: async (id) => {
-        const response = await apiClient.post(`/super-admin/users/${id}/activate`);
+        const response = await apiClient.post(`/admins/${id}/activate`);
+        return response.data;
+    },
+};
+
+// ============================================================================
+// ACTIVITY LOG APIs
+// ============================================================================
+
+export const activityAPI = {
+    getActivityLogs: async (params = {}) => {
+        const response = await apiClient.get('/activity-logs', { params });
+        return response.data;
+    },
+};
+
+// ============================================================================
+// SUPER ADMIN APIs
+// ============================================================================
+
+export const superAdminAPI = {
+    // Admin Management (Legacy/Alias)
+    getAdmins: async (params = {}) => {
+        const response = await apiClient.get('/admins', { params });
+        return response.data;
+    },
+
+    createAdmin: async (data) => {
+        const response = await apiClient.post('/admins', data);
+        return response.data;
+    },
+
+    updateAdmin: async (id, data) => {
+        const response = await apiClient.put(`/admins/${id}`, data);
+        return response.data;
+    },
+
+    deleteAdmin: async (id) => {
+        const response = await apiClient.delete(`/admins/${id}`);
+        return response.data;
+    },
+
+    suspendAdmin: async (id) => {
+        const response = await apiClient.post(`/admins/${id}/suspend`);
+        return response.data;
+    },
+
+    activateAdmin: async (id) => {
+        const response = await apiClient.post(`/admins/${id}/activate`);
         return response.data;
     },
 
     // Activity Logs
     getActivityLogs: async (params = {}) => {
-        const response = await apiClient.get('/super-admin/activity-logs', { params });
+        const response = await apiClient.get('/activity-logs', { params });
         return response.data;
     },
 
@@ -471,7 +519,50 @@ export const superAdminAPI = {
         const response = await apiClient.delete(`/super-admin/payments/${id}`);
         return response.data;
     },
+
+    // Subscription billing (super admin)
+    getSubscriptionBilling: async () => {
+        const response = await apiClient.get('/super-admin/subscription/billing');
+        return response.data;
+    },
+
+    getAllSubscriptionPayments: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/subscription/payments', { params });
+        return response.data;
+    },
+
+    recordSubscriptionPayment: async (data) => {
+        const response = await apiClient.post('/super-admin/subscription/record-payment', data);
+        return response.data;
+    },
+
+    adjustWalletBalance: async (data) => {
+        const response = await apiClient.post('/super-admin/subscription/adjust-wallet', data);
+        return response.data;
+    },
+
+    getOrgSubscriptionPayments: async (orgId, params = {}) => {
+        const response = await apiClient.get(`/super-admin/subscription/org/${orgId}/payments`, { params });
+        return response.data;
+    },
 };
+
+// ============================================================================
+// BILLING APIs (Landlord self-service)
+// ============================================================================
+
+export const billingAPI = {
+    getMyBillingStatus: async () => {
+        const response = await apiClient.get('/billing/status');
+        return response.data;
+    },
+
+    getMyPayments: async (params = {}) => {
+        const response = await apiClient.get('/billing/payments', { params });
+        return response.data;
+    },
+};
+
 
 // ============================================================================
 // DASHBOARD APIs
@@ -631,6 +722,11 @@ export const saasAPI = {
 
     updateOrganizationStatus: async (id, data) => {
         const response = await apiClient.put(`/super-admin/saas/organizations/${id}`, data);
+        return response.data;
+    },
+
+    updatePlan: async (id, data) => {
+        const response = await apiClient.put(`/super-admin/saas/plans/${id}`, data);
         return response.data;
     },
 

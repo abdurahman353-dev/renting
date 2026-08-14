@@ -12,7 +12,11 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Wrench
+  Wrench,
+  Wallet,
+  Zap,
+  Activity,
+  ShieldCheck
 } from "lucide-react"
 import { Children, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
@@ -81,9 +85,12 @@ const defaultRoutes: SidebarRoute[] = [
     href: "/repairs",
     color: "text-amber-500",
   },
-]
-
-const superAdminRoutes: SidebarRoute[] = [
+  {
+    label: "Billing",
+    icon: Wallet,
+    href: "/billing",
+    color: "text-indigo-500",
+  },
   {
     label: "Reports",
     icon: FileText,
@@ -111,7 +118,7 @@ const superAdminRoutes: SidebarRoute[] = [
     color: "text-emerald-500",
   },
   {
-    label: "Admins",
+    label: "Admins / Team",
     icon: Users,
     href: "/admins",
     color: "text-pink-700",
@@ -124,35 +131,37 @@ const superAdminRoutes: SidebarRoute[] = [
   },
 ]
 
+
+
 const pureSuperAdminRoutes: SidebarRoute[] = [
   {
     label: "SaaS Master Control",
     icon: LayoutDashboard,
     href: "/super-admin",
-    color: "text-amber-400 font-bold",
+    color: "text-amber-400",
   },
   {
-    label: "Landing & Settings",
-    icon: Settings,
-    href: "/settings",
+    label: "Plans & Subscriptions",
+    icon: Zap,
+    href: "/super-admin/plans",
     color: "text-indigo-400",
   },
   {
-    label: "Platform Activity",
-    icon: FileText,
-    href: "/activity",
-    color: "text-emerald-400",
-  },
-  {
     label: "System Admins",
-    icon: Users,
+    icon: ShieldCheck,
     href: "/admins",
     color: "text-pink-400",
   },
   {
-    label: "Landlord Demo View",
-    icon: Building2,
-    href: "/dashboard",
+    label: "Platform Activity",
+    icon: Activity,
+    href: "/activity",
+    color: "text-emerald-400",
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: "/settings",
     color: "text-slate-400",
   },
 ]
@@ -166,7 +175,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRoutes }: SidebarProps) {
   const pathname = usePathname()
-  const { isSuperAdmin, user } = useAuth()
+  const { isSuperAdmin, isOwner, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
   const [companyName, setCompanyName] = useState("")
 
@@ -186,7 +195,13 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
 
   // If routes are passed as props, use them. 
   // Super Admin gets pure SaaS Owner navigation.
-  const routes = propRoutes || (isSuperAdmin() ? pureSuperAdminRoutes : defaultRoutes)
+  // Sub-admins (non-owners) do not get Admins/Team, Activity, or Settings.
+  const routes = propRoutes || (isSuperAdmin() ? pureSuperAdminRoutes : defaultRoutes.filter(r => {
+    if (['/admins', '/activity', '/settings'].includes(r.href)) {
+      return isOwner();
+    }
+    return true;
+  }));
 
   const toggleMenu = (href: string) => {
     if (!isExpanded) return; // Don't expand menus if sidebar is collapsed
@@ -229,62 +244,67 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
             )}
           </Link>
           <div className="space-y-1">
-            {routes.map((route) => (
-              <div key={route.href}>
-                {route.children && isExpanded ? (
-                  <>
-                    <button
-                      onClick={() => toggleMenu(route.href)}
-                      className={cn(
-                        "text-sm group flex p-3 w-full justify-between items-center font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
-                        pathname.startsWith(route.href) ? "text-white" : "text-zinc-400"
+            {routes.map((route) => {
+              // Strip any hash anchor for active detection
+              const hrefBase = route.href.split('#')[0];
+              const isActive = hrefBase ? pathname === hrefBase : false;
+              return (
+                <div key={route.href}>
+                  {route.children && isExpanded ? (
+                    <>
+                      <button
+                        onClick={() => toggleMenu(route.href)}
+                        className={cn(
+                          "text-sm group flex p-3 w-full justify-between items-center font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                          pathname.startsWith(hrefBase) ? "text-white" : "text-zinc-400"
+                        )}
+                      >
+                        <div className="flex items-center flex-1">
+                          <route.icon className={cn("h-5 w-5 flex-shrink-0", isExpanded ? "mr-3" : "", route.color)} />
+                          {isExpanded && <span className="whitespace-nowrap">{route.label}</span>}
+                        </div>
+                        {isExpanded && (expandedMenus.includes(route.href) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        ))}
+                      </button>
+                      {expandedMenus.includes(route.href) && (
+                        <div className="ml-9 mt-1 space-y-1 transition-all duration-300">
+                          {route.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className={cn(
+                                "text-sm group flex p-2 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                                pathname === child.href ? "text-white bg-white/10" : "text-zinc-400"
+                              )}
+                            >
+                              <span className="whitespace-nowrap">{child.label}</span>
+                            </Link>
+                          ))}
+                        </div>
                       )}
+                    </>
+                  ) : (
+                    <Link
+                      href={route.href}
+                      className={cn(
+                        "text-sm group flex p-3 w-full font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300",
+                        isActive ? "text-white bg-white/10" : "text-zinc-400",
+                        isExpanded ? "justify-start" : "justify-center"
+                      )}
+                      title={!isExpanded ? route.label : undefined}
                     >
-                      <div className="flex items-center flex-1">
-                        <route.icon className={cn("h-5 w-5 flex-shrink-0", isExpanded ? "mr-3" : "", route.color)} />
+                      <div className={cn("flex items-center", isExpanded ? "flex-1" : "")}>
+                        <route.icon className={cn("h-5 w-5 flex-shrink-0 transition-all", isExpanded ? "mr-3" : "", route.color)} />
                         {isExpanded && <span className="whitespace-nowrap">{route.label}</span>}
                       </div>
-                      {isExpanded && (expandedMenus.includes(route.href) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      ))}
-                    </button>
-                    {expandedMenus.includes(route.href) && (
-                      <div className="ml-9 mt-1 space-y-1 transition-all duration-300">
-                        {route.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className={cn(
-                              "text-sm group flex p-2 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
-                              pathname === child.href ? "text-white bg-white/10" : "text-zinc-400"
-                            )}
-                          >
-                            <span className="whitespace-nowrap">{child.label}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    href={route.href}
-                    className={cn(
-                      "text-sm group flex p-3 w-full font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300",
-                      pathname === route.href ? "text-white bg-white/10" : "text-zinc-400",
-                      isExpanded ? "justify-start" : "justify-center"
-                    )}
-                    title={!isExpanded ? route.label : undefined}
-                  >
-                    <div className={cn("flex items-center", isExpanded ? "flex-1" : "")}>
-                      <route.icon className={cn("h-5 w-5 flex-shrink-0 transition-all", isExpanded ? "mr-3" : "", route.color)} />
-                      {isExpanded && <span className="whitespace-nowrap">{route.label}</span>}
-                    </div>
-                  </Link>
-                )}
-              </div>
-            ))}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="px-3 py-2 transition-all duration-300">
