@@ -27,8 +27,25 @@ import {
     TrendingUp,
     Clock,
     Zap,
+    MoreVertical,
+    Eye,
+    FileText,
+    SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 
 const PLAN_META: Record<string, { gradient: string; badge: string; icon: string }> = {
     starter:    { gradient: 'from-sky-500 to-cyan-400',      badge: 'bg-sky-500/10 text-sky-700 border-sky-300',         icon: '🌱' },
@@ -74,10 +91,11 @@ const WHATSAPP_NUMBER = '254745621159';
 const MPESA_NUMBERS   = ['0745 621 159', '0754 973 757'];
 
 export default function BillingPage() {
-    const [billing, setBilling]       = useState<BillingStatus | null>(null);
-    const [payments, setPayments]     = useState<Payment[]>([]);
-    const [loading, setLoading]       = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+    const [billing, setBilling]         = useState<BillingStatus | null>(null);
+    const [payments, setPayments]       = useState<Payment[]>([]);
+    const [loading, setLoading]         = useState(true);
+    const [refreshing, setRefreshing]   = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
     const fetchData = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -123,8 +141,8 @@ export default function BillingPage() {
     const whatsappMsg = encodeURIComponent(
         `Hello, I have made the M-Pesa payment for my rental management account.\n\nOrganization: ${billing.organization_name}\nPlan: ${billing.plan_name}\n\nPlease unlock my account. Thank you.`
     );
-    const totalTopups     = payments.filter(p => p.payment_type !== 'monthly_deduction').reduce((s, p) => s + Number(p.amount_paid), 0);
-    const totalDeductions = payments.filter(p => p.payment_type === 'monthly_deduction').reduce((s, p) => s + Math.abs(Number(p.amount_paid)), 0);
+    const totalTopups     = payments.filter(p => Number(p.amount_paid) > 0).reduce((s, p) => s + Number(p.amount_paid), 0);
+    const totalDeductions = payments.filter(p => Number(p.amount_paid) < 0).reduce((s, p) => s + Math.abs(Number(p.amount_paid)), 0);
 
     return (
         <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
@@ -186,7 +204,11 @@ export default function BillingPage() {
                     <CardContent>
                         <p className={`text-2xl font-black tracking-tight ${billing.wallet_balance > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{fmt(billing.wallet_balance)}</p>
                         <p className="text-muted-foreground text-xs mt-1.5">
-                            {billing.months_covered > 0 ? `Covers ~${billing.months_covered} more month${billing.months_covered !== 1 ? 's' : ''}` : 'Insufficient — top-up required'}
+                            {billing.months_covered > 0 
+                                ? `Covers ~${billing.months_covered} more month${billing.months_covered !== 1 ? 's' : ''}` 
+                                : billing.is_active 
+                                    ? `Credit towards next renewal` 
+                                    : 'Insufficient — top-up required'}
                         </p>
                     </CardContent>
                 </Card>
@@ -333,12 +355,15 @@ export default function BillingPage() {
                                     <TableHead className="font-bold">Wallet After</TableHead>
                                     <TableHead className="font-bold">Period</TableHead>
                                     <TableHead className="font-bold">Recorded By</TableHead>
+                                    <TableHead className="font-bold text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {payments.map((p) => {
-                                    const isDeduction = p.payment_type === 'monthly_deduction';
                                     const amount = Number(p.amount_paid);
+                                    const isDeduction = amount < 0;
+                                    const isAdjustment = p.payment_type === 'manual_adjustment';
+
                                     return (
                                         <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
                                             <TableCell className="text-sm text-muted-foreground font-medium">
@@ -347,11 +372,11 @@ export default function BillingPage() {
                                             <TableCell>
                                                 {isDeduction ? (
                                                     <Badge className="bg-red-500/10 text-red-600 border-red-300 text-xs font-bold gap-1">
-                                                        <ArrowDownCircle className="w-3 h-3" /> Deduction
+                                                        <ArrowDownCircle className="w-3 h-3" /> {isAdjustment ? 'Adjustment (Deduct)' : 'Deduction'}
                                                     </Badge>
                                                 ) : (
                                                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-300 text-xs font-bold gap-1">
-                                                        <ArrowUpCircle className="w-3 h-3" /> Top-Up
+                                                        <ArrowUpCircle className="w-3 h-3" /> {isAdjustment ? 'Adjustment (Add)' : 'Top-Up'}
                                                     </Badge>
                                                 )}
                                             </TableCell>
@@ -367,6 +392,24 @@ export default function BillingPage() {
                                                     : '—'}
                                             </TableCell>
                                             <TableCell className="text-sm text-muted-foreground">{p.recorded_by}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48">
+                                                        <DropdownMenuItem
+                                                            onClick={() => setSelectedPayment(p)}
+                                                            className="cursor-pointer gap-2 font-medium"
+                                                        >
+                                                            <Eye className="w-4 h-4 text-indigo-500" />
+                                                            View Full Details
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     );
                                 })}
@@ -375,6 +418,102 @@ export default function BillingPage() {
                     </div>
                 )}
             </div>
+
+            {/* ── Transaction Details Dialog ── */}
+            <Dialog open={!!selectedPayment} onOpenChange={(open) => !open && setSelectedPayment(null)}>
+                <DialogContent className="max-w-lg rounded-2xl p-6 border shadow-2xl space-y-5">
+                    {selectedPayment && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-bold flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-indigo-600" />
+                                        Transaction #{selectedPayment.id}
+                                    </span>
+                                    <Badge variant="outline" className="text-xs font-semibold">
+                                        {new Date(selectedPayment.created_at).toLocaleString('en-KE', {
+                                            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                        })}
+                                    </Badge>
+                                </DialogTitle>
+                            </DialogHeader>
+
+                            {/* Hero Amount Banner */}
+                            <div className={`p-5 rounded-2xl border text-center space-y-1 ${
+                                Number(selectedPayment.amount_paid) < 0
+                                    ? 'bg-red-50 dark:bg-red-950/20 border-red-200'
+                                    : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200'
+                            }`}>
+                                <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Transaction Amount</p>
+                                <p className={`text-3xl font-black ${
+                                    Number(selectedPayment.amount_paid) < 0 ? 'text-red-600' : 'text-emerald-600'
+                                }`}>
+                                    {Number(selectedPayment.amount_paid) < 0 ? '−' : '+'}KES {Math.abs(Number(selectedPayment.amount_paid)).toLocaleString()}
+                                </p>
+                                <div className="pt-1 flex justify-center">
+                                    <Badge className={`font-bold text-xs ${
+                                        Number(selectedPayment.amount_paid) < 0
+                                            ? 'bg-red-500/10 text-red-700 border-red-300'
+                                            : 'bg-emerald-500/10 text-emerald-700 border-emerald-300'
+                                    }`}>
+                                        {selectedPayment.payment_type === 'monthly_deduction'
+                                            ? 'Monthly Subscription Deduction'
+                                            : selectedPayment.payment_type === 'manual_adjustment'
+                                                ? (Number(selectedPayment.amount_paid) < 0 ? 'Manual Wallet Deduction' : 'Manual Wallet Credit')
+                                                : 'Wallet Top-Up'}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-2 gap-4 text-sm pt-2">
+                                <div className="p-3 rounded-xl bg-muted/40 border">
+                                    <p className="text-xs text-muted-foreground font-semibold">Wallet Before</p>
+                                    <p className="font-bold text-foreground mt-0.5">KES {Number(selectedPayment.wallet_before).toLocaleString()}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-muted/40 border">
+                                    <p className="text-xs text-muted-foreground font-semibold">Wallet After</p>
+                                    <p className="font-black text-indigo-600 mt-0.5">KES {Number(selectedPayment.wallet_after).toLocaleString()}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-muted/40 border">
+                                    <p className="text-xs text-muted-foreground font-semibold">M-Pesa Reference</p>
+                                    <p className="font-mono font-bold text-foreground mt-0.5">{selectedPayment.mpesa_reference ?? '—'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-muted/40 border">
+                                    <p className="text-xs text-muted-foreground font-semibold">Subscription Plan</p>
+                                    <p className="font-bold text-foreground capitalize mt-0.5">{selectedPayment.plan ?? '—'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-muted/40 border col-span-2">
+                                    <p className="text-xs text-muted-foreground font-semibold">Billing Period</p>
+                                    <p className="font-bold text-foreground mt-0.5">
+                                        {selectedPayment.billing_period_start && selectedPayment.billing_period_end
+                                            ? `${new Date(selectedPayment.billing_period_start).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })} – ${new Date(selectedPayment.billing_period_end).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                            : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-muted/40 border col-span-2">
+                                    <p className="text-xs text-muted-foreground font-semibold">Recorded By</p>
+                                    <p className="font-bold text-foreground mt-0.5">{selectedPayment.recorded_by}</p>
+                                </div>
+                            </div>
+
+                            {/* Note / Reason Section */}
+                            {selectedPayment.note && (
+                                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200">
+                                    <p className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Note / Reason</p>
+                                    <p className="text-xs text-amber-900 dark:text-amber-200 mt-1 leading-relaxed">{selectedPayment.note}</p>
+                                </div>
+                            )}
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setSelectedPayment(null)} className="w-full font-bold">
+                                    Close Details
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
