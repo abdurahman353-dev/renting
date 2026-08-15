@@ -55,6 +55,7 @@ export default function PlansAndSubscriptionsPage() {
         monthly_price: "",
         max_units: "",
         max_properties: "",
+        max_admins: "",
         badge: "",
     });
 
@@ -82,6 +83,7 @@ export default function PlansAndSubscriptionsPage() {
             monthly_price: String(plan.monthly_price ?? ""),
             max_units: String(plan.max_units ?? ""),
             max_properties: String(plan.max_properties ?? ""),
+            max_admins: String(plan.max_admins ?? ""),
             badge: plan.badge || "",
         });
         setEditModalOpen(true);
@@ -94,6 +96,7 @@ export default function PlansAndSubscriptionsPage() {
         const monthlyPrice = parseFloat(form.monthly_price);
         const maxUnits = parseInt(form.max_units, 10);
         const maxProperties = parseInt(form.max_properties, 10);
+        const maxAdmins = parseInt(form.max_admins, 10);
 
         if (!monthlyPrice || monthlyPrice <= 0) {
             toast.error("Monthly price must be greater than 0.");
@@ -107,6 +110,10 @@ export default function PlansAndSubscriptionsPage() {
             toast.error("Max properties must be at least 1.");
             return;
         }
+        if (!maxAdmins || maxAdmins < 1) {
+            toast.error("Max admin managers must be at least 1.");
+            return;
+        }
 
         setSaving(true);
         try {
@@ -116,6 +123,7 @@ export default function PlansAndSubscriptionsPage() {
                 monthly_price: monthlyPrice,
                 max_units: maxUnits,
                 max_properties: maxProperties,
+                max_admins: maxAdmins,
                 badge: form.badge || null,
             });
 
@@ -219,6 +227,18 @@ export default function PlansAndSubscriptionsPage() {
                                             </p>
                                         </div>
                                     </div>
+
+                                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colors.icon}`}>
+                                            <Users className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground font-medium">Max Admin Managers</p>
+                                            <p className="text-base font-black text-foreground">
+                                                {plan.max_admins >= 999 ? 'Unlimited' : `${plan.max_admins ?? '—'} Admins`}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Features list */}
@@ -232,6 +252,8 @@ export default function PlansAndSubscriptionsPage() {
                                                     text = `Up to ${Number(plan.max_units).toLocaleString()} Units`;
                                                 } else if (/^Up to .* Properties$/i.test(f)) {
                                                     text = `Up to ${Number(plan.max_properties).toLocaleString()} Properties`;
+                                                } else if (/^Up to .* Admin Managers$/i.test(f) || /^Up to .* Admins$/i.test(f) || /^Unlimited Admin Managers$/i.test(f)) {
+                                                    text = plan.max_admins >= 999 ? "Unlimited Admin Managers" : `Up to ${Number(plan.max_admins).toLocaleString()} Admin Managers`;
                                                 }
                                                 return (
                                                     <li key={i} className="flex items-center gap-2 text-xs text-foreground/80">
@@ -313,7 +335,7 @@ export default function PlansAndSubscriptionsPage() {
                         </div>
 
                         {/* Limits */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <Label htmlFor="edit_max_properties" className="font-bold text-xs flex items-center gap-1.5">
                                     <Home className="w-3.5 h-3.5 text-sky-500" /> Max Properties *
@@ -340,6 +362,21 @@ export default function PlansAndSubscriptionsPage() {
                                     value={form.max_units}
                                     onChange={(e) => setForm({ ...form, max_units: e.target.value })}
                                     placeholder="e.g. 25"
+                                    required
+                                    className="font-bold text-base"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="edit_max_admins" className="font-bold text-xs flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-emerald-500" /> Max Admins *
+                                </Label>
+                                <Input
+                                    id="edit_max_admins"
+                                    type="number"
+                                    min="1"
+                                    value={form.max_admins}
+                                    onChange={(e) => setForm({ ...form, max_admins: e.target.value })}
+                                    placeholder="e.g. 1"
                                     required
                                     className="font-bold text-base"
                                 />

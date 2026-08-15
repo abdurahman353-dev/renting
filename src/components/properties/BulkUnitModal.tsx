@@ -12,8 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import api from "@/data/apis";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { propertyAPI } from "@/data/apis";
+import { Loader2, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -52,8 +52,10 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
     const [generatedUnits, setGeneratedUnits] = useState<GeneratedUnit[]>([]);
     const [isPreviewing, setIsPreviewing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const handlePreview = () => {
+        setErrorMsg(null);
         const units: GeneratedUnit[] = [];
         for (let i = 0; i < count; i++) {
             units.push({
@@ -73,40 +75,57 @@ export function BulkUnitModal({ isOpen, onClose, propertyId, onSuccess, existing
     };
 
     const handleRemoveUnit = (index: number) => {
+        setErrorMsg(null);
         setGeneratedUnits(units => units.filter((_, i) => i !== index));
     };
 
     const handleUnitChange = (index: number, field: keyof GeneratedUnit, value: any) => {
+        setErrorMsg(null);
         setGeneratedUnits(units => units.map((u, i) => i === index ? { ...u, [field]: value } : u));
     };
 
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true);
-            await api.post(`/properties/${propertyId}/units/bulk`, { units: generatedUnits });
+            setErrorMsg(null);
+            await propertyAPI.bulkAddUnits(propertyId, { units: generatedUnits });
             toast.success(`Successfully added ${generatedUnits.length} units`);
             onSuccess();
+            setErrorMsg(null);
             onClose();
         } catch (error: any) {
-            console.error("Failed to add bulk units:", error);
-            const errorMessage = error.response?.data?.message || "Failed to add bulk units. Please check for duplicate unit numbers.";
-            toast.error(errorMessage);
+            const message = error.response?.data?.message || "Failed to add bulk units. Please check for duplicate unit numbers.";
+            setErrorMsg(message);
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const resetForm = () => {
+        setErrorMsg(null);
         setIsPreviewing(false);
         setGeneratedUnits([]);
     };
 
+    const handleCloseModal = () => {
+        setErrorMsg(null);
+        onClose();
+    };
+
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && handleCloseModal()}>
             <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Bulk Add Units</DialogTitle>
                 </DialogHeader>
+
+                {errorMsg && (
+                    <div className="p-3.5 bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 rounded-xl text-sm flex items-center gap-2.5 font-semibold animate-in fade-in-50">
+                        <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                        <span className="flex-1">{errorMsg}</span>
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-hidden flex flex-col gap-4">
                     {!isPreviewing ? (

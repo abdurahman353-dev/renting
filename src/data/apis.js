@@ -736,5 +736,21 @@ export const saasAPI = {
     },
 };
 
+// ============================================================================
+// ORGANIZATION / LANDLORD SETTINGS APIs
+// ============================================================================
+
+export const orgSettingsAPI = {
+    getSettings: async () => {
+        const response = await apiClient.get('/organization/settings');
+        return response.data;
+    },
+
+    updateSettings: async (data) => {
+        const response = await apiClient.put('/organization/settings', data);
+        return response.data;
+    },
+};
+
 // Export the axios instance for custom requests if needed
 export default apiClient;

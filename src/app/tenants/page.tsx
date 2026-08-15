@@ -13,7 +13,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Users, FileText } from "lucide-react"
+import { Search, Plus, MoreVertical, Phone, Mail, Loader2, Building2, Home, Users, FileText, Download, CheckSquare, Square, Send, MessageSquare } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     Dialog,
     DialogContent,
@@ -144,6 +145,153 @@ function TenantsContent() {
     const [smsData, setSmsData] = useState({ phone: "", name: "" });
     const [smsMessage, setSmsMessage] = useState("");
     const [sendingSms, setSendingSms] = useState(false);
+
+    // Tenant Selection State & Bulk Action State
+    const [selectedTenantIds, setSelectedTenantIds] = useState<number[]>([]);
+    const [bulkSmsOpen, setBulkSmsOpen] = useState(false);
+    const [bulkSmsMessage, setBulkSmsMessage] = useState("");
+    const [sendingBulkSms, setSendingBulkSms] = useState(false);
+    const [confirmSelectedRemindersOpen, setConfirmSelectedRemindersOpen] = useState(false);
+
+    const toggleSelectTenant = (id: number) => {
+        setSelectedTenantIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        const pageIds = tenants.map(t => t.id);
+        const allSelected = pageIds.length > 0 && pageIds.every(id => selectedTenantIds.includes(id));
+        if (allSelected) {
+            setSelectedTenantIds(prev => prev.filter(id => !pageIds.includes(id)));
+        } else {
+            setSelectedTenantIds(prev => Array.from(new Set([...prev, ...pageIds])));
+        }
+    };
+
+    const clearSelection = () => {
+        setSelectedTenantIds([]);
+    };
+
+    const isAllPageSelected = tenants.length > 0 && tenants.every(t => selectedTenantIds.includes(t.id));
+    const isSomePageSelected = tenants.some(t => selectedTenantIds.includes(t.id)) && !isAllPageSelected;
+
+    const handleSendBulkSms = async () => {
+        if (!bulkSmsMessage.trim() || selectedTenantIds.length === 0) return;
+
+        setSendingBulkSms(true);
+        let successCount = 0;
+        let failCount = 0;
+        const targetTenants = tenants.filter(t => selectedTenantIds.includes(t.id));
+
+        for (const tenant of targetTenants) {
+            if (!tenant.phone) continue;
+            try {
+                let msg = bulkSmsMessage
+                    .replace(/{name}/gi, tenant.name)
+                    .replace(/{unit}/gi, tenant.unit?.unit_number || tenant.unit_number || '')
+                    .replace(/{balance}/gi, Math.abs(tenant.balance || 0).toLocaleString());
+
+                await communicationAPI.send({
+                    phone: tenant.phone,
+                    message: msg
+                });
+                successCount++;
+            } catch (error) {
+                console.error("Bulk SMS error for tenant", tenant.id, error);
+                failCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            toast.success(`SMS sent successfully to ${successCount} tenant(s)` + (failCount > 0 ? ` (${failCount} failed)` : ''));
+        } else {
+            toast.error("Failed to send SMS to selected tenants");
+        }
+
+        setSendingBulkSms(false);
+        setBulkSmsOpen(false);
+        setBulkSmsMessage("");
+        setSelectedTenantIds([]);
+    };
+
+    const handleSendSelectedReminders = async () => {
+        const targetTenants = tenants.filter(t => selectedTenantIds.includes(t.id));
+        if (targetTenants.length === 0) return;
+
+        setSendingReminders(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const tenant of targetTenants) {
+            if (!tenant.phone) continue;
+            try {
+                const bal = Math.abs(tenant.balance || 0);
+                const msg = `Dear ${tenant.name}, your rent balance is KES ${bal.toLocaleString()}. Pay via Paybill: 4131909, Account No: ${tenant.id_number || tenant.phone}. Thank you.`;
+                await communicationAPI.send({
+                    phone: tenant.phone,
+                    message: msg
+                });
+                successCount++;
+            } catch (err) {
+                console.error("Reminder SMS error", tenant.id, err);
+                failCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            toast.success(`Balance reminders sent to ${successCount} selected tenant(s)` + (failCount > 0 ? ` (${failCount} failed)` : ''));
+        } else {
+            toast.error("Failed to send reminders");
+        }
+
+        setSendingReminders(false);
+        setConfirmSelectedRemindersOpen(false);
+        setSelectedTenantIds([]);
+    };
+
+    const handleExportSelectedCsv = () => {
+        const targetTenants = tenants.filter(t => selectedTenantIds.includes(t.id));
+        if (targetTenants.length === 0) {
+            toast.error("No tenants selected for export");
+            return;
+        }
+
+        const headers = [
+            "ID", "Name", "ID Number", "Phone", "Email", "Property", "Unit",
+            "Status", "Balance", "Start Date", "Rent (KES)"
+        ];
+
+        const rows = targetTenants.map(t => [
+            t.id,
+            `"${t.name || ''}"`,
+            `"${t.id_number || ''}"`,
+            `"${t.phone || ''}"`,
+            `"${t.email || ''}"`,
+            `"${t.property?.name || t.property_name || ''}"`,
+            `"${t.unit?.unit_number || t.unit_number || ''}"`,
+            `"${t.status || ''}"`,
+            t.balance ?? 0,
+            `"${t.leases?.[0]?.start_date || ''}"`,
+            t.leases?.[0]?.rent_amount ?? 0
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(r => r.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `selected_tenants_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast.success(`Exported ${targetTenants.length} tenant(s) to CSV`);
+    };
 
     const handleSendSms = async () => {
         if (!smsMessage.trim()) return;
@@ -970,11 +1118,75 @@ function TenantsContent() {
 
 
 
+            {/* Bulk Action Bar when tenants are selected */}
+            {selectedTenantIds.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 p-4 border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-xl shadow-sm animate-in slide-in-from-top-2">
+                    <div className="flex items-center gap-3">
+                        <Badge className="bg-indigo-600 text-white font-bold px-3 py-1 text-xs">
+                            {selectedTenantIds.length} Tenant{selectedTenantIds.length !== 1 ? 's' : ''} Selected
+                        </Badge>
+                        <span className="text-sm font-semibold text-foreground hidden sm:inline">
+                            Perform quick actions:
+                        </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            size="sm"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5"
+                            onClick={() => {
+                                setBulkSmsMessage("");
+                                setBulkSmsOpen(true);
+                            }}
+                        >
+                            <Mail className="h-3.5 w-3.5" />
+                            Send Bulk SMS ({selectedTenantIds.length})
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-semibold gap-1.5"
+                            onClick={() => setConfirmSelectedRemindersOpen(true)}
+                        >
+                            <Phone className="h-3.5 w-3.5" />
+                            Send Balance Reminders
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-1.5"
+                            onClick={handleExportSelectedCsv}
+                        >
+                            <Download className="h-3.5 w-3.5" />
+                            Export CSV
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-foreground text-xs"
+                            onClick={clearSelection}
+                        >
+                            Clear Selection
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             <div className="rounded-md border border-border bg-card shadow-sm">
                 <div className="max-h-[600px] overflow-y-auto relative">
                     <Table>
                         <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                             <TableRow>
+                                <TableHead className="w-[45px] bg-card text-center">
+                                    <Checkbox
+                                        checked={isAllPageSelected ? true : isSomePageSelected ? "indeterminate" : false}
+                                        onCheckedChange={toggleSelectAll}
+                                        aria-label="Select all tenants"
+                                    />
+                                </TableHead>
                                 <TableHead className="bg-card">Name</TableHead>
                                 <TableHead className="bg-card">ID Number</TableHead>
                                 <TableHead className="bg-card">Property / Unit</TableHead>
@@ -993,7 +1205,7 @@ function TenantsContent() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={13} className="h-40 text-center">
+                                    <TableCell colSpan={14} className="h-40 text-center">
                                         <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
                                             <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
                                             <span className="font-semibold text-base">Loading tenants...</span>
@@ -1006,9 +1218,20 @@ function TenantsContent() {
                                 const lease = tenant.leases?.[0];
                                 const startDate = lease?.start_date ? new Date(lease.start_date).toLocaleDateString() : 'N/A';
                                 const rentAmount = lease?.rent_amount || 'N/A';
+                                const isSelected = selectedTenantIds.includes(tenant.id);
 
                                 return (
-                                    <TableRow key={tenant.id} className="cursor-pointer hover:bg-muted/50">
+                                    <TableRow
+                                        key={tenant.id}
+                                        className={`cursor-pointer transition-colors ${isSelected ? "bg-indigo-50/50 dark:bg-indigo-950/20" : "hover:bg-muted/50"}`}
+                                    >
+                                        <TableCell className="w-[45px] text-center" onClick={(e) => e.stopPropagation()}>
+                                            <Checkbox
+                                                checked={isSelected}
+                                                onCheckedChange={() => toggleSelectTenant(tenant.id)}
+                                                aria-label={`Select tenant ${tenant.name}`}
+                                            />
+                                        </TableCell>
                                         <TableCell className="font-medium">
                                             <div>{tenant.name}</div>
                                             <div className="text-xs text-muted-foreground">ID: {tenant.id}</div>
@@ -1128,7 +1351,7 @@ function TenantsContent() {
                                 );
                             }) : (
                                 <TableRow>
-                                    <TableCell colSpan={13} className="py-20 text-center">
+                                    <TableCell colSpan={14} className="py-20 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-4">
                                             <div className="bg-muted p-6 rounded-full">
                                                 <Users className="h-12 w-12 text-muted-foreground" />
@@ -1212,6 +1435,68 @@ function TenantsContent() {
                             className="bg-indigo-600 hover:bg-indigo-700"
                         >
                             Send Reminders
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Send Bulk SMS Dialog for Selected Tenants */}
+            <Dialog open={bulkSmsOpen} onOpenChange={setBulkSmsOpen}>
+                <DialogContent className="sm:max-w-[550px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Mail className="h-5 w-5 text-indigo-600" />
+                            Send Bulk SMS to {selectedTenantIds.length} Selected Tenant{selectedTenantIds.length !== 1 ? 's' : ''}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Type your custom message below. You can use placeholder tags like <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-foreground font-mono">{'{name}'}</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-foreground font-mono">{'{unit}'}</code>, or <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-foreground font-mono">{'{balance}'}</code>.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4 space-y-3">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Recipients: <strong>{selectedTenantIds.length} tenant(s)</strong></span>
+                            <span>Placeholders: <code className="font-mono text-indigo-600">{'{name}'}</code>, <code className="font-mono text-indigo-600">{'{unit}'}</code></span>
+                        </div>
+
+                        <textarea
+                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Hello {name}, this is an important update regarding unit {unit}..."
+                            value={bulkSmsMessage}
+                            onChange={(e) => setBulkSmsMessage(e.target.value)}
+                        />
+
+                        <p className="text-xs text-muted-foreground">
+                            Each tenant will receive a personalized message with their details automatically filled in.
+                        </p>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setBulkSmsOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSendBulkSms} disabled={sendingBulkSms || !bulkSmsMessage.trim()} className="bg-indigo-600 hover:bg-indigo-700">
+                            {sendingBulkSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            Send to {selectedTenantIds.length} Tenant{selectedTenantIds.length !== 1 ? 's' : ''}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Selected Tenants Balance Reminders Confirmation Dialog */}
+            <AlertDialog open={confirmSelectedRemindersOpen} onOpenChange={setConfirmSelectedRemindersOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Send Reminders to {selectedTenantIds.length} Selected Tenant{selectedTenantIds.length !== 1 ? 's' : ''}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will send an individual SMS balance reminder (with Paybill info and rent balance) to each of the {selectedTenantIds.length} selected tenant(s).
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleSendSelectedReminders}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            Send Selected Reminders
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -30,6 +30,7 @@ interface Property {
     total_units: number;
     occupied_units: number;
     image?: string;
+    featured_image?: string;
     property?: string;
     units?: any[];
     featured_image_url?: string;
@@ -60,6 +61,7 @@ export default function AllPropertiesPage() {
     const [allProperties, setAllProperties] = useState<Property[]>([]);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
+    const [agenciesLoading, setAgenciesLoading] = useState(true);
 
     // Filter states
     const [searchLocation, setSearchLocation] = useState('');
@@ -77,11 +79,14 @@ export default function AllPropertiesPage() {
     }, []);
 
     const fetchAgencies = async () => {
+        setAgenciesLoading(true);
         try {
             const data = await publicAPI.getAgencies();
             if (Array.isArray(data)) setAgencies(data);
         } catch (err) {
             console.error("Failed to fetch agencies:", err);
+        } finally {
+            setAgenciesLoading(false);
         }
     };
 
@@ -221,69 +226,102 @@ export default function AllPropertiesPage() {
                     {/* View 1: Registered Agencies Grid */}
                     {viewMode === 'agencies' && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {agencies.length > 0 ? (
-                                    agencies.map((agency) => (
+                            {agenciesLoading ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[1, 2, 3, 4, 5, 6].map((i) => (
                                         <div
-                                            key={agency.id}
-                                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                                            key={i}
+                                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm animate-pulse flex flex-col justify-between space-y-6 min-h-[290px]"
                                         >
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-3 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
-                                                        <Building2 className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">
-                                                            {agency.name}
-                                                        </h3>
-                                                        <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200 font-semibold px-2 py-0">
-                                                            Verified Landlord Account
-                                                        </Badge>
+                                                    <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                                                    <div className="space-y-2 flex-1">
+                                                        <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
+                                                        <div className="h-3 bg-emerald-100 dark:bg-emerald-950/40 rounded-full w-1/2" />
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
-                                                    {agency.phone && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Phone className="w-3.5 h-3.5 text-indigo-500" />
-                                                            <span>{agency.phone}</span>
-                                                        </div>
-                                                    )}
-                                                    {agency.email && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Mail className="w-3.5 h-3.5 text-indigo-500" />
-                                                            <span className="truncate">{agency.email}</span>
-                                                        </div>
-                                                    )}
+                                                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                                    <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded w-2/3" />
+                                                    <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded w-4/5" />
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-2 pt-2 text-center">
-                                                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
-                                                        <div className="text-base font-black text-slate-900 dark:text-white">{agency.properties_count}</div>
-                                                        <div className="text-[10px] text-slate-500 font-medium">Properties</div>
-                                                    </div>
-                                                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
-                                                        <div className="text-base font-black text-emerald-600 dark:text-emerald-400">{agency.vacant_units_count}</div>
-                                                        <div className="text-[10px] text-slate-500 font-medium">Vacant Units</div>
-                                                    </div>
+                                                <div className="grid grid-cols-2 gap-2 pt-1">
+                                                    <div className="h-14 bg-slate-100 dark:bg-slate-800/80 rounded-xl" />
+                                                    <div className="h-14 bg-slate-100 dark:bg-slate-800/80 rounded-xl" />
                                                 </div>
                                             </div>
 
-                                            <Button
-                                                onClick={() => handleSelectAgency(agency)}
-                                                className="mt-6 w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
-                                            >
-                                                View Agency Properties <ArrowRight className="w-4 h-4 ml-1.5" />
-                                            </Button>
+                                            <div className="h-11 bg-indigo-100 dark:bg-indigo-950/60 rounded-xl w-full" />
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="col-span-full py-16 text-center text-slate-500">
-                                        No registered agencies available yet.
-                                    </div>
-                                )}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {agencies.length > 0 ? (
+                                        agencies.map((agency) => (
+                                            <div
+                                                key={agency.id}
+                                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                                            >
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-3 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
+                                                            <Building2 className="w-6 h-6" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">
+                                                                {agency.name}
+                                                            </h3>
+                                                            <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200 font-semibold px-2 py-0">
+                                                                Verified Landlord Account
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
+                                                        {agency.phone && (
+                                                            <div className="flex items-center gap-2">
+                                                                <Phone className="w-3.5 h-3.5 text-indigo-500" />
+                                                                <span>{agency.phone}</span>
+                                                            </div>
+                                                        )}
+                                                        {agency.email && (
+                                                            <div className="flex items-center gap-2">
+                                                                <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                                                                <span className="truncate">{agency.email}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-2 pt-2 text-center">
+                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
+                                                            <div className="text-base font-black text-slate-900 dark:text-white">{agency.properties_count}</div>
+                                                            <div className="text-[10px] text-slate-500 font-medium">Properties</div>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5">
+                                                            <div className="text-base font-black text-emerald-600 dark:text-emerald-400">{agency.vacant_units_count}</div>
+                                                            <div className="text-[10px] text-slate-500 font-medium">Vacant Units</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <Button
+                                                    onClick={() => handleSelectAgency(agency)}
+                                                    className="mt-6 w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
+                                                >
+                                                    View Agency Properties <ArrowRight className="w-4 h-4 ml-1.5" />
+                                                </Button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="col-span-full py-16 text-center text-slate-500">
+                                            No registered agencies available yet.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -357,16 +395,59 @@ export default function AllPropertiesPage() {
                             </div>
 
                             {loading ? (
-                                <div className="flex flex-col items-center justify-center py-20">
-                                    <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-                                    <p className="text-slate-500 font-medium">Loading properties...</p>
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                                        <div
+                                            key={i}
+                                            className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse flex flex-col justify-between"
+                                        >
+                                            <div>
+                                                <div className="h-64 bg-slate-200 dark:bg-slate-800 w-full relative" />
+                                                <div className="p-6 space-y-4">
+                                                    <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
+                                                    <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-md w-1/2" />
+                                                </div>
+                                            </div>
+                                            <div className="p-6 pt-0 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between mt-4">
+                                                <div className="flex gap-2">
+                                                    <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                                                    <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                                                </div>
+                                                <div className="h-10 bg-indigo-100 dark:bg-indigo-950/60 rounded-xl w-40" />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {filteredProperties.length > 0 ? (
                                         filteredProperties.map((property) => {
-                                            const availableUnits = (property.total_units || property.units?.length || 0) - (property.occupied_units || 0);
-                                            const displayImage = property.featured_image_url || property.image || property.images || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
+                                            const totalUnitsCount = property.units ? property.units.length : (property.total_units || 0);
+                                            const vacantUnitsCount = property.units && property.units.length > 0
+                                                ? property.units.filter((u: any) => {
+                                                    const st = (u.status || '').toUpperCase();
+                                                    return st === 'VACANT' || st === 'AVAILABLE';
+                                                }).length
+                                                : Math.max(0, totalUnitsCount - (property.occupied_units || 0));
+
+                                            let badgeText = '';
+                                            let badgeClass = '';
+
+                                            if (totalUnitsCount === 0) {
+                                                badgeText = 'No Units Added';
+                                                badgeClass = 'bg-slate-900/80 text-white dark:bg-slate-950/80 border-0';
+                                            } else if (vacantUnitsCount > 0) {
+                                                badgeText = `${vacantUnitsCount} Vacant Unit${vacantUnitsCount > 1 ? 's' : ''}`;
+                                                badgeClass = 'bg-emerald-600 text-white font-bold border-0 shadow-md';
+                                            } else {
+                                                badgeText = 'Fully Occupied';
+                                                badgeClass = 'bg-amber-600 text-white font-bold border-0 shadow-md';
+                                            }
+
+                                            const displayImage = property.featured_image_url
+                                                || (typeof property.featured_image === 'string' && property.featured_image ? property.featured_image : null)
+                                                || (typeof property.image === 'string' && property.image ? property.image : null)
+                                                || 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
 
                                             return (
                                                 <div key={property.id} className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-slate-800">
@@ -375,9 +456,12 @@ export default function AllPropertiesPage() {
                                                             src={displayImage}
                                                             alt={property.name}
                                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1600596542815-e32c8cc13bc9?q=80&w=2070&auto=format&fit=crop';
+                                                            }}
                                                         />
-                                                        <Badge className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 font-bold border-0 shadow-md">
-                                                            {availableUnits > 0 ? `${availableUnits} Vacant Units` : 'Fully Occupied'}
+                                                        <Badge className={`absolute top-4 left-4 ${badgeClass}`}>
+                                                            {badgeText}
                                                         </Badge>
                                                         {(() => {
                                                             const unitPrices = property.units?.map(u => Number(u.price)).filter(p => !isNaN(p)) || [];

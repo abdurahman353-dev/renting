@@ -48,10 +48,12 @@ import {
     CornerDownRight,
     MoreVertical,
     KeyRound,
-    Filter
+    Filter,
+    Lock,
+    AlertTriangle
 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { adminAPI } from '@/data/apis';
+import { adminAPI, saasAPI } from '@/data/apis';
 import { toast } from 'sonner';
 import { useDebounce } from "@/hooks/use-debounce";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -158,10 +160,24 @@ export default function AdminManagementPage() {
         onConfirm: () => { },
     });
 
+    // Plan Limits State
+    const [planLimits, setPlanLimits] = useState<{ max_admins: number | null } | null>(null);
+    const [adminCount, setAdminCount] = useState<number>(0);
+
     useEffect(() => {
         if (!authLoading) {
             fetchAdmins(currentPage);
         }
+        // Fetch subscription status for max_admins
+        saasAPI.getSubscriptionStatus().then((data: any) => {
+            if (data?.organization) {
+                const maxAdmins = data.usage?.max_admins ?? data.organization.max_admins ?? null;
+                setPlanLimits({ max_admins: maxAdmins });
+                if (data.usage?.admins_count != null) {
+                    setAdminCount(data.usage.admins_count);
+                }
+            }
+        }).catch(() => {});
     }, [authLoading, currentPage, debouncedSearch]);
 
     const fetchAdmins = async (page = 1) => {
@@ -217,7 +233,12 @@ export default function AdminManagementPage() {
             });
             fetchAdmins(1);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to create administrator.");
+            const errData = error.response?.data;
+            if (errData?.error_code === 'ADMIN_LIMIT_EXCEEDED') {
+                toast.error(`🔒 ${errData.message || 'Admin account limit reached. Please upgrade your plan.'}`, { duration: 6000 });
+            } else {
+                toast.error(errData?.message || "Failed to create administrator.");
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -316,14 +337,44 @@ export default function AdminManagementPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-foreground">Administrator Management</h2>
-                    <p className="text-muted-foreground mt-1">Manage system administrators, roles, and account permissions.</p>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <p className="text-muted-foreground">Manage system administrators, roles, and account permissions.</p>
+                        {planLimits?.max_admins != null && user?.role !== 'super_admin' && (
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border ${
+                                adminCount >= planLimits.max_admins
+                                    ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                                    : 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800'
+                            }`}>
+                                {adminCount >= planLimits.max_admins && <AlertTriangle className="h-3.5 w-3.5" />}
+                                {adminCount} / {planLimits.max_admins >= 999 ? 'Unlimited' : planLimits.max_admins} Admins Used
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <Button
-                    onClick={() => setIsAddDialogOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md"
-                >
-                    <Plus className="mr-2 h-4 w-4" /> Add new Admin
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                    <Button
+                        onClick={() => {
+                            if (planLimits?.max_admins != null && user?.role !== 'super_admin' && adminCount >= planLimits.max_admins) {
+                                toast.error(`🔒 Admin limit reached (${adminCount}/${planLimits.max_admins}). Please upgrade your plan on the SaaS portal to add more team members.`);
+                                return;
+                            }
+                            setIsAddDialogOpen(true);
+                        }}
+                        className={`${
+                            planLimits?.max_admins != null && user?.role !== 'super_admin' && adminCount >= planLimits.max_admins
+                                ? 'bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-70'
+                                : 'bg-indigo-600 hover:bg-indigo-700'
+                        } text-white font-bold shadow-md`}
+                    >
+                        {planLimits?.max_admins != null && user?.role !== 'super_admin' && adminCount >= planLimits.max_admins
+                            ? <><Lock className="mr-2 h-4 w-4" /> Limit Reached</>
+                            : <><Plus className="mr-2 h-4 w-4" /> Add new Admin</>
+                        }
+                    </Button>
+                    {planLimits?.max_admins != null && user?.role !== 'super_admin' && adminCount >= planLimits.max_admins && (
+                        <p className="text-xs text-red-500 dark:text-red-400 font-medium">Upgrade plan to add more team members</p>
+                    )}
+                </div>
             </div>
 
             {/* Search Bar & Filters */}

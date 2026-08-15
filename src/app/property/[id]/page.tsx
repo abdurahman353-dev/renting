@@ -29,6 +29,8 @@ import {
     Users,
     ArrowLeft,
     ArrowRight,
+    Clock,
+    Timer,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -208,6 +210,14 @@ export default function PropertyViewPage() {
     const occupancyRate = totalUnitsCount > 0
         ? Math.round((occupiedUnits / totalUnitsCount) * 100)
         : 0;
+
+    const agencyName = (property as any)?.agency?.name || settings?.company_name || 'Landlord Agency';
+    const agencyPhone = (property as any)?.agency?.phone || settings?.company_phone || property.owner_contact || '';
+    const agencyWhatsapp = (property as any)?.agency?.whatsapp_number || settings?.company_whatsapp || agencyPhone;
+    const agencyEmail = (property as any)?.agency?.email || settings?.company_email || property.owner_email || '';
+    const officeHours = (property as any)?.agency?.office_hours || settings?.company_office_hours || '';
+    const officeAddress = (property as any)?.agency?.office_address || settings?.company_address || '';
+    const responseTimeNote = (property as any)?.agency?.response_time_note || settings?.company_response_time || '';
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -435,6 +445,49 @@ export default function PropertyViewPage() {
                                             </CardContent>
                                         </Card>
                                     )}
+
+                                    {/* Agency & Office Information */}
+                                    {(officeHours || officeAddress || responseTimeNote) && (
+                                        <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden">
+                                            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-6">
+                                                <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                                    <Building2 className="w-5 h-5 text-blue-600" />
+                                                    Agency & Office Information
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-8 pb-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    {officeHours && (
+                                                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                                                            <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
+                                                                <Clock className="w-4 h-4" />
+                                                                Office Hours
+                                                            </div>
+                                                            <p className="text-slate-900 font-bold text-base whitespace-pre-line leading-relaxed">{officeHours}</p>
+                                                        </div>
+                                                    )}
+                                                    {officeAddress && (
+                                                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                                                            <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
+                                                                <MapPin className="w-4 h-4" />
+                                                                Office Location
+                                                            </div>
+                                                            <p className="text-slate-900 font-bold text-base">{officeAddress}</p>
+                                                        </div>
+                                                    )}
+                                                    {responseTimeNote && (
+                                                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                                                            <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
+                                                                <Timer className="w-4 h-4" />
+                                                                Response Guarantee
+                                                            </div>
+                                                            <p className="text-slate-900 font-bold text-base">{responseTimeNote}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
                                 </TabsContent>
 
                                 <TabsContent value="units" className="mt-8">
@@ -596,61 +649,74 @@ export default function PropertyViewPage() {
                             </Card>
 
                             {/* Property Contact */}
-                            <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden p-6">
-                                <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                    <Phone className="w-5 h-5 text-blue-500" />
-                                    Contact Agency
-                                </h4>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                            <Building2 className="w-6 h-6 text-blue-600" />
+                            {(() => {
+                                const agencyName = (property as any)?.agency?.name || settings?.company_name || 'Landlord Agency';
+                                const agencyPhone = (property as any)?.agency?.phone || settings?.company_phone || property.owner_contact || '';
+                                const agencyWhatsapp = (property as any)?.agency?.whatsapp_number || settings?.company_whatsapp || agencyPhone;
+                                const agencyEmail = (property as any)?.agency?.email || settings?.company_email || property.owner_email || '';
+                                const officeHours = (property as any)?.agency?.office_hours || settings?.company_office_hours || '';
+                                const officeAddress = (property as any)?.agency?.office_address || settings?.company_address || '';
+                                const responseTimeNote = (property as any)?.agency?.response_time_note || settings?.company_response_time || '';
+
+                                return (
+                                    <Card className="bg-white shadow-sm border border-slate-100 rounded-3xl overflow-hidden p-6">
+                                        <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                            <Phone className="w-5 h-5 text-blue-500" />
+                                            Contact Agency
+                                        </h4>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                                    <Building2 className="w-6 h-6 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-900">{agencyName}</p>
+                                                    <p className="text-xs text-slate-500 font-bold">verified Agency</p>
+                                                </div>
+                                            </div>
+
+                                            {agencyPhone && (
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
+                                                    onClick={() => window.open(`tel:${agencyPhone}`)}
+                                                >
+                                                    <Phone className="w-4 h-4 mr-3" /> {agencyPhone}
+                                                </Button>
+                                            )}
+
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
+                                                onClick={() => {
+                                                    const raw = agencyWhatsapp || agencyPhone || '0745621158';
+                                                    const digitsOnly = raw.replace(/\D/g, '');
+                                                    let cleanPhone = digitsOnly;
+                                                    if (digitsOnly.startsWith('0')) {
+                                                        cleanPhone = '254' + digitsOnly.substring(1);
+                                                    } else if (digitsOnly.length === 9 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('1'))) {
+                                                        cleanPhone = '254' + digitsOnly;
+                                                    }
+                                                    const message = `Hi, I am interested in ${property.name} located at ${fullAddress}`;
+                                                    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+                                                }}
+                                            >
+                                                <WhatsAppIcon className="w-5 h-5 mr-3 text-emerald-500" /> WhatsApp Agent
+                                            </Button>
+
+                                            {agencyEmail && (
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
+                                                    onClick={() => window.location.href = `mailto:${agencyEmail}`}
+                                                >
+                                                    <Mail className="w-4 h-4 mr-3" /> {agencyEmail}
+                                                </Button>
+                                            )}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-slate-900">{settings?.company_name}</p>
-                                            <p className="text-xs text-slate-500 font-bold">verified Agency</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
-                                        onClick={() => {
-                                            const phone = settings?.company_phone || property.owner_contact || '';
-                                            if (phone) window.open(`tel:${phone}`);
-                                        }}
-                                    >
-                                        <Phone className="w-4 h-4 mr-3" /> {settings?.company_phone || property.owner_contact}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
-                                        onClick={() => {
-                                            const phone = settings?.company_whatsapp || settings?.company_phone || property.owner_contact || '0745621158';
-                                            const digitsOnly = phone.replace(/\D/g, '');
-                                            let cleanPhone = digitsOnly;
-                                            if (digitsOnly.startsWith('0')) {
-                                                cleanPhone = '254' + digitsOnly.substring(1);
-                                            } else if (digitsOnly.length === 9 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('1'))) {
-                                                cleanPhone = '254' + digitsOnly;
-                                            }
-                                            const message = `Hi, I am interested in ${property.name} located at ${fullAddress}`;
-                                            window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
-                                        }}
-                                    >
-                                        <WhatsAppIcon className="w-5 h-5 mr-3 text-emerald-500" /> WhatsApp Agent
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start h-12 rounded-xl text-slate-700 hover:text-blue-600 transition-colors"
-                                        onClick={() => {
-                                            const email = settings?.company_email || property.owner_email || 'hello@rentsys.com';
-                                            window.location.href = `mailto:${email}`;
-                                        }}
-                                    >
-                                        <Mail className="w-4 h-4 mr-3" /> {settings?.company_email || property.owner_email}
-                                    </Button>
-                                </div>
-                            </Card>
+                                    </Card>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

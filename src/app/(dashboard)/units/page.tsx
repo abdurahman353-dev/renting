@@ -20,9 +20,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Filter, Loader2, RefreshCw, Download, Trash2 } from "lucide-react";
+import { Search, Plus, Filter, Loader2, RefreshCw, Download, Trash2, Lock, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { unitAPI, propertyAPI, authAPI } from "@/data/apis";
+import { unitAPI, propertyAPI, authAPI, saasAPI } from "@/data/apis";
 import { toast } from "sonner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -54,6 +54,7 @@ export default function UnitsPage() {
     const [user, setUser] = useState<any>(null);
     const [unitToDelete, setUnitToDelete] = useState<any>(null);
     const [deleting, setDeleting] = useState(false);
+    const [planLimits, setPlanLimits] = useState<{ max_units: number | null; max_properties: number | null } | null>(null);
 
     // Filter States
     const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +77,15 @@ export default function UnitsPage() {
         const currentUser = authAPI.getUser();
         setUser(currentUser);
         fetchProperties();
+        // Fetch org plan limits
+        saasAPI.getSubscriptionStatus().then((data: any) => {
+            if (data?.organization) {
+                setPlanLimits({
+                    max_units: data.organization.max_units ?? null,
+                    max_properties: data.organization.max_properties ?? null,
+                });
+            }
+        }).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -217,20 +227,37 @@ export default function UnitsPage() {
 
     return (
         <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-foreground">Units</h2>
-                    <p className="text-muted-foreground mt-1">
-                        Manage all residential units across properties.
-                    </p>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <p className="text-muted-foreground">
+                            Manage all residential units across properties.
+                        </p>
+                        {planLimits?.max_units != null && (
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border ${
+                                totalItems >= planLimits.max_units
+                                    ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                                    : 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800'
+                            }`}>
+                                {totalItems >= planLimits.max_units && <AlertTriangle className="h-3.5 w-3.5" />}
+                                {totalItems} / {planLimits.max_units} Units Used
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <Button
-                    onClick={handleExport}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export to CSV
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                    <Button
+                        onClick={handleExport}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Export to CSV
+                    </Button>
+                    {planLimits?.max_units != null && totalItems >= planLimits.max_units && (
+                        <p className="text-xs text-red-500 dark:text-red-400 font-medium">Unit limit reached — upgrade your plan to add more</p>
+                    )}
+                </div>
             </div>
 
             <Card className="border-border shadow-sm bg-card">

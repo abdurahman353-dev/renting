@@ -41,6 +41,7 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<ImageItem[]>([]);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     // Form State
     const [formData, setFormData] = useState({
@@ -139,27 +140,34 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear inline error as user types
+        if (formErrors[name]) setFormErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
     };
 
     const handleSelectChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (formErrors[name]) setFormErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
     }
 
     const handleLocationChange = (type: 'subcounty' | 'ward' | 'subward', value: string) => {
+        // Clear location error whenever user interacts with location selects
+        setFormErrors(prev => { const n = { ...prev }; delete n['location']; return n; });
+
         if (type === 'subcounty') {
             setSelectedSubcounty(value);
             setSelectedWard("");
             setSelectedSubward("");
-            setFormData(prev => ({ ...prev, city: value, state: "Mombasa", location: "" }));
+            // Set a base location immediately so even Sub-County alone satisfies the required field
+            setFormData(prev => ({ ...prev, city: value, state: "Mombasa", location: value }));
         } else if (type === 'ward') {
             setSelectedWard(value);
             setSelectedSubward("");
-            // Update location with Ward primarily
+            // More specific: Ward, Sub-County
             setFormData(prev => ({ ...prev, location: `${value}, ${selectedSubcounty}` }));
         } else if (type === 'subward') {
             setSelectedSubward(value);
-            // More specific location: "Subward, Ward"
-            setFormData(prev => ({ ...prev, location: `${value}, ${selectedWard}` }));
+            // Most specific: Sub-Ward, Ward, Sub-County
+            setFormData(prev => ({ ...prev, location: `${value}, ${selectedWard}, ${selectedSubcounty}` }));
         }
     };
 
@@ -202,6 +210,25 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // --- Client-side validation ---
+        const errors: Record<string, string> = {};
+        if (!formData.name.trim()) errors.name = "Property name is required.";
+        if (!formData.location.trim()) errors.location = "Please select a Sub-County, Ward, or Sub-Ward to set the location.";
+        if (!formData.property_type.trim()) errors.property_type = "Property type is required.";
+        if (!formData.status.trim()) errors.status = "Status is required.";
+
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            // Scroll to first error field
+            const firstErrorKey = Object.keys(errors)[0];
+            const el = document.querySelector(`[name="${firstErrorKey}"], [data-field="${firstErrorKey}"]`);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            toast.error("Please fix the highlighted fields before submitting.");
+            return;
+        }
+
+        setFormErrors({});
         setLoading(true);
 
         try {
@@ -269,7 +296,28 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
 
         } catch (error: any) {
             console.error("Submission failed:", error);
-            toast.error(error.response?.data?.message || "Failed to save property");
+            const errData = error.response?.data;
+
+            // ── Plan limit hit ─────────────────────────────────────────────────
+            if (errData?.error_code === 'PROPERTY_LIMIT_EXCEEDED') {
+                toast.error(
+                    `🔒 ${errData.message || `Property limit reached (${errData.current_count}/${errData.limit}). Upgrade your plan to add more properties.`}`,
+                    { duration: 6000 }
+                );
+            // ── Laravel field-level 422 validation errors ──────────────────────
+            } else if (error.response?.status === 422 && errData?.errors) {
+                const backendErrors: Record<string, string> = {};
+                Object.entries(errData.errors).forEach(([field, msgs]: [string, any]) => {
+                    backendErrors[field] = Array.isArray(msgs) ? msgs[0] : String(msgs);
+                });
+                setFormErrors(backendErrors);
+                const firstField = Object.keys(backendErrors)[0];
+                const el = document.querySelector(`[name="${firstField}"], [data-field="${firstField}"]`);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                toast.error("Validation failed. Please check the highlighted fields.");
+            } else {
+                toast.error(errData?.message || "Failed to save property. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -309,8 +357,13 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                             value={formData.name}
                             onChange={handleInputChange}
                             placeholder="e.g. Sunset Apartments"
-                            required
+                            className={formErrors.name ? "border-red-500 focus-visible:ring-red-400" : ""}
                         />
+                        {formErrors.name && (
+                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                <span>⚠</span> {formErrors.name}
+                            </p>
+                        )}
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
@@ -374,6 +427,11 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                             </Select>
                         </div>
                     </div>
+                    {formErrors.location && (
+                        <p data-field="location" className="md:col-span-2 text-xs text-red-500 mt-1 flex items-center gap-1">
+                            <span>⚠</span> {formErrors.location}
+                        </p>
+                    )}
                     {/* <div className="md:col-span-2 space-y-2">
                         <Label>Full Address</Label>
                         <Input name="full_address" value={formData.full_address} onChange={handleInputChange} />
@@ -399,10 +457,10 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                     <CardTitle>Property Details</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label>Property Type</Label>
+                    <div className="space-y-2" data-field="property_type">
+                        <Label>Property Type *</Label>
                         <Select name="property_type" value={formData.property_type} onValueChange={(val) => handleSelectChange("property_type", val)}>
-                            <SelectTrigger>
+                            <SelectTrigger className={formErrors.property_type ? "border-red-500" : ""}>
                                 <SelectValue placeholder="Select Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -411,6 +469,11 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                                 ))}
                             </SelectContent>
                         </Select>
+                        {formErrors.property_type && (
+                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                <span>⚠</span> {formErrors.property_type}
+                            </p>
+                        )}
                     </div>
                     <div className="space-y-2">
                         <Label>Year Built</Label>

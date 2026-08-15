@@ -248,8 +248,16 @@ export default function AddUnitPage() {
             router.refresh();
         } catch (error: any) {
             console.error(error);
-            const errorMessage = error.response?.data?.message || error.message || "Failed to create unit";
-            toast.error(errorMessage);
+            const errData = error.response?.data;
+            // ── Plan unit limit hit ──────────────────────────────────────────────
+            if (errData?.error_code === 'UNIT_LIMIT_EXCEEDED') {
+                toast.error(
+                    `🔒 ${errData.message || 'Unit limit reached. Please upgrade your subscription plan to add more units.'}`,
+                    { duration: 6000 }
+                );
+            } else {
+                toast.error(errData?.message || error.message || "Failed to create unit");
+            }
         } finally {
             setLoading(false);
         }

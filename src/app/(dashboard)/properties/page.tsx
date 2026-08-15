@@ -14,11 +14,11 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, MapPin, Home, Trash2, Loader2 } from "lucide-react"
+import { Search, Plus, MapPin, Home, Trash2, Loader2, Lock, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { propertyAPI, authAPI } from "@/data/apis"
+import { propertyAPI, authAPI, saasAPI } from "@/data/apis"
 import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useDebounce } from "../../../hooks/use-debounce"
 
@@ -47,15 +47,25 @@ export default function PropertiesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [perPage] = useState(9); // 3x3 grid looks best
+    const [perPage] = useState(9);
     const [deletionError, setDeletionError] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [planLimits, setPlanLimits] = useState<{ max_properties: number | null; max_units: number | null } | null>(null);
 
     const debouncedSearch = useDebounce(searchQuery, 500);
 
     useEffect(() => {
         const currentUser = authAPI.getUser();
         setUser(currentUser);
+        // Fetch org plan limits
+        saasAPI.getSubscriptionStatus().then((data: any) => {
+            if (data?.organization) {
+                setPlanLimits({
+                    max_properties: data.organization.max_properties ?? null,
+                    max_units: data.organization.max_units ?? null,
+                });
+            }
+        }).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -122,21 +132,52 @@ export default function PropertiesPage() {
 
     return (
         <div className="p-8 space-y-8 bg-slate-50 dark:bg-[#0F1115] min-h-screen transition-colors duration-300">
-            <div className="border-b border-slate-200 dark:border-[#1F2630] pb-6 mb-2">
+        <div className="border-b border-slate-200 dark:border-[#1F2630] pb-6 mb-2">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Properties</h2>
-                        <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">Manage your houses and residential units.</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <p className="text-slate-500 dark:text-[#9CA3AF] text-lg font-medium">Manage your houses and residential units.</p>
+                            {planLimits?.max_properties != null && (
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border ${
+                                    totalItems >= planLimits.max_properties
+                                        ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                                        : 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800'
+                                }`}>
+                                    {totalItems >= planLimits.max_properties && <AlertTriangle className="h-3.5 w-3.5" />}
+                                    {totalItems} / {planLimits.max_properties} Properties Used
+                                </span>
+                            )}
+                        </div>
                     </div>
 
-                    <Button
-                        onClick={() => router.push('/properties/new')}
-                        className="bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        <Plus className="mr-2 h-6 w-6" /> Add Property
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                        <Button
+                            onClick={() => {
+                                if (planLimits?.max_properties != null && totalItems >= planLimits.max_properties) {
+                                    toast.error(`Property limit reached (${totalItems}/${planLimits.max_properties}). Please upgrade your plan to add more properties.`);
+                                    return;
+                                }
+                                router.push('/properties/new');
+                            }}
+                            className={`${
+                                planLimits?.max_properties != null && totalItems >= planLimits.max_properties
+                                    ? 'bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-70'
+                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                            }`}
+                        >
+                            {planLimits?.max_properties != null && totalItems >= planLimits.max_properties
+                                ? <><Lock className="mr-2 h-4 w-4" /> Limit Reached</>
+                                : <><Plus className="mr-2 h-6 w-6" /> Add Property</>
+                            }
+                        </Button>
+                        {planLimits?.max_properties != null && totalItems >= planLimits.max_properties && (
+                            <p className="text-xs text-red-500 dark:text-red-400 font-medium">Upgrade your plan to add more properties</p>
+                        )}
+                    </div>
                 </div>
             </div>
+
 
             <div className="flex items-center space-x-2">
                 <div className="relative flex-1 max-w-md">

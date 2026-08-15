@@ -248,30 +248,28 @@ export default function SaaSProductLandingPage() {
                                             KES {Number(plan.monthly_price).toLocaleString()} <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">/ month</span>
                                         </div>
                                         <ul className="mt-6 space-y-3.5 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                                            {plan.features && Array.isArray(plan.features) ? (
-                                                plan.features.map((feature: string, i: number) => {
-                                                    let text = feature;
-                                                    if (/^Up to .* Units$/i.test(feature)) {
-                                                        text = `Up to ${Number(plan.max_units).toLocaleString()} Units`;
-                                                    } else if (/^Up to .* Properties$/i.test(feature)) {
-                                                        text = `Up to ${Number(plan.max_properties).toLocaleString()} Properties`;
-                                                    }
-                                                    return (
-                                                        <li key={i} className="flex items-center gap-2.5">
-                                                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> {text}
-                                                        </li>
-                                                    );
-                                                })
-                                            ) : (
-                                                <>
-                                                    <li className="flex items-center gap-2.5">
-                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> Up to {Number(plan.max_units).toLocaleString()} Units
+                                            {(plan.features && Array.isArray(plan.features) ? plan.features : [
+                                                plan.max_units >= 999 ? "Unlimited Units" : `Up to ${Number(plan.max_units).toLocaleString()} Units`,
+                                                plan.max_properties >= 999 ? "Unlimited Properties" : `Up to ${Number(plan.max_properties).toLocaleString()} Properties`,
+                                                plan.max_admins >= 999 ? "Unlimited Admin Managers" : `Up to ${Number(plan.max_admins).toLocaleString()} Admin Managers`,
+                                                "Bulk SMS to Tenants",
+                                                "Automatic Tenant Payments via Paybill",
+                                                "Financial Records & Reports"
+                                            ]).map((feature: string, i: number) => {
+                                                let text = feature;
+                                                if (/^Up to .* Units$/i.test(feature)) {
+                                                    text = plan.max_units >= 999 ? "Unlimited Units" : `Up to ${Number(plan.max_units).toLocaleString()} Units`;
+                                                } else if (/^Up to .* Properties$/i.test(feature)) {
+                                                    text = plan.max_properties >= 999 ? "Unlimited Properties" : `Up to ${Number(plan.max_properties).toLocaleString()} Properties`;
+                                                } else if (/^Up to .* Admin Managers$/i.test(feature) || /^Up to .* Admins$/i.test(feature) || /^Unlimited Admin Managers$/i.test(feature)) {
+                                                    text = plan.max_admins >= 999 ? "Unlimited Admin Managers" : `Up to ${Number(plan.max_admins).toLocaleString()} Admin Managers`;
+                                                }
+                                                return (
+                                                    <li key={i} className="flex items-center gap-2.5">
+                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> {text}
                                                     </li>
-                                                    <li className="flex items-center gap-2.5">
-                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> Up to {Number(plan.max_properties).toLocaleString()} Properties
-                                                    </li>
-                                                </>
-                                            )}
+                                                );
+                                            })}
                                         </ul>
                                     </div>
                                     <Link href="/register" className="mt-8">
