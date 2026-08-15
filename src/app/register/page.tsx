@@ -56,7 +56,7 @@ export default function RegisterOrganizationPage() {
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [agreeTerms, setAgreeTerms] = useState(true);
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     const [form, setForm] = useState({
         company_name: "",
@@ -467,8 +467,8 @@ export default function RegisterOrganizationPage() {
                             {/* Submit Button */}
                             <Button
                                 type="submit"
-                                disabled={submitting}
-                                className="w-full h-12 text-base font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 rounded-xl transition-all"
+                                disabled={submitting || !agreeTerms}
+                                className="w-full h-12 text-base font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {submitting ? (
                                     <>

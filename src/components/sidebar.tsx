@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { Children, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { publicAPI } from "@/data/apis"
+import { orgSettingsAPI, publicAPI } from "@/data/apis"
 
 
 interface SidebarRoute {
@@ -178,16 +178,26 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
   const { isSuperAdmin, isOwner, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
   const [companyName, setCompanyName] = useState("")
+  const [brandLoading, setBrandLoading] = useState(true)
 
   useEffect(() => {
     const fetchSettings = async () => {
+      setBrandLoading(true);
       try {
-        const data = await publicAPI.getSettings();
-        if (data && data.company_name) {
-          setCompanyName(data.company_name);
+        // Prefer org-specific settings for logged-in users, fall back to public
+        let name = "";
+        try {
+          const orgData = await orgSettingsAPI.getSettings();
+          name = orgData?.company_name || "";
+        } catch {
+          const data = await publicAPI.getSettings();
+          name = data?.company_name || "";
         }
+        setCompanyName(name);
       } catch (err) {
         console.error("Failed to load sidebar settings:", err);
+      } finally {
+        setBrandLoading(false);
       }
     };
     fetchSettings();
@@ -212,7 +222,7 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
     )
   }
 
-  const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "R";
+  const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "";
   const displayTitle = companyName || "";
 
   return (
@@ -226,21 +236,32 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
         )}
       >
         <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar overflow-x-hidden">
-          <Link href="/dashboard" className={cn(
+          <Link href="/" className={cn(
             "flex items-center mb-14 transition-all duration-300",
             isExpanded ? "pl-3" : "justify-center"
           )}>
             <div className="relative w-8 h-8 flex-shrink-0">
-              {/* Logo placeholder */}
-              <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
-              <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
-                <span className="text-xl font-bold">{brandLetter}</span>
-              </div>
+              {brandLoading ? (
+                /* Skeleton avatar */
+                <div className="w-8 h-8 rounded-lg bg-slate-700 animate-pulse" />
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
+                  <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
+                    <span className="text-xl font-bold">{brandLetter}</span>
+                  </div>
+                </>
+              )}
             </div>
             {isExpanded && (
-              <h1 className="text-2xl font-bold text-indigo-400 ml-4 whitespace-nowrap overflow-hidden transition-all duration-300">
-                {displayTitle}
-              </h1>
+              brandLoading ? (
+                /* Skeleton text bar */
+                <div className="ml-4 h-5 w-32 rounded-md bg-slate-700 animate-pulse" />
+              ) : (
+                <h1 className="text-2xl font-bold text-indigo-400 ml-4 whitespace-nowrap overflow-hidden transition-all duration-300">
+                  {displayTitle}
+                </h1>
+              )
             )}
           </Link>
           <div className="space-y-1">

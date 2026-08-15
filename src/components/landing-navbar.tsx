@@ -3,14 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Building2, ChevronDown, Menu, X } from "lucide-react";
+import { Building2, Menu, X } from "lucide-react";
 import { publicAPI } from "@/data/apis";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export function LandingNavbar() {
     const [companyName, setCompanyName] = useState('');
@@ -48,22 +42,7 @@ export function LandingNavbar() {
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
                     <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
                     <Link href="/property" className="hover:text-blue-600 transition-colors">Properties</Link>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                            Service
-                            <ChevronDown className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem asChild>
-                                <Link href="/login" className="cursor-pointer">
-                                    Agency
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                Inquiry
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Link href="/#plans" className="hover:text-blue-600 transition-colors">Plans</Link>
                     <button
                         onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
                         className="hover:text-blue-600 transition-colors"
@@ -111,22 +90,13 @@ export function LandingNavbar() {
                     >
                         Properties
                     </Link>
-                    <div className="space-y-2 py-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Services</p>
-                        <Link
-                            href="/login"
-                            className="block text-gray-600 font-medium hover:text-blue-600 pl-4 border-l-2 border-transparent hover:border-blue-600"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Agency
-                        </Link>
-                        <button
-                            className="block text-gray-600 font-medium hover:text-blue-600 pl-4 border-l-2 border-transparent hover:border-blue-600 w-full text-left"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Inquiry
-                        </button>
-                    </div>
+                    <Link
+                        href="/#plans"
+                        className="block text-gray-600 font-medium hover:text-blue-600 py-2"
+                        onClick={() => setIsMenuOpen(false)}
+                    >
+                        Plans
+                    </Link>
                     <button
                         onClick={() => {
                             document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });

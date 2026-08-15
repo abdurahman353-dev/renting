@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Save, Building2, Phone, Mail, MapPin, Clock, Timer, Lock, Loader2 } from 'lucide-react';
+import { Save, Building2, Phone, Mail, MapPin, Clock, Timer, Loader2 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 import { Textarea } from '@/components/ui/textarea';
@@ -25,6 +25,7 @@ export default function SettingsPage() {
         company_office_hours?: string;
         company_address?: string;
         company_response_time?: string;
+        company_footer_tagline?: string;
     }>({});
 
     useEffect(() => {
@@ -120,18 +121,17 @@ export default function SettingsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-3">
                                     <Label htmlFor="company_name" className="text-sm font-bold text-foreground flex items-center gap-2">
-                                        Company Name <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <Building2 className="w-4 h-4 text-muted-foreground" /> Company Name
                                     </Label>
                                     <Input
                                         id="company_name"
                                         value={settings.company_name || ''}
-                                        disabled={true}
-                                        readOnly={true}
-                                        className="h-12 rounded-2xl border-input bg-muted/60 cursor-not-allowed opacity-80 font-semibold px-4"
+                                        onChange={(e) => handleChange('company_name', e.target.value)}
+                                        className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                        placeholder="e.g. Mombasa Rental Systems"
                                     />
                                     <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-                                        <Lock className="w-3 h-3 text-amber-500 shrink-0" />
-                                        Managed & verified by SaaS Super Admin
+                                        This name appears on the navbar, footer, and all public pages.
                                     </p>
                                 </div>
 
@@ -219,6 +219,23 @@ export default function SettingsPage() {
                                     className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
                                     placeholder="e.g. Plaza Building, 3rd Floor, Mombasa, Kenya"
                                 />
+                            </div>
+
+                            {/* Footer Tagline */}
+                            <div className="space-y-3">
+                                <Label htmlFor="company_footer_tagline" className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-muted-foreground" /> Footer Tagline
+                                </Label>
+                                <Input
+                                    id="company_footer_tagline"
+                                    value={settings.company_footer_tagline || ''}
+                                    onChange={(e) => handleChange('company_footer_tagline', e.target.value)}
+                                    className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                    placeholder="e.g. The complete SaaS rental property management platform"
+                                />
+                                <p className="text-[11px] text-muted-foreground font-medium">
+                                    Short description shown beneath your company name in the website footer.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

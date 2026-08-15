@@ -52,8 +52,6 @@ export default function SuperAdminDashboard() {
     const [planFilter, setPlanFilter] = useState("all");
     
     // Modal Edit Form State
-    const [editPlan, setEditPlan] = useState("starter");
-    const [editMaxUnits, setEditMaxUnits] = useState(25);
     const [editStatus, setEditStatus] = useState("active");
     const [extendDays, setExtendDays] = useState(14);
     const [updating, setUpdating] = useState(false);
@@ -137,8 +135,6 @@ export default function SuperAdminDashboard() {
 
     const openEditModal = (org: any) => {
         setSelectedOrg(org);
-        setEditPlan(org.subscription_plan || "starter");
-        setEditMaxUnits(org.max_units || 25);
         setEditStatus(org.status || "active");
         setExtendDays(14);
         setEditModalOpen(true);
@@ -149,8 +145,6 @@ export default function SuperAdminDashboard() {
         setUpdating(true);
         try {
             const payload: any = {
-                subscription_plan: editPlan,
-                max_units: editMaxUnits,
                 status: editStatus,
             };
             if (editStatus === 'trial' && extendDays > 0) {
@@ -485,6 +479,7 @@ export default function SuperAdminDashboard() {
                                 <TableHead>Super Admin (Owner)</TableHead>
                                 <TableHead>Subscription Tier</TableHead>
                                 <TableHead>Unit Limit</TableHead>
+                                <TableHead>Property Limit</TableHead>
                                 <TableHead>Wallet Balance</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Registered</TableHead>
@@ -494,7 +489,7 @@ export default function SuperAdminDashboard() {
                         <TableBody>
                             {filteredOrgs.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                                    <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                                         <div className="space-y-2">
                                             <Building2 className="w-8 h-8 mx-auto text-muted-foreground opacity-50" />
                                             <p className="font-semibold text-foreground">No agency accounts match your search.</p>
@@ -526,7 +521,18 @@ export default function SuperAdminDashboard() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-sm font-semibold">
-                                            <span>{org.max_units || 25}</span> <span className="text-xs text-muted-foreground font-normal">units</span>
+                                            {(() => {
+                                                const plan = plans.find((p: any) => p.id === org.subscription_plan);
+                                                const units = plan?.max_units ?? org.max_units ?? '—';
+                                                return <><span>{Number(units).toLocaleString()}</span> <span className="text-xs text-muted-foreground font-normal">units</span></>;
+                                            })()}
+                                        </TableCell>
+                                        <TableCell className="text-sm font-semibold">
+                                            {(() => {
+                                                const plan = plans.find((p: any) => p.id === org.subscription_plan);
+                                                const props = plan?.max_properties ?? org.max_properties ?? '—';
+                                                return <><span>{Number(props).toLocaleString()}</span> <span className="text-xs text-muted-foreground font-normal">props</span></>;
+                                            })()}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
@@ -625,56 +631,11 @@ export default function SuperAdminDashboard() {
                             Manage {selectedOrg?.name}
                         </DialogTitle>
                         <DialogDescription>
-                            Override subscription tiers, bump unit capacity limits, or extend trial days.
+                            Change the account status or extend the trial period for this agency.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-5 py-4">
-                        {/* Subscription Tier Selection */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Subscription Plan Tier</Label>
-                            <select
-                                className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
-                                value={editPlan}
-                                onChange={(e) => {
-                                    const planId = e.target.value;
-                                    setEditPlan(planId);
-                                    const targetPlan = plans.find(p => p.id === planId);
-                                    if (targetPlan && targetPlan.max_units) {
-                                        setEditMaxUnits(targetPlan.max_units);
-                                    }
-                                }}
-                            >
-                                {plans && plans.length > 0 ? (
-                                    plans.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name} ({p.max_units ? `Up to ${Number(p.max_units).toLocaleString()} Units` : 'Unlimited'} - KES {Number(p.monthly_price).toLocaleString()}/mo)
-                                        </option>
-                                    ))
-                                ) : (
-                                    <>
-                                        <option value="starter">Starter Plan</option>
-                                        <option value="growth">Growth Plan</option>
-                                        <option value="enterprise">Enterprise Plan</option>
-                                    </>
-                                )}
-                            </select>
-                        </div>
-
-                        {/* Custom Unit Capacity Override */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Max Unit Capacity Limit</Label>
-                            <Input
-                                type="number"
-                                value={editMaxUnits}
-                                onChange={(e) => setEditMaxUnits(Number(e.target.value))}
-                                min={1}
-                                max={10000}
-                                className="h-11 rounded-xl font-mono font-bold"
-                            />
-                            <p className="text-xs text-muted-foreground">You can override default plan limits for VIP agency clients.</p>
-                        </div>
-
                         {/* Status Select */}
                         <div className="space-y-2">
                             <Label className="font-bold text-sm">Account Status</Label>

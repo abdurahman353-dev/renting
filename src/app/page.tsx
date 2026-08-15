@@ -190,7 +190,7 @@ export default function SaaSProductLandingPage() {
             </section>
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-20 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative">
+            <section id="plans" className="py-20 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
                         <Badge className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 px-3.5 py-1 text-xs uppercase font-bold tracking-wider">
