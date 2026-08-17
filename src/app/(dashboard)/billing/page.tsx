@@ -222,9 +222,16 @@ export default function BillingPage() {
                     </CardHeader>
                     <CardContent>
                         {isTrial ? (
-                            <Badge className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-300 font-bold text-sm px-3 py-1">
-                                <Clock className="w-3 h-3 mr-1.5 inline" /> Trial — {daysLeft}d left
-                            </Badge>
+                            <div className="space-y-1">
+                                <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-300 font-bold text-sm px-3 py-1">
+                                    <Clock className="w-3 h-3 mr-1.5 inline" /> Free Trial — {daysLeft}d left
+                                </Badge>
+                                {billing.trial_ends_at && (
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                        Expires {new Date(billing.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </p>
+                                )}
+                            </div>
                         ) : billing.is_active ? (
                             <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-300 font-bold text-sm px-3 py-1">
                                 <Zap className="w-3 h-3 mr-1.5 inline" /> Active
@@ -242,7 +249,7 @@ export default function BillingPage() {
                     <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-purple-400" />
                     <CardHeader className="pb-2 pt-4">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" /> Next Billing
+                            <Calendar className="w-3.5 h-3.5" /> {isTrial ? 'Trial Expiration Date' : 'Next Billing Date'}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -254,7 +261,7 @@ export default function BillingPage() {
                                     : '—'}
                         </p>
                         <p className="text-muted-foreground text-xs mt-1.5">
-                            {billing.last_payment_at ? `Last payment: ${new Date(billing.last_payment_at).toLocaleDateString('en-KE')}` : 'No payments yet'}
+                            {isTrial ? `Trial ends on this date` : billing.last_payment_at ? `Last payment: ${new Date(billing.last_payment_at).toLocaleDateString('en-KE')}` : 'No payments yet'}
                         </p>
                     </CardContent>
                 </Card>

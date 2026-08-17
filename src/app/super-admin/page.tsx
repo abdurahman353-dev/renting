@@ -497,11 +497,7 @@ export default function SuperAdminDashboard() {
                                         </option>
                                     ))
                                 ) : (
-                                    <>
-                                        <option value="starter">Starter</option>
-                                        <option value="growth">Growth</option>
-                                        <option value="enterprise">Enterprise</option>
-                                    </>
+                                    <option value="" disabled>Loading plans...</option>
                                 )}
                             </select>
 
@@ -627,9 +623,23 @@ export default function SuperAdminDashboard() {
                                         </TableCell>
                                         <TableCell>
                                             {org.status === 'active' ? (
-                                                <Badge className="bg-emerald-500 text-white border-0 font-bold text-xs">Active</Badge>
+                                                <div className="space-y-0.5">
+                                                    <Badge className="bg-emerald-500 text-white border-0 font-bold text-xs">Active</Badge>
+                                                    {org.plan_expires_at && (
+                                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">
+                                                            Expires {new Date(org.plan_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             ) : org.status === 'trial' ? (
-                                                <Badge className="bg-amber-500 text-white border-0 font-bold text-xs">Trial</Badge>
+                                                <div className="space-y-0.5">
+                                                    <Badge className="bg-amber-500 text-white border-0 font-bold text-xs">Trial</Badge>
+                                                    {org.trial_ends_at && (
+                                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold whitespace-nowrap">
+                                                            Expires {new Date(org.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <Badge className="bg-red-500 text-white border-0 font-bold text-xs">Suspended</Badge>
                                             )}
@@ -837,11 +847,7 @@ export default function SuperAdminDashboard() {
                                         </option>
                                     ))
                                 ) : (
-                                    <>
-                                        <option value="starter">Starter Plan</option>
-                                        <option value="growth">Growth Plan</option>
-                                        <option value="enterprise">Enterprise Plan</option>
-                                    </>
+                                    <option value="" disabled>Loading plans...</option>
                                 )}
                             </select>
                         </div>
@@ -982,11 +988,7 @@ export default function SuperAdminDashboard() {
                                         </option>
                                     ))
                                 ) : (
-                                    <>
-                                        <option value="starter">Starter Plan</option>
-                                        <option value="growth">Growth Plan</option>
-                                        <option value="enterprise">Enterprise Plan</option>
-                                    </>
+                                    <option value="" disabled>Loading plans...</option>
                                 )}
                             </select>
                         </div>
