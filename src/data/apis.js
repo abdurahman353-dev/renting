@@ -33,6 +33,8 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         const isSuperAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin');
+        const errorCode = error.response?.data?.error_code;
+
         if (error.response?.status === 401 || (error.response?.status === 403 && isSuperAdminRoute)) {
             // Token expired, invalid, or insufficient privilege for super-admin portal
             Cookies.remove('admin_token');
@@ -40,7 +42,12 @@ apiClient.interceptors.response.use(
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
                 window.location.href = '/login?error=session_expired';
             }
+        } else if (error.response?.status === 403 && ['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('org_blocked', { detail: error.response.data }));
+            }
         }
+
         return Promise.reject(error);
     }
 );

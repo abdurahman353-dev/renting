@@ -19,7 +19,8 @@ import {
     Edit3,
     Eye,
     Zap,
-    Filter
+    Filter,
+    FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,8 @@ export default function SuperAdminDashboard() {
     // View Details State
     const [detailsModalOpen, setDetailsModalOpen] = useState(false);
     const [viewOrg, setViewOrg] = useState<any>(null);
+    const [orgPayments, setOrgPayments] = useState<any[]>([]);
+    const [loadingPayments, setLoadingPayments] = useState(false);
 
     // Dynamic Plans state
     const [plans, setPlans] = useState<any[]>([]);
@@ -271,9 +274,19 @@ export default function SuperAdminDashboard() {
         }
     };
 
-    const openViewDetailsModal = (org: any) => {
+    const openViewDetailsModal = async (org: any) => {
         setViewOrg(org);
         setDetailsModalOpen(true);
+        setLoadingPayments(true);
+        try {
+            const res = await superAdminAPI.getOrgSubscriptionPayments(org.id);
+            setOrgPayments(res?.data?.data || res?.data || res || []);
+        } catch (err) {
+            console.error("Failed to load org payments:", err);
+            setOrgPayments([]);
+        } finally {
+            setLoadingPayments(false);
+        }
     };
 
     const toggleOrgStatus = async (org: any) => {
@@ -1108,22 +1121,97 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             {/* Plan & Financial Summary */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/60 rounded-xl p-3 space-y-1">
                                     <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Subscription Tier</p>
                                     <p className="text-lg font-extrabold capitalize text-foreground">{viewOrg.subscription_plan || 'Starter'}</p>
-                                    <p className="text-xs text-muted-foreground">Capacity: {viewOrg.max_units || 25} Units max</p>
+                                    <p className="text-xs text-muted-foreground font-medium">
+                                        Units: {plans.find(p => p.id === viewOrg.subscription_plan)?.max_units ?? viewOrg.max_units ?? 'Unlimited'}
+                                    </p>
                                 </div>
+
                                 <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 rounded-xl p-3 space-y-1">
                                     <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Wallet Balance</p>
                                     <p className="text-lg font-extrabold text-emerald-600">KES {Number(viewOrg.wallet_balance ?? 0).toLocaleString()}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {viewOrg.plan_expires_at
-                                            ? `Expires ${new Date(viewOrg.plan_expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}`
-                                            : viewOrg.trial_ends_at
-                                                ? `Trial ends ${new Date(viewOrg.trial_ends_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}`
-                                                : 'No expiry date set'}
+                                    <p className="text-xs text-muted-foreground font-medium">
+                                        {(() => {
+                                            const plan = plans.find(p => p.id === viewOrg.subscription_plan);
+                                            const monthlyPrice = Number(plan?.monthly_price ?? 0);
+                                            if (monthlyPrice > 0 && (viewOrg.wallet_balance ?? 0) >= monthlyPrice) {
+                                                const months = Math.floor(viewOrg.wallet_balance / monthlyPrice);
+                                                return `Covers ${months} future month${months > 1 ? 's' : ''}`;
+                                            }
+                                            return 'Direct top-up balance';
+                                        })()}
                                     </p>
+                                </div>
+
+                                <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 rounded-xl p-3 space-y-1">
+                                    <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Current Plan Period</p>
+                                    {viewOrg.plan_started_at && (
+                                        <p className="text-xs font-semibold text-foreground">
+                                            Started: <span className="font-bold">{new Date(viewOrg.plan_started_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        </p>
+                                    )}
+                                    <p className="text-xs font-semibold text-foreground">
+                                        {viewOrg.plan_expires_at ? (
+                                            <>Expires: <span className="font-bold text-indigo-600 dark:text-indigo-400">{new Date(viewOrg.plan_expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span></>
+                                        ) : viewOrg.trial_ends_at ? (
+                                            <>Trial ends: <span className="font-bold text-amber-600">{new Date(viewOrg.trial_ends_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span></>
+                                        ) : (
+                                            <span className="text-muted-foreground">No active billing period</span>
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Billing & Transaction History */}
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <FileText className="w-3.5 h-3.5 text-emerald-500" /> Subscription Payment & Wallet Ledger
+                                </h4>
+                                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                                    {loadingPayments ? (
+                                        <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Loading payment history...
+                                        </div>
+                                    ) : orgPayments.length === 0 ? (
+                                        <div className="p-4 text-center text-xs text-muted-foreground">
+                                            No payment transactions recorded for this organization yet.
+                                        </div>
+                                    ) : (
+                                        <Table>
+                                            <TableHeader className="bg-slate-50 dark:bg-slate-900 text-[11px]">
+                                                <TableRow>
+                                                    <TableHead className="py-2">Date</TableHead>
+                                                    <TableHead className="py-2">Type / Note</TableHead>
+                                                    <TableHead className="py-2">Amount</TableHead>
+                                                    <TableHead className="py-2">Ref</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="text-xs">
+                                                {orgPayments.map((p: any) => (
+                                                    <TableRow key={p.id} className="hover:bg-slate-50/50">
+                                                        <TableCell className="py-2 font-mono text-[11px]">
+                                                            {new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                                                        </TableCell>
+                                                        <TableCell className="py-2">
+                                                            <div className="font-semibold capitalize text-foreground">{p.payment_type?.replace('_', ' ')}</div>
+                                                            <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">{p.note || '—'}</div>
+                                                        </TableCell>
+                                                        <TableCell className="py-2 font-bold">
+                                                            <span className={p.amount_paid >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                                                                {p.amount_paid >= 0 ? `+KES ${Number(p.amount_paid).toLocaleString()}` : `-KES ${Math.abs(Number(p.amount_paid)).toLocaleString()}`}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="py-2 font-mono text-[11px] text-muted-foreground">
+                                                            {p.mpesa_reference || '—'}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
                                 </div>
                             </div>
 

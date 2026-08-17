@@ -17,9 +17,13 @@ type BlockedState = {
     plan: string;
     plan_price: number;
     wallet_balance: number;
+    organization_name?: string;
+    user_name?: string;
+    user_email?: string;
 } | null;
 
 function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () => void }) {
+    const { user } = useAuth();
     if (!blocked) return null;
 
     const isTrialExpired      = blocked.error_code === 'TRIAL_EXPIRED';
@@ -31,9 +35,12 @@ function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () 
     const planName  = `${planCapitalized} Plan — KES ${planPrice.toLocaleString()}/mo`;
     const walletBalance = blocked.wallet_balance ?? 0;
     const remaining = Math.max(0, planPrice - walletBalance);
+    const orgName = blocked.organization_name || user?.organization?.name || 'Rental Agency';
+    const landlordName = blocked.user_name || user?.name || 'Landlord';
+    const landlordEmail = blocked.user_email || user?.email || 'N/A';
 
     const whatsappMessage = encodeURIComponent(
-        `Hello, I would like to unlock my rental management account.\n\nPlan: ${planName}\nAmount Required: KES ${planPrice.toLocaleString()}\n\nI have made the M-Pesa payment. Please confirm and unlock my account.`
+        `Hello, I would like to unlock my rental management account.\n\nOrganization: ${orgName}\nLandlord Name: ${landlordName}\nEmail: ${landlordEmail}\nPlan: ${planName}\nAmount Required: KES ${(remaining > 0 ? remaining : planPrice).toLocaleString()}\n\nI have made the M-Pesa payment. Please confirm and unlock my account.`
     );
 
     return (
@@ -61,6 +68,18 @@ function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () 
 
                     {/* Plan & Amount Info */}
                     <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4 mb-6 space-y-2">
+                        {orgName && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-400">Organization</span>
+                                <span className="text-indigo-300 font-semibold">{orgName}</span>
+                            </div>
+                        )}
+                        {landlordName && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-400">Landlord</span>
+                                <span className="text-slate-200 font-medium">{landlordName}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between text-sm">
                             <span className="text-slate-400">Your Plan</span>
                             <span className="text-white font-semibold capitalize">{planName}</span>
@@ -177,11 +196,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const errorCode  = data?.error_code;
             if (['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
                 setBlocked({
-                    error_code:     errorCode,
-                    message:        data.message,
-                    plan:           data.plan       ?? 'starter',
-                    plan_price:     data.plan_price ?? 0,
-                    wallet_balance: data.wallet_balance ?? 0,
+                    error_code:        errorCode,
+                    message:           data.message,
+                    plan:              data.plan       ?? 'starter',
+                    plan_price:        data.plan_price ?? 0,
+                    wallet_balance:    data.wallet_balance ?? 0,
+                    organization_name: data.organization_name,
+                    user_name:         data.user_name,
+                    user_email:        data.user_email,
                 });
             } else {
                 setBlocked(null);
@@ -235,8 +257,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, [loading, isAuthenticated, hasRole, isOwner, user, pathname, router, checkOrgStatus, initialChecked]);
 
-    // Only block render during initial auth load — never on route change
-    if (loading || (!initialChecked && checkingBlock)) {
+    // Listen for mid-session org_blocked events from API interceptors
+    useEffect(() => {
+        const handleOrgBlocked = (e: any) => {
+            const data = e.detail;
+            const errorCode = data?.error_code;
+            if (['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
+                setBlocked({
+                    error_code:        errorCode,
+                    message:           data.message,
+                    plan:              data.plan       ?? 'starter',
+                    plan_price:        data.plan_price ?? 0,
+                    wallet_balance:    data.wallet_balance ?? 0,
+                    organization_name: data.organization_name,
+                    user_name:         data.user_name,
+                    user_email:        data.user_email,
+                });
+            }
+        };
+        window.addEventListener('org_blocked', handleOrgBlocked);
+        return () => window.removeEventListener('org_blocked', handleOrgBlocked);
+    }, []);
+
+    // Block rendering children until initial auth load & initial org check are complete
+    const isPendingInitialCheck = !initialChecked && isAuthenticated && !hasRole('super_admin');
+    if (loading || isPendingInitialCheck) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                 <div className="text-center">

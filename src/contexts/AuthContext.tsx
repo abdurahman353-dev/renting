@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 router.replace('/dashboard');
             }
         } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Login failed');
+            throw error;
         } finally {
             setLoading(false);
         }
