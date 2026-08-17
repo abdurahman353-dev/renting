@@ -118,7 +118,7 @@ export default function AdminManagementPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [perPage] = useState(15);
+    const [perPage, setPerPage] = useState(15);
 
     // Add Modal Form State
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -358,6 +358,13 @@ export default function AdminManagementPage() {
                                 toast.error(`🔒 Admin limit reached (${adminCount}/${planLimits.max_admins}). Please upgrade your plan on the SaaS portal to add more team members.`);
                                 return;
                             }
+                            setFormData({
+                                name: '',
+                                email: '',
+                                role: user?.role === 'super_admin' ? 'super_admin' : 'manager',
+                                password: '',
+                                password_confirmation: '',
+                            });
                             setIsAddDialogOpen(true);
                         }}
                         className={`${
@@ -415,7 +422,29 @@ export default function AdminManagementPage() {
                             <option value="all">All Roles</option>
                             <option value="owner">Landlord Owners</option>
                             <option value="sub_admin">Sub-Admins / Staff</option>
-                            <option value="super_admin">SaaS Super Admins</option>
+                            {user?.role === 'super_admin' && (
+                                <option value="super_admin">SaaS Super Admins</option>
+                            )}
+                        </select>
+                    </div>
+
+                    {/* Per Page Selector */}
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-muted-foreground hidden lg:inline">Per Page:</span>
+                        <select
+                            value={perPage}
+                            onChange={(e) => {
+                                const newSize = Number(e.target.value);
+                                setPerPage(newSize);
+                                setCurrentPage(1);
+                            }}
+                            className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-card px-3 text-xs font-semibold text-foreground shadow-xs cursor-pointer"
+                        >
+                            <option value={10}>10 per page</option>
+                            <option value={15}>15 per page</option>
+                            <option value={25}>25 per page</option>
+                            <option value={50}>50 per page</option>
+                            <option value={100}>100 per page</option>
                         </select>
                     </div>
                 </div>
@@ -563,8 +592,8 @@ export default function AdminManagementPage() {
 
                             return (
                                 <>
-                                    {/* 1. Super Admins Section */}
-                                    {superAdminsList.map((admin) => {
+                                    {/* 1. Super Admins Section (Shown only to SaaS Super Admins) */}
+                                    {user?.role === 'super_admin' && superAdminsList.map((admin) => {
                                         const isSelf = admin.id === user?.id;
                                         const isActive = admin.status === 'Active';
 
@@ -760,7 +789,7 @@ export default function AdminManagementPage() {
             </div>
 
             {/* Pagination Controls */}
-            {lastPage > 1 && (
+            {totalItems > 0 && (
                 <PaginationControls
                     currentPage={currentPage}
                     totalPages={lastPage}
@@ -808,17 +837,25 @@ export default function AdminManagementPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="font-bold text-sm">Role / Assigned Position</Label>
+                            <Label className="font-bold text-sm">Role / Account Type</Label>
                             <select
                                 className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
                                 value={formData.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             >
+                                {user?.role === 'super_admin' && (
+                                    <option value="super_admin">🔑 SaaS Super Admin (Full SaaS Portal Access)</option>
+                                )}
                                 <option value="admin">Administrator (Co-Admin)</option>
                                 <option value="manager">General Manager</option>
                                 <option value="Property Manager">Property Manager</option>
                                 <option value="Finance Manager">Finance Manager</option>
                             </select>
+                            <p className="text-[11px] text-muted-foreground">
+                                {formData.role === 'super_admin'
+                                    ? "SaaS Super Admins have full administrative control over the SaaS portal, agencies, and reports. On first login, they will be directed to change their temporary password."
+                                    : "New administrators are issued a temporary password and must set a custom password on first login."}
+                            </p>
                         </div>
 
                         <div className="space-y-2">

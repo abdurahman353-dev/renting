@@ -722,8 +722,8 @@ export const saasAPI = {
         return response.data;
     },
 
-    getSuperAdminOverview: async () => {
-        const response = await apiClient.get('/super-admin/saas/overview');
+    getSuperAdminOverview: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/saas/overview', { params });
         return response.data;
     },
 
@@ -739,6 +739,11 @@ export const saasAPI = {
 
     getOrganizationsWithUsers: async (params = {}) => {
         const response = await apiClient.get('/super-admin/organizations', { params });
+        return response.data;
+    },
+
+    getSaasReports: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/saas/reports', { params });
         return response.data;
     },
 };

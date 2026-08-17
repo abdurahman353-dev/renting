@@ -283,7 +283,7 @@ export default function PropertiesPage() {
                 )}
             </div>
 
-            {lastPage > 1 && (
+            {totalItems > 0 && (
                 <PaginationControls
                     currentPage={currentPage}
                     totalPages={lastPage}

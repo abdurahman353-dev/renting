@@ -27,22 +27,23 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${roboto.variable} antialiased font-sans`}
+        suppressHydrationWarning
       >
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
             <NextTopLoader color="#4f46e5" showSpinner={false} />
             {children}
             <Toaster
               position="top-right"
               duration={5000}
             />
-          </ThemeProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

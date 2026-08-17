@@ -217,8 +217,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Run org-status check once auth is ready
     useEffect(() => {
         if (!loading) {
-            if (!isAuthenticated) {
-                router.replace('/login');
+            if (!isAuthenticated || !user) {
+                window.location.href = '/login';
                 return;
             }
             if (!hasRole(['admin', 'super_admin', 'manager', 'Property Manager', 'Finance Manager'])) {
@@ -297,30 +297,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return <PaymentWall blocked={blocked} onRetry={checkOrgStatus} />;
     }
 
-    // Access denied
-    if (!isAuthenticated || !hasRole(['admin', 'super_admin', 'manager', 'Property Manager', 'Finance Manager'])) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-                    <p className="text-gray-600 mb-6">
-                        {!isAuthenticated
-                            ? "You need to be logged in to view this page."
-                            : "You do not have the required permissions."}
-                    </p>
-                    <button
-                        onClick={() => {
-                            sessionStorage.clear();
-                            document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                            window.location.href = '/login';
-                        }}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                    >
-                        Return to Login
-                    </button>
-                </div>
-            </div>
+    // Access denied / Unauthenticated — immediate hard redirect to login
+    if (!isAuthenticated || !user || !hasRole(['admin', 'super_admin', 'manager', 'Property Manager', 'Finance Manager'])) {
+        if (typeof window !== 'undefined') {
+            window.location.href = '/login?error=unauthorized';
+        }
+        return null;
+    }
+
+    // Mandatory Password Change Precedence — zero preview flash
+    if (user?.must_change_password && pathname !== '/profile') {
+        if (typeof window !== 'undefined') {
+            window.location.href = '/profile?change_password=true';
+        }
+        return null;
+    }
+
+    // Redirect super_admin away from landlord pages — zero preview flash
+    if (user?.role === 'super_admin') {
+        const isLandlordPage = LANDLORD_ONLY_PATHS.some(
+            (p) => pathname === p || pathname?.startsWith(p + '/')
         );
+        if (isLandlordPage) {
+            if (typeof window !== 'undefined') {
+                window.location.href = '/super-admin';
+            }
+            return null;
+        }
     }
 
     return <LayoutWrapper>{children}</LayoutWrapper>;

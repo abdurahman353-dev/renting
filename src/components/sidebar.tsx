@@ -16,7 +16,8 @@ import {
   Wallet,
   Zap,
   Activity,
-  ShieldCheck
+  ShieldCheck,
+  BarChart3
 } from "lucide-react"
 import { Children, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
@@ -147,6 +148,12 @@ const pureSuperAdminRoutes: SidebarRoute[] = [
     color: "text-indigo-400",
   },
   {
+    label: "Financial Reports",
+    icon: BarChart3,
+    href: "/super-admin/reports",
+    color: "text-emerald-400",
+  },
+  {
     label: "System Admins",
     icon: ShieldCheck,
     href: "/admins",
@@ -184,7 +191,10 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
     const fetchSettings = async () => {
       setBrandLoading(true);
       try {
-        // Prefer org-specific settings for logged-in users, fall back to public
+        if (isSuperAdmin()) {
+          setCompanyName("SaaS Super Admin");
+          return;
+        }
         let name = "";
         try {
           const orgData = await orgSettingsAPI.getSettings();
@@ -201,7 +211,7 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
       }
     };
     fetchSettings();
-  }, []);
+  }, [isSuperAdmin]);
 
   // If routes are passed as props, use them. 
   // Super Admin gets pure SaaS Owner navigation.

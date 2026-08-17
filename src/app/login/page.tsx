@@ -35,7 +35,7 @@ type BlockedState = {
 } | null;
 
 export default function LoginPage() {
-    const { login, loading } = useAuth();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const router = useRouter();
     const [password, setPassword] = useState('');
@@ -44,6 +44,7 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
     const [blockedData, setBlockedData] = useState<BlockedState>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -64,6 +65,7 @@ export default function LoginPage() {
         setError(null);
         setFieldErrors({});
         setBlockedData(null);
+        setIsSubmitting(true);
 
         try {
             // Validate form data with Zod
@@ -104,6 +106,8 @@ export default function LoginPage() {
                     setError(errorMessage);
                 }
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -251,10 +255,10 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={(e) => handleLogin(e)}
-                                    disabled={loading}
+                                    disabled={isSubmitting}
                                     className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl py-2 text-xs transition-all duration-200"
                                 >
-                                    {loading ? (
+                                    {isSubmitting ? (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     ) : (
                                         <RefreshCw className="w-3.5 h-3.5" />
@@ -308,7 +312,7 @@ export default function LoginPage() {
                                                     setFieldErrors(prev => ({ ...prev, email: undefined }));
                                                 }
                                             }}
-                                            disabled={loading}
+                                            disabled={isSubmitting}
                                             className={`h-11 bg-white dark:bg-zinc-800 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                         />
                                         {fieldErrors.email && (
@@ -333,7 +337,7 @@ export default function LoginPage() {
                                                         setFieldErrors(prev => ({ ...prev, password: undefined }));
                                                     }
                                                 }}
-                                                disabled={loading}
+                                                disabled={isSubmitting}
                                                 className={`h-11 pr-10 bg-white dark:bg-zinc-800 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                             />
                                             <button
@@ -365,8 +369,8 @@ export default function LoginPage() {
                                     </div>
                                 </div>
 
-                                <Button className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium" type="submit" disabled={loading}>
-                                    {loading ? (
+                                <Button className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium" type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             Signing in...

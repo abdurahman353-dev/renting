@@ -20,8 +20,14 @@ import {
     Eye,
     Zap,
     Filter,
-    FileText
+    FileText,
+    ArrowDownCircle,
+    ArrowUpCircle,
+    SlidersHorizontal,
+    RefreshCw,
+    Clock,
 } from "lucide-react";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -98,17 +104,27 @@ export default function SuperAdminDashboard() {
     const [viewOrg, setViewOrg] = useState<any>(null);
     const [orgPayments, setOrgPayments] = useState<any[]>([]);
     const [loadingPayments, setLoadingPayments] = useState(false);
+    const [selectedOrgPayment, setSelectedOrgPayment] = useState<any>(null);
+    const [refreshingLedger, setRefreshingLedger] = useState(false);
 
     // Dynamic Plans state
     const [plans, setPlans] = useState<any[]>([]);
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
 
-    const fetchOverview = async () => {
-        setLoading(true);
+    const fetchOverview = async (targetPage = page, targetPerPage = perPage, silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const [data, plansData] = await Promise.all([
-                saasAPI.getSuperAdminOverview(),
+                saasAPI.getSuperAdminOverview({
+                    search:   debouncedSearch,
+                    status:   statusFilter,
+                    plan:     planFilter,
+                    page:     targetPage,
+                    per_page: targetPerPage,
+                }),
                 saasAPI.getPlans()
             ]);
             setOverview(data);
@@ -133,8 +149,9 @@ export default function SuperAdminDashboard() {
     };
 
     useEffect(() => {
-        fetchOverview();
-    }, []);
+        setPage(1);
+        fetchOverview(1, perPage, true);
+    }, [debouncedSearch, statusFilter, planFilter, perPage]);
 
     const openEditModal = (org: any) => {
         setSelectedOrg(org);
@@ -229,6 +246,10 @@ export default function SuperAdminDashboard() {
             toast.success(result.message ?? `Payment recorded for ${paymentOrg.name}.`);
             setPaymentModalOpen(false);
             fetchOverview();
+            // Re-open details & refresh ledger (ensure viewOrg is set)
+            setViewOrg(paymentOrg);
+            setDetailsModalOpen(true);
+            refreshLedger(paymentOrg.id, true);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to record payment.');
         } finally {
@@ -267,6 +288,10 @@ export default function SuperAdminDashboard() {
             toast.success(result.message ?? `Wallet balance adjusted for ${adjustOrg.name}.`);
             setAdjustModalOpen(false);
             fetchOverview();
+            // Re-open details & refresh ledger (ensure viewOrg is set)
+            setViewOrg(adjustOrg);
+            setDetailsModalOpen(true);
+            refreshLedger(adjustOrg.id, true);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to adjust wallet balance.');
         } finally {
@@ -279,13 +304,26 @@ export default function SuperAdminDashboard() {
         setDetailsModalOpen(true);
         setLoadingPayments(true);
         try {
-            const res = await superAdminAPI.getOrgSubscriptionPayments(org.id);
+            const res = await superAdminAPI.getOrgSubscriptionPayments(org.id, { per_page: 100 });
             setOrgPayments(res?.data?.data || res?.data || res || []);
         } catch (err) {
             console.error("Failed to load org payments:", err);
             setOrgPayments([]);
         } finally {
             setLoadingPayments(false);
+        }
+    };
+
+    const refreshLedger = async (orgId: number, silent = false) => {
+        if (!silent) setRefreshingLedger(true);
+        try {
+            const res = await superAdminAPI.getOrgSubscriptionPayments(orgId, { per_page: 100 });
+            setOrgPayments(res?.data?.data || res?.data || res || []);
+            if (!silent) toast.success('Ledger refreshed.');
+        } catch {
+            if (!silent) toast.error('Failed to refresh ledger.');
+        } finally {
+            setRefreshingLedger(false);
         }
     };
 
@@ -315,60 +353,50 @@ export default function SuperAdminDashboard() {
     }
 
     const stats = overview?.stats || {};
-    const orgs = overview?.recent_organizations || [];
-
-    // Filter organizations for handling 100+ agencies
-    const filteredOrgs = orgs.filter((org: any) => {
-        const matchesSearch = !debouncedSearch || 
-            org.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            (org.email && org.email.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-            (org.phone && org.phone.includes(debouncedSearch));
-
-        const matchesStatus = statusFilter === "all" || org.status === statusFilter;
-        const matchesPlan = planFilter === "all" || org.subscription_plan === planFilter;
-
-        return matchesSearch && matchesStatus && matchesPlan;
-    });
+    const orgs  = overview?.organizations?.data || overview?.recent_organizations || [];
+    const paginationMeta = overview?.organizations;
 
     return (
-        <div className="p-8 space-y-8 bg-muted/30 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 bg-muted/30 min-h-screen">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-                        <Sparkles className="w-7 h-7 text-amber-500" />
-                        SaaS Enterprise Control Center
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="min-w-0">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+                        <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-amber-500 shrink-0" />
+                        <span className="truncate">SaaS Enterprise Control Center</span>
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Platform revenue metrics, subscription overrides, and multi-tenant agency management.
                     </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                     <Button
                         onClick={() => setRegisterModalOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md"
+                        className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md text-sm"
                     >
-                        <Plus className="mr-2 h-4 w-4" /> Register New Agency / Landlord
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Register New Agency / Landlord</span>
+                        <span className="sm:hidden">Register Agency</span>
                     </Button>
                 </div>
             </div>
 
             {/* Metrics Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {/* Monthly Recurring Revenue */}
+                {/* Total Revenue Collected */}
                 <Card className="border-none shadow-lg shadow-emerald-500/5 bg-card">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Monthly Revenue (MRR)</CardTitle>
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Revenue Collected</CardTitle>
                         <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
                             <DollarSign className="h-5 w-5" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                            KES {(stats.mrr_kes || 0).toLocaleString()}
+                            KES {(stats.total_collected_kes || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
-                            ARR: KES {(stats.arr_kes || 0).toLocaleString()} / year
+                            Active MRR: <span className="font-bold text-emerald-600 dark:text-emerald-400">KES {(stats.mrr_kes || 0).toLocaleString()}</span> · ARR: KES {(stats.arr_kes || 0).toLocaleString()} / yr
                         </p>
                     </CardContent>
                 </Card>
@@ -383,7 +411,7 @@ export default function SuperAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
-                            {stats.total_organizations || 0}
+                            {(stats.total_organizations || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
                             {stats.active_organizations || 0} Active · {stats.trial_organizations || 0} Trials · {stats.suspended_organizations || 0} Suspended
@@ -401,10 +429,10 @@ export default function SuperAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-black text-purple-600 dark:text-purple-400">
-                            {stats.total_units || 0}
+                            {(stats.total_units || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
-                            Across {stats.total_properties || 0} registered properties
+                            Across {(stats.total_properties || 0).toLocaleString()} registered properties
                         </p>
                     </CardContent>
                 </Card>
@@ -419,7 +447,7 @@ export default function SuperAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
-                            {stats.total_tenants || 0}
+                            {(stats.total_tenants || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
                             Managed platform-wide
@@ -431,43 +459,67 @@ export default function SuperAdminDashboard() {
 
             {/* Filter & Search Bar for Enterprise Agency Management */}
             <Card className="border-none shadow-md bg-card">
-                <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="relative flex-1 w-full">
+                <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col gap-3">
+                        <div className="relative w-full">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search agency name, owner email or phone number..."
+                                placeholder="Search agency name, owner email or phone..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-9 bg-background"
                             />
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-xs font-bold text-muted-foreground uppercase">Status:</span>
-                            </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className="text-xs font-bold text-muted-foreground uppercase shrink-0">Status:</span>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="h-10 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium"
+                                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium flex-1 min-w-[120px]"
                             >
                                 <option value="all">All Statuses</option>
                                 <option value="active">Active</option>
                                 <option value="trial">Trial</option>
                                 <option value="suspended">Suspended</option>
                             </select>
-
-                            <span className="text-xs font-bold text-muted-foreground uppercase ml-2">Plan:</span>
+                            <span className="text-xs font-bold text-muted-foreground uppercase shrink-0">Plan:</span>
                             <select
                                 value={planFilter}
                                 onChange={(e) => setPlanFilter(e.target.value)}
-                                className="h-10 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium"
+                                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium flex-1 min-w-[120px]"
                             >
                                 <option value="all">All Plans</option>
-                                <option value="starter">Starter</option>
-                                <option value="growth">Growth</option>
-                                <option value="enterprise">Enterprise</option>
+                                {plans && plans.length > 0 ? (
+                                    plans.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <>
+                                        <option value="starter">Starter</option>
+                                        <option value="growth">Growth</option>
+                                        <option value="enterprise">Enterprise</option>
+                                    </>
+                                )}
+                            </select>
+
+                            <span className="text-xs font-bold text-muted-foreground uppercase shrink-0">Per Page:</span>
+                            <select
+                                value={perPage}
+                                onChange={(e) => {
+                                    const newSize = Number(e.target.value);
+                                    setPerPage(newSize);
+                                    setPage(1);
+                                    fetchOverview(1, newSize);
+                                }}
+                                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium shrink-0"
+                            >
+                                <option value={10}>10 / page</option>
+                                <option value={20}>20 / page</option>
+                                <option value={50}>50 / page</option>
+                                <option value={100}>100 / page</option>
                             </select>
                         </div>
                     </div>
@@ -476,15 +528,16 @@ export default function SuperAdminDashboard() {
 
             {/* Registered Organizations Table */}
             <Card className="border-none shadow-xl bg-card">
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                        <CardTitle className="text-xl font-bold">Registered Agencies & Landlord Accounts</CardTitle>
+                        <CardTitle className="text-lg sm:text-xl font-bold">Registered Agencies &amp; Landlord Accounts</CardTitle>
                         <p className="text-xs text-muted-foreground mt-1 font-medium">
-                            Showing {filteredOrgs.length} of {orgs.length} subscriber organizations
+                            Showing {orgs.length} of {paginationMeta?.total ?? orgs.length} subscriber organizations
                         </p>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
+                    <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -500,7 +553,7 @@ export default function SuperAdminDashboard() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredOrgs.length === 0 ? (
+                            {orgs.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                                         <div className="space-y-2">
@@ -511,7 +564,7 @@ export default function SuperAdminDashboard() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredOrgs.map((org: any) => (
+                                orgs.map((org: any) => (
                                     <TableRow key={org.id}>
                                         <TableCell className="font-bold">
                                             <div className="text-foreground">{org.name}</div>
@@ -632,6 +685,21 @@ export default function SuperAdminDashboard() {
                             )}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    {/* Standardized Server-Side Pagination Bar for 10M Landlords */}
+                    {paginationMeta && (
+                        <PaginationControls
+                            currentPage={page}
+                            totalPages={paginationMeta.last_page || 1}
+                            onPageChange={(newPage) => {
+                                setPage(newPage);
+                                fetchOverview(newPage, perPage);
+                            }}
+                            totalItems={paginationMeta.total || 0}
+                            itemsPerPage={perPage}
+                        />
+                    )}
                 </CardContent>
             </Card>
 
@@ -720,7 +788,7 @@ export default function SuperAdminDashboard() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-2">
                                 <Label className="font-bold text-sm">Owner Name *</Label>
                                 <Input
@@ -817,7 +885,7 @@ export default function SuperAdminDashboard() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-2">
                                 <Label className="font-bold text-sm">Password *</Label>
                                 <Input
@@ -1062,8 +1130,18 @@ export default function SuperAdminDashboard() {
             </Dialog>
 
             {/* View Full Account Details Dialog */}
-            <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
-                <DialogContent className="sm:max-w-[600px] rounded-2xl p-6">
+            <Dialog open={detailsModalOpen} onOpenChange={(open) => {
+                setDetailsModalOpen(open);
+                if (!open) setViewOrg(null);
+            }}>
+                <DialogContent className="sm:max-w-[900px] rounded-2xl p-6 overflow-y-auto max-h-[90vh]">
+                    {!viewOrg ? (
+                        <div className="flex flex-col items-center justify-center py-16 gap-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                            <p className="text-sm text-muted-foreground font-medium">Loading organization details…</p>
+                        </div>
+                    ) : (
+                    <>
                     <DialogHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -1072,19 +1150,19 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 <div>
                                     <DialogTitle className="text-xl font-extrabold text-foreground">
-                                        {viewOrg?.name}
+                                        {viewOrg.name}
                                     </DialogTitle>
                                     <DialogDescription className="text-xs text-muted-foreground">
-                                        Registered on {viewOrg?.created_at ? new Date(viewOrg.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                                        Registered on {viewOrg.created_at ? new Date(viewOrg.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
                                     </DialogDescription>
                                 </div>
                             </div>
                             <Badge className={`capitalize font-bold text-xs ${
-                                viewOrg?.status === 'active' ? 'bg-emerald-500 text-white'
-                                : viewOrg?.status === 'trial' ? 'bg-amber-500 text-white'
+                                viewOrg.status === 'active' ? 'bg-emerald-500 text-white'
+                                : viewOrg.status === 'trial' ? 'bg-amber-500 text-white'
                                 : 'bg-red-500 text-white'
                             }`}>
-                                {viewOrg?.status}
+                                {viewOrg.status}
                             </Badge>
                         </div>
                     </DialogHeader>
@@ -1166,49 +1244,122 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             {/* Billing & Transaction History */}
-                            <div className="space-y-2">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                                    <FileText className="w-3.5 h-3.5 text-emerald-500" /> Subscription Payment & Wallet Ledger
-                                </h4>
-                                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
-                                    {loadingPayments ? (
-                                        <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
-                                            <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Loading payment history...
+                            <div className="space-y-3">
+                                {/* Ledger Header */}
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                        <FileText className="w-3.5 h-3.5 text-emerald-500" /> Subscription Payment & Wallet Ledger
+                                        <Badge variant="outline" className="text-[10px] font-bold ml-1">{orgPayments.length} records</Badge>
+                                    </h4>
+                                    <button
+                                        onClick={() => refreshLedger(viewOrg.id)}
+                                        disabled={refreshingLedger || loadingPayments}
+                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-indigo-600 font-semibold transition-colors disabled:opacity-50"
+                                    >
+                                        <RefreshCw className={`w-3 h-3 ${refreshingLedger ? 'animate-spin' : ''}`} />
+                                        {refreshingLedger ? 'Refreshing…' : 'Refresh'}
+                                    </button>
+                                </div>
+
+                                {/* Summary Stats */}
+                                {orgPayments.length > 0 && (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 rounded-lg p-2 text-center">
+                                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide">Total Top-Ups</p>
+                                            <p className="text-sm font-black text-emerald-700">
+                                                KES {orgPayments.filter((p: any) => Number(p.amount_paid) > 0).reduce((s: number, p: any) => s + Number(p.amount_paid), 0).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200/60 rounded-lg p-2 text-center">
+                                            <p className="text-[10px] text-red-600 font-bold uppercase tracking-wide">Total Deductions</p>
+                                            <p className="text-sm font-black text-red-600">
+                                                KES {orgPayments.filter((p: any) => Number(p.amount_paid) < 0).reduce((s: number, p: any) => s + Math.abs(Number(p.amount_paid)), 0).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200/60 rounded-lg p-2 text-center">
+                                            <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wide">Transactions</p>
+                                            <p className="text-sm font-black text-indigo-700">{orgPayments.length}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Ledger Table */}
+                                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-64 overflow-y-auto overflow-x-auto">
+                                    {loadingPayments || refreshingLedger ? (
+                                        <div className="p-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> Loading payment history…
                                         </div>
                                     ) : orgPayments.length === 0 ? (
-                                        <div className="p-4 text-center text-xs text-muted-foreground">
-                                            No payment transactions recorded for this organization yet.
+                                        <div className="p-8 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="p-3 bg-muted rounded-full"><CreditCard className="w-5 h-5 text-muted-foreground" /></div>
+                                                <p className="text-xs font-semibold text-foreground">No transactions yet</p>
+                                                <p className="text-[10px] text-muted-foreground">Payment history will appear here once recorded.</p>
+                                            </div>
                                         </div>
                                     ) : (
                                         <Table>
-                                            <TableHeader className="bg-slate-50 dark:bg-slate-900 text-[11px]">
+                                            <TableHeader className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
                                                 <TableRow>
-                                                    <TableHead className="py-2">Date</TableHead>
-                                                    <TableHead className="py-2">Type / Note</TableHead>
-                                                    <TableHead className="py-2">Amount</TableHead>
-                                                    <TableHead className="py-2">Ref</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">Date / Time</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">Type</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">Amount</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">Wallet Before → After</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">M-Pesa Ref</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold">Recorded By</TableHead>
+                                                    <TableHead className="py-2 text-[11px] font-bold text-right"></TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody className="text-xs">
-                                                {orgPayments.map((p: any) => (
-                                                    <TableRow key={p.id} className="hover:bg-slate-50/50">
-                                                        <TableCell className="py-2 font-mono text-[11px]">
-                                                            {new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
-                                                        </TableCell>
-                                                        <TableCell className="py-2">
-                                                            <div className="font-semibold capitalize text-foreground">{p.payment_type?.replace('_', ' ')}</div>
-                                                            <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">{p.note || '—'}</div>
-                                                        </TableCell>
-                                                        <TableCell className="py-2 font-bold">
-                                                            <span className={p.amount_paid >= 0 ? 'text-emerald-600' : 'text-red-500'}>
-                                                                {p.amount_paid >= 0 ? `+KES ${Number(p.amount_paid).toLocaleString()}` : `-KES ${Math.abs(Number(p.amount_paid)).toLocaleString()}`}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell className="py-2 font-mono text-[11px] text-muted-foreground">
-                                                            {p.mpesa_reference || '—'}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                {orgPayments.map((p: any) => {
+                                                    const amount = Number(p.amount_paid);
+                                                    const isDebit = amount < 0;
+                                                    const typeLabel: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+                                                        topup:              { label: 'Top-Up',         icon: <ArrowUpCircle className="w-2.5 h-2.5" />,     cls: 'bg-emerald-500/10 text-emerald-700 border-emerald-300' },
+                                                        monthly_deduction:  { label: 'Monthly Bill',   icon: <ArrowDownCircle className="w-2.5 h-2.5" />,   cls: 'bg-red-500/10 text-red-700 border-red-300' },
+                                                        manual_adjustment:  { label: 'Adjustment',     icon: <SlidersHorizontal className="w-2.5 h-2.5" />, cls: 'bg-amber-500/10 text-amber-700 border-amber-300' },
+                                                        wallet_correction:  { label: 'Correction',     icon: <SlidersHorizontal className="w-2.5 h-2.5" />, cls: 'bg-amber-500/10 text-amber-700 border-amber-300' },
+                                                        upgrade_deduction:  { label: 'Plan Upgrade',   icon: <Zap className="w-2.5 h-2.5" />,              cls: 'bg-indigo-500/10 text-indigo-700 border-indigo-300' },
+                                                    };
+                                                    const meta = typeLabel[p.payment_type] ?? { label: p.payment_type?.replace(/_/g, ' '), icon: <Clock className="w-2.5 h-2.5" />, cls: 'bg-slate-100 text-slate-700 border-slate-300' };
+                                                    return (
+                                                        <TableRow key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                                            <TableCell className="py-2.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+                                                                <div>{new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                                <div className="text-[10px] opacity-70">{new Date(p.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5">
+                                                                <Badge className={`text-[10px] font-bold gap-1 border ${meta.cls}`}>
+                                                                    {meta.icon} {meta.label}
+                                                                </Badge>
+                                                                {p.note && <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[120px]">{p.note}</div>}
+                                                            </TableCell>
+                                                            <TableCell className={`py-2.5 font-black text-xs whitespace-nowrap ${isDebit ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                                {isDebit ? '−' : '+'}KES {Math.abs(amount).toLocaleString()}
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5 text-[11px] whitespace-nowrap">
+                                                                <span className="text-muted-foreground">KES {Number(p.wallet_before).toLocaleString()}</span>
+                                                                <span className="mx-1 text-muted-foreground">→</span>
+                                                                <span className="font-bold text-foreground">KES {Number(p.wallet_after).toLocaleString()}</span>
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5 font-mono text-[10px] text-muted-foreground">
+                                                                {p.mpesa_reference || <span className="opacity-40">—</span>}
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5 text-[11px] text-muted-foreground">
+                                                                {p.recorded_by || 'System'}
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5 text-right">
+                                                                <button
+                                                                    onClick={() => setSelectedOrgPayment(p)}
+                                                                    className="p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-muted-foreground hover:text-indigo-600 transition-colors"
+                                                                    title="View details"
+                                                                >
+                                                                    <Eye className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
                                             </TableBody>
                                         </Table>
                                     )}
@@ -1216,10 +1367,10 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             {/* Modal Action Buttons */}
-                            <div className="pt-2 flex flex-wrap gap-2 border-t border-slate-200 dark:border-slate-700">
+                            <div className="pt-3 flex flex-wrap gap-2 border-t border-slate-200 dark:border-slate-700">
                                 <Button
                                     size="sm"
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-1 text-xs"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-1.5 text-xs shadow-sm"
                                     onClick={() => {
                                         setDetailsModalOpen(false);
                                         openPaymentModal(viewOrg);
@@ -1230,7 +1381,7 @@ export default function SuperAdminDashboard() {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="font-bold rounded-xl gap-1 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                                    className="font-bold rounded-xl gap-1.5 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
                                     onClick={() => {
                                         setDetailsModalOpen(false);
                                         openAdjustWalletModal(viewOrg);
@@ -1241,7 +1392,7 @@ export default function SuperAdminDashboard() {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="font-bold rounded-xl gap-1 text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                    className="font-bold rounded-xl gap-1.5 text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
                                     onClick={() => {
                                         setDetailsModalOpen(false);
                                         openEditModal(viewOrg);
@@ -1252,8 +1403,8 @@ export default function SuperAdminDashboard() {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className={`font-bold rounded-xl gap-1 text-xs border-slate-200 ${
-                                        viewOrg.status === 'suspended' ? 'text-emerald-600 hover:bg-emerald-50' : 'text-red-600 hover:bg-red-50'
+                                    className={`font-bold rounded-xl gap-1.5 text-xs border-slate-200 ${
+                                        viewOrg.status === 'suspended' ? 'text-emerald-600 hover:bg-emerald-50 border-emerald-300' : 'text-red-600 hover:bg-red-50 border-red-300'
                                     }`}
                                     onClick={() => toggleOrgStatus(viewOrg)}
                                 >
@@ -1263,10 +1414,113 @@ export default function SuperAdminDashboard() {
                             </div>
                         </div>
                     )}
+                    </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* ── Org Transaction Detail Dialog ── */}
+            <Dialog open={!!selectedOrgPayment} onOpenChange={(open) => !open && setSelectedOrgPayment(null)}>
+                <DialogContent className="max-w-lg rounded-2xl p-6 border shadow-2xl space-y-5">
+                    {selectedOrgPayment && (() => {
+                        const amt = Number(selectedOrgPayment.amount_paid);
+                        const isDebit = amt < 0;
+                        const typeLabels: Record<string, string> = {
+                            topup:             'Wallet Top-Up',
+                            monthly_deduction: 'Monthly Subscription Deduction',
+                            manual_adjustment: isDebit ? 'Manual Wallet Deduction' : 'Manual Wallet Credit',
+                            wallet_correction: isDebit ? 'Wallet Correction (Deduct)' : 'Wallet Correction (Add)',
+                            upgrade_deduction: 'Plan Upgrade Deduction',
+                        };
+                        return (
+                            <>
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl font-bold flex items-center justify-between">
+                                        <span className="flex items-center gap-2">
+                                            <FileText className="w-5 h-5 text-indigo-600" />
+                                            Transaction #{selectedOrgPayment.id}
+                                        </span>
+                                        <Badge variant="outline" className="text-xs font-semibold">
+                                            {new Date(selectedOrgPayment.created_at).toLocaleString('en-KE', {
+                                                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                            })}
+                                        </Badge>
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-muted-foreground">
+                                        {viewOrg?.name} — Full transaction record
+                                    </DialogDescription>
+                                </DialogHeader>
+
+                                {/* Hero Amount Banner */}
+                                <div className={`p-5 rounded-2xl border text-center space-y-1 ${
+                                    isDebit ? 'bg-red-50 dark:bg-red-950/20 border-red-200' : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200'
+                                }`}>
+                                    <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Transaction Amount</p>
+                                    <p className={`text-3xl font-black ${isDebit ? 'text-red-600' : 'text-emerald-600'}`}>
+                                        {isDebit ? '−' : '+'}KES {Math.abs(amt).toLocaleString()}
+                                    </p>
+                                    <div className="pt-1 flex justify-center">
+                                        <Badge className={`font-bold text-xs ${
+                                            isDebit ? 'bg-red-500/10 text-red-700 border-red-300' : 'bg-emerald-500/10 text-emerald-700 border-emerald-300'
+                                        }`}>
+                                            {typeLabels[selectedOrgPayment.payment_type] ?? selectedOrgPayment.payment_type?.replace(/_/g, ' ')}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {/* Details Grid */}
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div className="p-3 rounded-xl bg-muted/40 border">
+                                        <p className="text-xs text-muted-foreground font-semibold">Wallet Before</p>
+                                        <p className="font-bold text-foreground mt-0.5">KES {Number(selectedOrgPayment.wallet_before).toLocaleString()}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-muted/40 border">
+                                        <p className="text-xs text-muted-foreground font-semibold">Wallet After</p>
+                                        <p className="font-black text-indigo-600 mt-0.5">KES {Number(selectedOrgPayment.wallet_after).toLocaleString()}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-muted/40 border">
+                                        <p className="text-xs text-muted-foreground font-semibold">M-Pesa Reference</p>
+                                        <p className="font-mono font-bold text-foreground mt-0.5">{selectedOrgPayment.mpesa_reference ?? '—'}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-muted/40 border">
+                                        <p className="text-xs text-muted-foreground font-semibold">Subscription Plan</p>
+                                        <p className="font-bold text-foreground capitalize mt-0.5">{selectedOrgPayment.plan ?? '—'}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-muted/40 border col-span-2">
+                                        <p className="text-xs text-muted-foreground font-semibold">Billing Period</p>
+                                        <p className="font-bold text-foreground mt-0.5">
+                                            {selectedOrgPayment.billing_period_start && selectedOrgPayment.billing_period_end
+                                                ? `${new Date(selectedOrgPayment.billing_period_start).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })} – ${new Date(selectedOrgPayment.billing_period_end).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                                : 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-muted/40 border col-span-2">
+                                        <p className="text-xs text-muted-foreground font-semibold">Recorded By</p>
+                                        <p className="font-bold text-foreground mt-0.5">{selectedOrgPayment.recorded_by || 'System (Auto)'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Note / Reason */}
+                                {selectedOrgPayment.note && (
+                                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200">
+                                        <p className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Note / Reason</p>
+                                        <p className="text-xs text-amber-900 dark:text-amber-200 mt-1 leading-relaxed">{selectedOrgPayment.note}</p>
+                                    </div>
+                                )}
+
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setSelectedOrgPayment(null)} className="w-full font-bold">
+                                        Close Details
+                                    </Button>
+                                </DialogFooter>
+                            </>
+                        );
+                    })()}
                 </DialogContent>
             </Dialog>
 
 
         </div>
+
     );
 }

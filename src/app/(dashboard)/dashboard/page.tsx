@@ -16,6 +16,8 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+import { useAuth } from "@/contexts/AuthContext";
+
 interface DashboardStats {
   revenue: number;
   revenueGrowth: number;
@@ -45,6 +47,7 @@ interface ChartData {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     revenue: 0, revenueGrowth: 0,
     activeTenants: 0, tenantsGrowth: 0,
@@ -59,6 +62,13 @@ export default function DashboardPage() {
   const [chartView, setChartView] = useState<'Monthly' | 'Yearly'>('Monthly');
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (user?.role === 'super_admin') {
+      router.replace('/super-admin');
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [statsRes, activityRes, chartRes] = await Promise.all([
@@ -79,7 +89,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, []);
+  }, [user, authLoading, router]);
 
   const getAggregatedData = () => {
     if (chartView === 'Monthly') {

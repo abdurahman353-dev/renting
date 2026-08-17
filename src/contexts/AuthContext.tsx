@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '@/data/apis';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface User {
     id: number;
@@ -83,17 +84,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkAuth = () => {
         try {
-            const isAuth = authAPI.isAuthenticated();
-            if (isAuth) {
-                const userData = authAPI.getUser();
-                if (userData) {
-                    setUser(userData as User);
-                }
+            const token = Cookies.get('admin_token');
+            const userData = authAPI.getUser();
+            if (token && userData) {
+                setUser(userData as User);
             } else {
+                Cookies.remove('admin_token');
+                sessionStorage.removeItem('admin_user');
                 setUser(null);
             }
         } catch (error) {
             console.error('Auth check failed:', error);
+            Cookies.remove('admin_token');
+            sessionStorage.removeItem('admin_user');
             setUser(null);
         } finally {
             setLoading(false);

@@ -18,11 +18,17 @@ export default function SuperAdminLayout({
 
     useEffect(() => {
         if (!loading) {
-            if (!isAuthenticated) {
-                router.replace('/login');
+            if (!isAuthenticated || !user) {
+                window.location.href = '/login';
                 return;
             }
-            // Only super_admin can access this portal
+            // 1. Mandatory password change check MUST take precedence
+            if (user?.must_change_password) {
+                router.replace('/profile?change_password=true');
+                return;
+            }
+
+            // 2. Only super_admin can access this portal
             if (user?.role !== 'super_admin') {
                 router.replace('/login?error=unauthorized');
                 return;
@@ -38,7 +44,16 @@ export default function SuperAdminLayout({
         );
     }
 
-    if (!isAuthenticated || user?.role !== 'super_admin') {
+    if (!isAuthenticated || !user || user?.role !== 'super_admin' || user?.must_change_password) {
+        if (typeof window !== 'undefined') {
+            if (!isAuthenticated || !user) {
+                window.location.href = '/login';
+            } else if (user?.must_change_password) {
+                window.location.href = '/profile?change_password=true';
+            } else if (user?.role !== 'super_admin') {
+                window.location.href = '/login?error=unauthorized';
+            }
+        }
         return null;
     }
 
