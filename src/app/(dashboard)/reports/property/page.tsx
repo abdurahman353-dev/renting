@@ -78,12 +78,14 @@ export default function PropertyReportPage() {
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
-        const headers = ["Property Name", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Amount Paid", "Balance"];
+        const headers = ["Property Name", "Initial Dues", "(Rent+Deposits)", "Amount Collected", "Repair Expenses", "Net Collected", "Balance"];
         const rows = (data.properties || []).map((row: any) => [
             `"${row.name}"`,
             row.initial_dues,
             row.rent,
             row.amount_paid,
+            row.repair_expenses || 0,
+            row.net_collected !== undefined ? row.net_collected : (row.amount_paid - (row.repair_expenses || 0)),
             row.balance
         ]);
 
@@ -98,7 +100,7 @@ export default function PropertyReportPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `property_report_${filters.year}_${filters.month}.csv`);
+        link.setAttribute("download", `property_financial_report_${filters.year}_${filters.month}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -122,13 +124,14 @@ export default function PropertyReportPage() {
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
 
-    const SummaryCard = ({ title, value, colorClass }: { title: string, value: number, colorClass: string }) => (
+    const SummaryCard = ({ title, value, colorClass, subtitle }: { title: string, value: number, colorClass: string, subtitle?: string }) => (
         <Card className="border-border shadow-sm">
             <CardContent className="pt-6">
-                <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-                <h3 className={`text-2xl font-bold ${colorClass}`}>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</p>
+                <h3 className={`text-2xl font-black ${colorClass}`}>
                     KES {Number(value || 0).toLocaleString()}
                 </h3>
+                {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
             </CardContent>
         </Card>
     );
@@ -138,8 +141,8 @@ export default function PropertyReportPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground">Property Report</h1>
-                    <p className="text-muted-foreground mt-1">Monthly summary of occupancy and financials</p>
+                    <h1 className="text-3xl font-bold text-foreground">Property Financial Report</h1>
+                    <p className="text-muted-foreground mt-1">Monthly property revenue, repair costs, and net earnings breakdown</p>
                 </div>
                 <Button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Download className="mr-2 h-4 w-4" />
@@ -150,29 +153,34 @@ export default function PropertyReportPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <SummaryCard
+                    title="Total Collected"
+                    value={data.summary?.total_paid}
+                    colorClass="text-emerald-600"
+                    subtitle="Gross monthly collections"
+                />
+                <SummaryCard
+                    title="Repair Expenses"
+                    value={data.summary?.total_repairs}
+                    colorClass="text-amber-600"
+                    subtitle="Money spent on repairs"
+                />
+                <SummaryCard
+                    title="Net Collected"
+                    value={data.summary?.total_net_collected}
+                    colorClass={Number(data.summary?.total_net_collected) >= 0 ? "text-blue-600" : "text-rose-600"}
+                    subtitle="Collected minus repair costs"
+                />
+                <SummaryCard
                     title="Rent Arrears"
                     value={data.summary?.total_rent_arrears}
                     colorClass="text-rose-600"
-                />
-                <SummaryCard
-                    title="Initial Dues"
-                    value={data.summary?.total_initial_dues}
-                    colorClass="text-amber-600"
+                    subtitle="Past unpaid rent"
                 />
                 <SummaryCard
                     title="Total Balance"
                     value={data.summary?.total_balance}
                     colorClass={data.summary?.total_balance < 0 ? "text-rose-500" : "text-emerald-500"}
-                />
-                <SummaryCard
-                    title="Total Paid"
-                    value={data.summary?.total_paid}
-                    colorClass="text-emerald-600"
-                />
-                <SummaryCard
-                    title="Total Overpayment"
-                    value={data.summary?.total_overpayment}
-                    colorClass="text-blue-600"
+                    subtitle="Current ledger balance"
                 />
             </div>
 
@@ -237,47 +245,61 @@ export default function PropertyReportPage() {
             {/* Table */}
             <Card className="border-border shadow-sm overflow-hidden bg-card">
                 <CardHeader>
-                    <CardTitle className="text-lg text-foreground">Detailed Report</CardTitle>
+                    <CardTitle className="text-lg text-foreground font-bold">Property Financial Breakdown</CardTitle>
                 </CardHeader>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
                             <tr>
                                 <th className="px-6 py-3">Property (Units T/O/V)</th>
-                                <th className="px-6 py-3 text-right text-amber-600">Initial dues=(Agreement fee+Opening balance)</th>
+                                <th className="px-6 py-3 text-right text-amber-600">Initial Dues</th>
                                 <th className="px-6 py-3 text-right text-slate-900">(Rent+Deposits)</th>
-                                <th className="px-6 py-3 text-right text-emerald-600">Amount Paid</th>
+                                <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
+                                <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
+                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
                             ) : (!data.properties || data.properties.length === 0) ? (
-                                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
+                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
                             ) : (
-                                (data.properties || []).map((row: any) => (
-                                    <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-foreground">{row.name}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {row.total_units} units ({row.occupied_units} Occ / {row.vacant_units} Vac)
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-amber-600">
-                                            {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
-                                            {Number(row.amount_paid) !== 0 ? Number(row.amount_paid).toLocaleString() : '—'}
-                                        </td>
-                                        <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                            {Number(row.balance).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                ))
+                                (data.properties || []).map((row: any) => {
+                                    const repairExpenses = Number(row.repair_expenses || 0);
+                                    const amountPaid = Number(row.amount_paid || 0);
+                                    const netCollected = row.net_collected !== undefined ? Number(row.net_collected) : (amountPaid - repairExpenses);
+
+                                    return (
+                                        <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="font-semibold text-foreground">{row.name}</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {row.total_units} units ({row.occupied_units} Occ / {row.vacant_units} Vac)
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-amber-600">
+                                                {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-slate-900">
+                                                {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-bold text-emerald-600">
+                                                {amountPaid !== 0 ? amountPaid.toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-semibold text-amber-600">
+                                                {repairExpenses > 0 ? `KES ${repairExpenses.toLocaleString()}` : '—'}
+                                            </td>
+                                            <td className={`px-6 py-4 text-right font-black ${netCollected >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+                                                KES {netCollected.toLocaleString()}
+                                            </td>
+                                            <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                                {Number(row.balance).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
