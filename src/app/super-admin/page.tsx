@@ -131,6 +131,12 @@ export default function SuperAdminDashboard() {
             if (plansData && Array.isArray(plansData)) {
                 setPlans(plansData);
             }
+            if (data?.organizations?.data && viewOrg) {
+                const refreshed = data.organizations.data.find((o: any) => o.id === viewOrg.id);
+                if (refreshed) {
+                    setViewOrg((prev: any) => ({ ...prev, ...refreshed }));
+                }
+            }
         } catch (error: any) {
             console.error("Failed to load SaaS overview:", error);
             if (error.response?.status === 403) {
@@ -245,11 +251,16 @@ export default function SuperAdminDashboard() {
             });
             toast.success(result.message ?? `Payment recorded for ${paymentOrg.name}.`);
             setPaymentModalOpen(false);
-            fetchOverview();
-            // Re-open details & refresh ledger (ensure viewOrg is set)
-            setViewOrg(paymentOrg);
+            const updatedOrg = {
+                ...paymentOrg,
+                wallet_balance:  result.wallet_balance !== undefined ? result.wallet_balance : paymentOrg.wallet_balance,
+                status:          result.status || paymentOrg.status,
+                plan_expires_at: result.plan_expires_at !== undefined ? result.plan_expires_at : paymentOrg.plan_expires_at,
+            };
+            setViewOrg(updatedOrg);
             setDetailsModalOpen(true);
             refreshLedger(paymentOrg.id, true);
+            fetchOverview();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to record payment.');
         } finally {
@@ -287,11 +298,16 @@ export default function SuperAdminDashboard() {
             });
             toast.success(result.message ?? `Wallet balance adjusted for ${adjustOrg.name}.`);
             setAdjustModalOpen(false);
-            fetchOverview();
-            // Re-open details & refresh ledger (ensure viewOrg is set)
-            setViewOrg(adjustOrg);
+            const updatedOrg = {
+                ...adjustOrg,
+                wallet_balance:  result.wallet_balance !== undefined ? result.wallet_balance : adjustOrg.wallet_balance,
+                status:          result.status || adjustOrg.status,
+                plan_expires_at: result.plan_expires_at !== undefined ? result.plan_expires_at : adjustOrg.plan_expires_at,
+            };
+            setViewOrg(updatedOrg);
             setDetailsModalOpen(true);
             refreshLedger(adjustOrg.id, true);
+            fetchOverview();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to adjust wallet balance.');
         } finally {
