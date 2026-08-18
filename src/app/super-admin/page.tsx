@@ -26,6 +26,7 @@ import {
     SlidersHorizontal,
     RefreshCw,
     Clock,
+    RotateCcw,
 } from "lucide-react";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ export default function SuperAdminDashboard() {
         mpesa_reference: '',
         plan: 'starter',
         note: '',
+        activation_mode: 'keep_trial',
     });
     const [recordingPayment, setRecordingPayment] = useState(false);
 
@@ -225,37 +227,63 @@ export default function SuperAdminDashboard() {
 
     const openPaymentModal = (org: any) => {
         setPaymentOrg(org);
+        const isPaidActive = (org.status === 'active' && org.plan_expires_at && new Date(org.plan_expires_at) > new Date());
         setPaymentForm({
             amount_paid: '',
             mpesa_reference: '',
             plan: org.subscription_plan || 'starter',
             note: '',
+            activation_mode: org.status === 'trial' ? 'keep_trial' : (isPaidActive ? 'topup_only' : 'activate_now'),
         });
         setPaymentModalOpen(true);
     };
 
     const handleRecordPayment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!paymentOrg || !paymentForm.amount_paid) {
-            toast.error('Please enter the amount paid.');
-            return;
+        if (!paymentOrg) return;
+
+        const amt = parseFloat(paymentForm.amount_paid) || 0;
+        const currWallet = Number(paymentOrg.wallet_balance ?? 0);
+        const selectedPlanObj = plans.find(p => p.id === paymentForm.plan);
+        const planFee = selectedPlanObj ? Number(selectedPlanObj.monthly_price) : 0;
+        const totalBal = currWallet + amt;
+
+        if (paymentForm.activation_mode === 'activate_now') {
+            if (totalBal < planFee) {
+                toast.error(`Insufficient balance. KES ${(planFee - totalBal).toLocaleString()} more required for ${selectedPlanObj?.name || 'this plan'}.`);
+                return;
+            }
+        } else if (paymentForm.activation_mode === 'keep_trial') {
+            if (amt <= 0) {
+                toast.error('Please enter the top-up amount.');
+                return;
+            }
+        } else {
+            // topup_only
+            if (amt <= 0 && paymentForm.plan === paymentOrg.subscription_plan) {
+                toast.error('Please enter the top-up amount.');
+                return;
+            }
         }
+
         setRecordingPayment(true);
         try {
             const result = await superAdminAPI.recordSubscriptionPayment({
                 organization_id: paymentOrg.id,
-                amount_paid:     parseFloat(paymentForm.amount_paid),
+                amount_paid:     amt,
                 mpesa_reference: paymentForm.mpesa_reference || undefined,
                 plan:            paymentForm.plan,
                 note:            paymentForm.note || undefined,
+                activation_mode: paymentForm.activation_mode,
             });
             toast.success(result.message ?? `Payment recorded for ${paymentOrg.name}.`);
             setPaymentModalOpen(false);
             const updatedOrg = {
                 ...paymentOrg,
-                wallet_balance:  result.wallet_balance !== undefined ? result.wallet_balance : paymentOrg.wallet_balance,
-                status:          result.status || paymentOrg.status,
-                plan_expires_at: result.plan_expires_at !== undefined ? result.plan_expires_at : paymentOrg.plan_expires_at,
+                wallet_balance:    result.wallet_balance !== undefined ? result.wallet_balance : paymentOrg.wallet_balance,
+                status:            result.status || paymentOrg.status,
+                plan_expires_at:   result.plan_expires_at !== undefined ? result.plan_expires_at : paymentOrg.plan_expires_at,
+                subscription_plan: result.subscription_plan || paymentOrg.subscription_plan,
             };
             setViewOrg(updatedOrg);
             setDetailsModalOpen(true);
@@ -540,7 +568,7 @@ export default function SuperAdminDashboard() {
 
             {/* Registered Organizations Table */}
             <Card className="border-none shadow-xl bg-card">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 sm:px-6">
                     <div>
                         <CardTitle className="text-lg sm:text-xl font-bold">Registered Agencies &amp; Landlord Accounts</CardTitle>
                         <p className="text-xs text-muted-foreground mt-1 font-medium">
@@ -549,7 +577,117 @@ export default function SuperAdminDashboard() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+
+                    {/* Mobile Card View (xs to md) */}
+                    <div className="block lg:hidden divide-y divide-border">
+                        {orgs.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground px-4">
+                                <Building2 className="w-8 h-8 mx-auto text-muted-foreground opacity-50 mb-2" />
+                                <p className="font-semibold text-foreground">No agency accounts match your search.</p>
+                                <p className="text-xs">When new agencies register on your SaaS platform, they will appear here instantly.</p>
+                            </div>
+                        ) : (
+                            orgs.map((org: any) => (
+                                <div key={org.id} className="p-4 space-y-3">
+                                    {/* Row 1: Name + Actions */}
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-foreground truncate">{org.name}</p>
+                                            <p className="text-xs text-muted-foreground font-mono truncate">{org.phone || org.email}</p>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0">
+                                                    <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 shadow-xl">
+                                                <DropdownMenuItem onClick={() => openViewDetailsModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                    <Eye className="w-4 h-4 text-indigo-500" /> View Full Account Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => openPaymentModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                    <CreditCard className="w-4 h-4 text-emerald-500" /> Record Top-Up Payment
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => openAdjustWalletModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                    <Wallet className="w-4 h-4 text-amber-500" /> Correct Wallet Balance
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => openEditModal(org)} className="font-semibold text-xs gap-2 py-2 cursor-pointer">
+                                                    <Edit3 className="w-4 h-4 text-blue-500" /> Manage Plan & Capacity
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => toggleOrgStatus(org)}
+                                                    className={`font-semibold text-xs gap-2 py-2 cursor-pointer ${
+                                                        org.status === 'suspended' ? 'text-emerald-600' : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    {org.status === 'suspended' ? (
+                                                        <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Activate Account</>
+                                                    ) : (
+                                                        <><Ban className="w-4 h-4 text-red-500" /> Suspend Account</>
+                                                    )}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
+                                    {/* Row 2: Owner */}
+                                    {org.super_admin_user && (
+                                        <div className="flex items-center gap-1.5 text-xs">
+                                            <Shield className="w-3 h-3 text-muted-foreground shrink-0" />
+                                            <span className="font-semibold text-foreground">{org.super_admin_user.name}</span>
+                                            <span className="text-muted-foreground truncate">· {org.super_admin_user.email}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Row 3: Plan + Status + Wallet */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Badge variant="outline" className="capitalize font-bold text-xs bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-indigo-200">
+                                            <Zap className="w-3 h-3 mr-1 text-amber-500" />
+                                            {org.subscription_plan || 'Starter'}
+                                        </Badge>
+
+                                        {org.status === 'active' ? (
+                                            <Badge className="bg-emerald-500 text-white border-0 font-bold text-xs">Active</Badge>
+                                        ) : org.status === 'trial' ? (
+                                            <Badge className="bg-amber-500 text-white border-0 font-bold text-xs">Trial</Badge>
+                                        ) : (
+                                            <Badge className="bg-red-500 text-white border-0 font-bold text-xs">Suspended</Badge>
+                                        )}
+
+                                        {(org.plan_expires_at || org.trial_ends_at) && (
+                                            <span className="text-[11px] text-muted-foreground font-medium">
+                                                Expires {new Date(org.plan_expires_at || org.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Row 4: Wallet + Limits */}
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-1.5">
+                                            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <span className={`font-bold ${ (org.wallet_balance ?? 0) > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                KES {Number(org.wallet_balance ?? 0).toLocaleString()}
+                                            </span>
+                                            <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:text-indigo-600" onClick={() => openAdjustWalletModal(org)}>
+                                                <Edit3 className="w-3 h-3" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <span>{(() => { const plan = plans.find((p: any) => p.id === org.subscription_plan); return plan?.max_units ?? org.max_units ?? '—'; })()} units</span>
+                                            <span>·</span>
+                                            <span>{(() => { const plan = plans.find((p: any) => p.id === org.subscription_plan); return plan?.max_properties ?? org.max_properties ?? '—'; })()} props</span>
+                                            <span className="text-muted-foreground/60">· {new Date(org.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Desktop Table View (lg+) */}
+                    <div className="hidden lg:block overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -731,7 +869,7 @@ export default function SuperAdminDashboard() {
 
             {/* Comprehensive Organization Settings & Override Dialog */}
             <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-                <DialogContent className="sm:max-w-[500px] rounded-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-[500px] rounded-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             <Building2 className="w-5 h-5 text-indigo-600" />
@@ -791,7 +929,7 @@ export default function SuperAdminDashboard() {
 
             {/* Register New Landlord Agency Modal */}
             <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
-                <DialogContent className="max-w-md rounded-2xl">
+                <DialogContent className="w-[95vw] max-w-md rounded-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
                             <Building2 className="w-5 h-5 text-indigo-600" />
@@ -950,7 +1088,7 @@ export default function SuperAdminDashboard() {
             </Dialog>
             {/* Record Payment Dialog */}
             <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-                <DialogContent className="max-w-md rounded-2xl">
+                <DialogContent className="w-[95vw] max-w-md rounded-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
                             <CreditCard className="w-5 h-5 text-emerald-600" />
@@ -963,93 +1101,424 @@ export default function SuperAdminDashboard() {
                     </DialogHeader>
 
                     <form onSubmit={handleRecordPayment} className="space-y-4 py-2">
-                        {/* Amount */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Amount Paid (KES) *</Label>
-                            <Input
-                                type="number"
-                                min="1"
-                                step="any"
-                                placeholder="e.g. 1500"
-                                value={paymentForm.amount_paid}
-                                onChange={(e) => setPaymentForm({ ...paymentForm, amount_paid: e.target.value })}
-                                className="h-10 rounded-xl font-bold text-lg"
-                                required
-                            />
-                        </div>
+                        {(() => {
+                            const selectedPlanObj = plans.find(p => p.id === paymentForm.plan);
+                            const planFee = selectedPlanObj ? Number(selectedPlanObj.monthly_price) : 0;
+                            const currWallet = Number(paymentOrg?.wallet_balance ?? 0);
+                            const topupAmt = parseFloat(paymentForm.amount_paid) || 0;
+                            const totalBal = currWallet + topupAmt;
+                            const shortfallAmt = Math.max(0, planFee - totalBal);
+                            const isShort = shortfallAmt > 0;
+                            const walletAlreadyCovers = currWallet >= planFee;
+                            const isSwitchingPlan = paymentOrg?.status === 'active' && paymentForm.plan && paymentForm.plan !== paymentOrg?.subscription_plan;
+                            const isOptionalAmount = (paymentForm.activation_mode === 'activate_now' && walletAlreadyCovers) ||
+                                                    (paymentForm.activation_mode === 'topup_only' && isSwitchingPlan);
 
-                        {/* M-Pesa Reference */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">M-Pesa Reference</Label>
-                            <Input
-                                placeholder="e.g. QKL5XXXXX"
-                                value={paymentForm.mpesa_reference}
-                                onChange={(e) => setPaymentForm({ ...paymentForm, mpesa_reference: e.target.value })}
-                                className="h-10 rounded-xl font-mono"
-                            />
-                        </div>
+                            return (
+                                <>
+                                    {/* Amount */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="font-bold text-sm">
+                                                {isOptionalAmount ? 'Amount to Top Up (KES) — Optional' : 'Amount Paid (KES) *'}
+                                            </Label>
+                                            {paymentForm.activation_mode === 'activate_now' && walletAlreadyCovers && (
+                                                <Badge variant="outline" className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300">
+                                                    Wallet covers full KES {planFee.toLocaleString()}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            placeholder={
+                                                paymentForm.activation_mode === 'activate_now' && walletAlreadyCovers
+                                                    ? "0 (Wallet balance is already sufficient)"
+                                                    : (isShort && paymentForm.activation_mode === 'activate_now'
+                                                        ? `Min KES ${shortfallAmt.toLocaleString()} required`
+                                                        : "e.g. 5000")
+                                            }
+                                            value={paymentForm.amount_paid}
+                                            onChange={(e) => setPaymentForm({ ...paymentForm, amount_paid: e.target.value })}
+                                            className="h-10 rounded-xl font-bold text-lg"
+                                            required={!isOptionalAmount}
+                                        />
+                                        {paymentForm.activation_mode === 'activate_now' && walletAlreadyCovers && (
+                                            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                                💡 Existing wallet balance (KES {currWallet.toLocaleString()}) covers this plan fee (KES {planFee.toLocaleString()}). Leave blank or 0 to deduct directly from wallet.
+                                            </p>
+                                        )}
+                                    </div>
 
-                        {/* Plan Override */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Plan (override if switching)</Label>
-                            <select
-                                className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
-                                value={paymentForm.plan}
-                                onChange={(e) => setPaymentForm({ ...paymentForm, plan: e.target.value })}
-                            >
-                                {plans && plans.length > 0 ? (
-                                    plans.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name} — KES {Number(p.monthly_price).toLocaleString()}/mo ({p.max_units ? `${Number(p.max_units).toLocaleString()} units` : 'Unlimited'})
-                                        </option>
-                                    ))
-                                ) : (
-                                    <option value="" disabled>Loading plans...</option>
-                                )}
-                            </select>
-                        </div>
+                                    {/* M-Pesa Reference */}
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-sm">M-Pesa Reference</Label>
+                                        <Input
+                                            placeholder="e.g. QKL5XXXXX"
+                                            value={paymentForm.mpesa_reference}
+                                            onChange={(e) => setPaymentForm({ ...paymentForm, mpesa_reference: e.target.value })}
+                                            className="h-10 rounded-xl font-mono"
+                                        />
+                                    </div>
 
-                        {/* Note */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Note (optional)</Label>
-                            <Input
-                                placeholder="e.g. Paid via M-Pesa on 13 Aug"
-                                value={paymentForm.note}
-                                onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
-                                className="h-10 rounded-xl"
-                            />
-                        </div>
+                                    {/* Plan Override */}
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-sm">Target Plan</Label>
+                                        <select
+                                            className="w-full h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+                                            value={paymentForm.plan}
+                                            onChange={(e) => setPaymentForm({ ...paymentForm, plan: e.target.value })}
+                                        >
+                                            {plans && plans.length > 0 ? (
+                                                plans.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.name} — KES {Number(p.monthly_price).toLocaleString()}/mo ({p.max_units ? `${Number(p.max_units).toLocaleString()} units` : 'Unlimited'})
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value="" disabled>Loading plans...</option>
+                                            )}
+                                        </select>
+                                    </div>
 
-                        {/* Info Banner */}
-                        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
-                            <p className="font-bold mb-1">💡 How this works:</p>
-                            <ul className="space-y-1 text-xs list-disc list-inside">
-                                <li>Amount is added to the wallet balance.</li>
-                                <li>If balance ≥ plan fee → account unlocked for 30 days.</li>
-                                <li>Any extra credit carries over to next month.</li>
-                            </ul>
-                        </div>
+                                    {/* Real-time Wallet & Deduction Live Preview Card */}
+                                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 p-3.5 space-y-2.5">
+                                        <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                            <span>
+                                                {paymentForm.activation_mode === 'topup_only' ? 'Wallet Top-Up Summary' : 'Real-Time Billing Breakdown'}
+                                            </span>
+                                            {paymentForm.activation_mode === 'activate_now' && walletAlreadyCovers && (
+                                                <Badge variant="outline" className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300">
+                                                    ✓ Auto-Deducts from Wallet
+                                                </Badge>
+                                            )}
+                                        </div>
 
-                        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-1">
-                            <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)} className="rounded-xl font-bold">
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md"
-                                disabled={recordingPayment}
-                            >
-                                {recordingPayment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                                Record Payment & Unlock
-                            </Button>
-                        </DialogFooter>
+                                        {paymentForm.activation_mode === 'topup_only' ? (
+                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                {/* Current Wallet */}
+                                                <div className="p-2.5 rounded-xl bg-background border shadow-xs">
+                                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">Current Wallet</p>
+                                                    <p className="text-sm sm:text-base font-extrabold text-foreground mt-0.5">
+                                                        KES {currWallet.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                {/* Top-up */}
+                                                <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 shadow-xs">
+                                                    <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase">Top-Up Added</p>
+                                                    <p className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                                        +KES {topupAmt.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                {/* New Wallet Total */}
+                                                <div className="p-2.5 rounded-xl bg-background border border-slate-300 dark:border-slate-700 shadow-xs">
+                                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">New Wallet Total</p>
+                                                    <p className="text-sm sm:text-base font-extrabold text-foreground mt-0.5">
+                                                        KES {totalBal.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                {/* Available Total */}
+                                                <div className="p-2.5 rounded-xl bg-background border shadow-xs">
+                                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">Total Available</p>
+                                                    <p className="text-sm sm:text-base font-extrabold text-foreground mt-0.5">
+                                                        KES {totalBal.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                {/* To Deduct */}
+                                                <div className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/40 shadow-xs">
+                                                    <p className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 uppercase">Plan Fee</p>
+                                                    <p className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400 mt-0.5">
+                                                        -KES {planFee.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                {/* Remaining or Shortfall */}
+                                                <div className={`p-2.5 rounded-xl border shadow-xs ${
+                                                    isShort
+                                                        ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 text-amber-700 dark:text-amber-400'
+                                                        : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                                                }`}>
+                                                    <p className="text-[10px] font-semibold uppercase">
+                                                        {isShort ? 'Shortfall' : 'Wallet After'}
+                                                    </p>
+                                                    <p className="text-sm sm:text-base font-extrabold mt-0.5">
+                                                        {isShort ? `KES ${shortfallAmt.toLocaleString()} short` : `KES ${(totalBal - planFee).toLocaleString()}`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {paymentForm.activation_mode === 'topup_only' && isSwitchingPlan && (
+                                            <p className={`text-[11px] text-center font-medium ${isShort ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                                                {isShort
+                                                    ? `⚠️ Total wallet (KES ${totalBal.toLocaleString()}) is KES ${shortfallAmt.toLocaleString()} short of ${selectedPlanObj?.name} (KES ${planFee.toLocaleString()}). Account stays on ${paymentOrg?.subscription_plan}.`
+                                                    : `ℹ️ Account remains on ${paymentOrg?.subscription_plan} until renewal date.`}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Activation Mode Selection */}
+                                    <div className="space-y-2 pt-1">
+                                        {/* Status badge row */}
+                                        <div className="flex items-center justify-between">
+                                            <Label className="font-bold text-xs">Payment Purpose &amp; Activation Mode</Label>
+                                            {paymentOrg?.status === 'trial' ? (
+                                                <Badge variant="outline" className="text-[10px] font-extrabold text-amber-600 bg-amber-50 border-amber-300">
+                                                    Currently on Free Trial
+                                                </Badge>
+                                            ) : (paymentOrg?.status === 'active' && paymentOrg?.plan_expires_at && new Date(paymentOrg.plan_expires_at) > new Date()) ? (
+                                                <Badge variant="outline" className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border-emerald-300">
+                                                    Currently Active (Paid)
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="text-[10px] font-extrabold text-rose-600 bg-rose-50 border-rose-300">
+                                                    Expired / Suspended
+                                                </Badge>
+                                            )}
+                                        </div>
+
+                                        {/* Mode cards */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {(() => {
+                                                const isActivePlan = paymentOrg?.status === 'active'
+                                                    && paymentOrg?.plan_expires_at
+                                                    && new Date(paymentOrg.plan_expires_at) > new Date();
+                                                const isSamePlan = !paymentForm.plan || paymentForm.plan === paymentOrg?.subscription_plan;
+
+                                                if (paymentOrg?.status === 'trial') {
+                                                    // Trial: keep trial OR activate now
+                                                    return (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPaymentForm({ ...paymentForm, activation_mode: 'keep_trial' })}
+                                                                className={`p-3 rounded-xl border text-left transition-all ${
+                                                                    paymentForm.activation_mode === 'keep_trial'
+                                                                        ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 ring-2 ring-amber-500/20'
+                                                                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-1.5 font-bold text-xs text-amber-700 dark:text-amber-400">
+                                                                    <Clock className="w-3.5 h-3.5" /> Keep Free Trial
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                                    Money stays in wallet. Deducts fee when trial expires.
+                                                                </p>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPaymentForm({ ...paymentForm, activation_mode: 'activate_now' })}
+                                                                className={`p-3 rounded-xl border text-left transition-all ${
+                                                                    paymentForm.activation_mode === 'activate_now'
+                                                                        ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
+                                                                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-700 dark:text-emerald-400">
+                                                                    <Zap className="w-3.5 h-3.5" /> Activate Sub Now
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                                    Deduct fee now &amp; convert to Active for 30 days.
+                                                                </p>
+                                                            </button>
+                                                        </>
+                                                    );
+                                                }
+
+                                                if (isActivePlan && isSamePlan) {
+                                                    // Active + same plan → locked wallet-only (no choice)
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            className="col-span-2 p-3 rounded-xl border border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20 text-left cursor-default"
+                                                        >
+                                                            <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-700 dark:text-emerald-400">
+                                                                <Wallet className="w-3.5 h-3.5" /> Top-Up Wallet Only
+                                                            </div>
+                                                            <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                                Funds added to wallet. Auto-deducted when current plan expires.
+                                                            </p>
+                                                        </button>
+                                                    );
+                                                }
+
+                                                if (isActivePlan && !isSamePlan) {
+                                                    // Active + DIFFERENT plan → admin chooses
+                                                    return (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPaymentForm({ ...paymentForm, activation_mode: 'topup_only' })}
+                                                                className={`p-3 rounded-xl border text-left transition-all ${
+                                                                    paymentForm.activation_mode === 'topup_only'
+                                                                        ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
+                                                                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-700 dark:text-emerald-400">
+                                                                    <Wallet className="w-3.5 h-3.5" /> Top-Up Wallet
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                                    Funds in wallet. New plan activates at renewal.
+                                                                </p>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPaymentForm({ ...paymentForm, activation_mode: 'activate_now' })}
+                                                                className={`p-3 rounded-xl border text-left transition-all ${
+                                                                    paymentForm.activation_mode === 'activate_now'
+                                                                        ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 ring-2 ring-blue-500/20'
+                                                                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-1.5 font-bold text-xs text-blue-700 dark:text-blue-400">
+                                                                    <Zap className="w-3.5 h-3.5" /> Switch Plan Now
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                                    Deduct new plan fee &amp; switch immediately.
+                                                                </p>
+                                                            </button>
+                                                        </>
+                                                    );
+                                                }
+
+                                                // Expired / Suspended → single unlock card
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPaymentForm({ ...paymentForm, activation_mode: 'activate_now' })}
+                                                        className="col-span-2 p-3 rounded-xl border text-left transition-all border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20"
+                                                    >
+                                                        <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-700 dark:text-emerald-400">
+                                                            <Zap className="w-3.5 h-3.5" /> Top-Up &amp; Unlock Account Now
+                                                        </div>
+                                                        <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
+                                                            Credit wallet &amp; deduct plan fee immediately to reactivate account for 30 days.
+                                                        </p>
+                                                    </button>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Note */}
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-sm">Note (optional)</Label>
+                                        <Input
+                                            placeholder="e.g. Switched plan / M-Pesa payment"
+                                            value={paymentForm.note}
+                                            onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
+                                            className="h-10 rounded-xl"
+                                        />
+                                    </div>
+
+                                    {/* Info Banner & Shortfall Indicator */}
+                                    {paymentForm.activation_mode === 'keep_trial' ? (
+                                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-900 dark:text-amber-300">
+                                            <p className="font-bold mb-1 flex items-center gap-1">💡 Free Trial Mode:</p>
+                                            <ul className="space-y-1 text-xs list-disc list-inside">
+                                                <li>Top-up amount (KES {topupAmt.toLocaleString()}) added to wallet balance.</li>
+                                                <li>Landlord stays on Free Trial until trial expiration date.</li>
+                                                <li>Wallet balance will be automatically deducted when trial ends.</li>
+                                            </ul>
+                                        </div>
+                                    ) : paymentForm.activation_mode === 'topup_only' ? (
+                                        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
+                                            <p className="font-bold mb-1 flex items-center gap-1">💰 Active Account Wallet Top-Up:</p>
+                                            <ul className="space-y-1 text-xs list-disc list-inside">
+                                                <li>Top-up amount (KES {topupAmt.toLocaleString()}) added directly to wallet balance (New Balance: KES {totalBal.toLocaleString()}).</li>
+                                                <li>Current plan (<strong>{paymentOrg?.subscription_plan}</strong>) remains active until <strong>{paymentOrg?.plan_expires_at ? new Date(paymentOrg.plan_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'renewal'}</strong>.</li>
+                                                {isSwitchingPlan ? (
+                                                    <li className="font-semibold text-blue-700 dark:text-blue-400">
+                                                        🔄 Plan change to <strong>{selectedPlanObj?.name}</strong> queued — will apply &amp; deduct KES {planFee.toLocaleString()} at next renewal.
+                                                    </li>
+                                                ) : (
+                                                    <li>Wallet balance will be used for auto-renewal on the expiration date.</li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                    ) : (
+                                        // activation_mode === 'activate_now'
+                                        <div className="space-y-2">
+                                            {isShort ? (
+                                                <div className="bg-amber-500/10 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-medium space-y-1">
+                                                    <p className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                                                        <AlertCircle className="w-3.5 h-3.5" /> Insufficient Balance for Immediate Activation
+                                                    </p>
+                                                    <p>
+                                                        Target plan <strong>{selectedPlanObj?.name}</strong> costs <strong>KES {planFee.toLocaleString()}/mo</strong>. Total wallet after top-up will be <strong>KES {totalBal.toLocaleString()}</strong> (<strong>KES {shortfallAmt.toLocaleString()} short</strong>).
+                                                    </p>
+                                                    <p className="text-[11px] opacity-80">
+                                                        Please enter a top-up of at least KES {shortfallAmt.toLocaleString()} to activate immediately.
+                                                    </p>
+                                                </div>
+                                            ) : isSwitchingPlan ? (
+                                                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800 dark:text-blue-300">
+                                                    <p className="font-bold mb-1 flex items-center gap-1">⚡ Immediate Plan Switch to {selectedPlanObj?.name}:</p>
+                                                    <ul className="space-y-1 text-xs list-disc list-inside">
+                                                        <li>Plan fee of <strong>KES {planFee.toLocaleString()}</strong> will be deducted immediately from wallet.</li>
+                                                        <li>
+                                                            Wallet breakdown: KES {currWallet.toLocaleString()} existing {topupAmt > 0 ? `+ KES ${topupAmt.toLocaleString()} top-up ` : ''}- KES {planFee.toLocaleString()} fee = <strong>KES {(totalBal - planFee).toLocaleString()}</strong> remaining.
+                                                        </li>
+                                                        <li className="font-semibold text-blue-700 dark:text-blue-400">
+                                                            ✅ Plan switched immediately to <strong>{selectedPlanObj?.name}</strong> and active for 30 days!
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
+                                                    <p className="font-bold mb-1 flex items-center gap-1">💡 Immediate Activation Mode:</p>
+                                                    <ul className="space-y-1 text-xs list-disc list-inside">
+                                                        {topupAmt > 0 && <li>Top-up of KES {topupAmt.toLocaleString()} credited to wallet balance.</li>}
+                                                        <li>Plan fee (KES {planFee.toLocaleString()}) deducted now &amp; account unlocked for 30 days.</li>
+                                                        <li>Wallet balance remaining: <strong>KES {(totalBal - planFee).toLocaleString()}</strong>.</li>
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-1">
+                                        <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)} className="rounded-xl font-bold">
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            className={`font-bold rounded-xl shadow-md ${
+                                                paymentForm.activation_mode === 'keep_trial'
+                                                    ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                                                    : paymentForm.activation_mode === 'topup_only'
+                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                            }`}
+                                            disabled={recordingPayment || (paymentForm.activation_mode === 'activate_now' && isShort)}
+                                        >
+                                            {recordingPayment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+                                                paymentForm.activation_mode === 'keep_trial' ? <Clock className="mr-2 h-4 w-4" /> : <CreditCard className="mr-2 h-4 w-4" />
+                                            )}
+                                            {paymentForm.activation_mode === 'keep_trial'
+                                                ? 'Record Top-Up (Keep Trial)'
+                                                : paymentForm.activation_mode === 'topup_only'
+                                                ? (isSwitchingPlan ? 'Queue Plan Change for Renewal' : 'Record Top-Up to Wallet')
+                                                : (isSwitchingPlan
+                                                    ? `Switch to ${selectedPlanObj?.name || 'Plan'} (Deduct KES ${planFee.toLocaleString()})`
+                                                    : 'Record Payment & Activate Now')}
+                                        </Button>
+                                    </DialogFooter>
+                                </>
+                            );
+                        })()}
                     </form>
                 </DialogContent>
             </Dialog>
 
             {/* Adjust / Correct Wallet Balance Dialog */}
             <Dialog open={adjustModalOpen} onOpenChange={setAdjustModalOpen}>
-                <DialogContent className="max-w-md rounded-2xl">
+                <DialogContent className="w-[95vw] max-w-md rounded-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
                             <Wallet className="w-5 h-5 text-indigo-600" />
@@ -1338,6 +1807,7 @@ export default function SuperAdminDashboard() {
                                                         manual_adjustment:  { label: 'Adjustment',     icon: <SlidersHorizontal className="w-2.5 h-2.5" />, cls: 'bg-amber-500/10 text-amber-700 border-amber-300' },
                                                         wallet_correction:  { label: 'Correction',     icon: <SlidersHorizontal className="w-2.5 h-2.5" />, cls: 'bg-amber-500/10 text-amber-700 border-amber-300' },
                                                         upgrade_deduction:  { label: 'Plan Upgrade',   icon: <Zap className="w-2.5 h-2.5" />,              cls: 'bg-indigo-500/10 text-indigo-700 border-indigo-300' },
+                                                        trial_refund:       { label: 'Trial Refund',   icon: <RotateCcw className="w-2.5 h-2.5" />,         cls: 'bg-blue-500/10 text-blue-700 border-blue-300' },
                                                     };
                                                     const meta = typeLabel[p.payment_type] ?? { label: p.payment_type?.replace(/_/g, ' '), icon: <Clock className="w-2.5 h-2.5" />, cls: 'bg-slate-100 text-slate-700 border-slate-300' };
                                                     return (
