@@ -520,7 +520,9 @@ export default function SaasReportsPage() {
                 <Card className="border-none shadow-lg shadow-indigo-500/5 bg-card overflow-hidden">
                     <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-400" />
                     <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Current Month Revenue</CardTitle>
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            {new Date().toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })} Revenue
+                        </CardTitle>
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl shrink-0">
                             <Calendar className="h-4 w-4" />
                         </div>
@@ -541,7 +543,7 @@ export default function SaasReportsPage() {
                                     {summary.mom_growth_percent}% MoM
                                 </span>
                             )}
-                            <span className="text-muted-foreground font-normal">vs previous month</span>
+                            <span className="text-muted-foreground font-normal">vs {new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}</span>
                         </div>
                     </CardContent>
                 </Card>
