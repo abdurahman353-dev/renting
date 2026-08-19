@@ -79,11 +79,27 @@ export default function ActivityLogsPage() {
                 setCurrentPage(response.current_page);
                 setLastPage(response.last_page);
                 setTotalItems(response.total);
+
+                // Extract unique action types from logs
+                const uniqueActions = Array.from(
+                    new Set(
+                        response.data
+                            .map((log: any) => log?.action)
+                            .filter((action: any) => Boolean(action && typeof action === 'string' && action.trim()))
+                    )
+                ) as string[];
+                setActions(uniqueActions.sort());
             }
 
             const allAdmins = allAdminsResponse?.data || allAdminsResponse || [];
             if (Array.isArray(allAdmins)) {
-                const registeredAdminNames = allAdmins.map((admin: any) => admin.name);
+                const registeredAdminNames = Array.from(
+                    new Set(
+                        allAdmins
+                            .map((admin: any) => admin?.name)
+                            .filter((name: any) => Boolean(name && typeof name === 'string' && name.trim()))
+                    )
+                ) as string[];
                 setAdmins(registeredAdminNames.sort());
             }
         } catch (error) {
@@ -181,8 +197,8 @@ export default function ActivityLogsPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Admins</SelectItem>
-                            {admins.map(admin => (
-                                <SelectItem key={admin} value={admin}>{admin}</SelectItem>
+                            {admins.map((admin, index) => (
+                                <SelectItem key={`admin-${index}-${admin}`} value={admin}>{admin}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -193,8 +209,8 @@ export default function ActivityLogsPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Actions</SelectItem>
-                            {actions.map(action => (
-                                <SelectItem key={action} value={action}>{action}</SelectItem>
+                            {actions.map((action, index) => (
+                                <SelectItem key={`action-${index}-${action}`} value={action}>{action}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
