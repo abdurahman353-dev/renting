@@ -367,9 +367,44 @@ export default function BillingPage() {
                             </TableHeader>
                             <TableBody>
                                 {payments.map((p) => {
-                                    const amount = Number(p.amount_paid);
-                                    const isDeduction = amount < 0;
-                                    const isAdjustment = p.payment_type === 'manual_adjustment';
+                                    const amount       = Number(p.amount_paid);
+                                    const isNegative   = amount < 0;
+                                    const type         = p.payment_type;
+
+                                    // Resolve a human-readable label and colour for each payment_type
+                                    const typeConfig: Record<string, { label: string; cls: string; Icon: typeof ArrowUpCircle }> = {
+                                        topup: {
+                                            label: 'Wallet Top-Up',
+                                            cls:   'bg-emerald-500/10 text-emerald-700 border-emerald-300 dark:text-emerald-400 dark:border-emerald-800',
+                                            Icon:  ArrowUpCircle,
+                                        },
+                                        monthly_deduction: {
+                                            label: 'Plan Fee Deducted',
+                                            cls:   'bg-indigo-500/10 text-indigo-700 border-indigo-300 dark:text-indigo-400 dark:border-indigo-800',
+                                            Icon:  ArrowDownCircle,
+                                        },
+                                        manual_adjustment: {
+                                            label: isNegative ? 'Admin Adjustment (Deduct)' : 'Admin Adjustment (Credit)',
+                                            cls:   isNegative
+                                                ? 'bg-red-500/10 text-red-600 border-red-300 dark:text-red-400 dark:border-red-800'
+                                                : 'bg-sky-500/10 text-sky-700 border-sky-300 dark:text-sky-400 dark:border-sky-800',
+                                            Icon:  isNegative ? ArrowDownCircle : ArrowUpCircle,
+                                        },
+                                        wallet_correction: {
+                                            label: isNegative ? 'Wallet Correction (Deduct)' : 'Wallet Correction (Credit)',
+                                            cls:   isNegative
+                                                ? 'bg-rose-500/10 text-rose-700 border-rose-300 dark:text-rose-400 dark:border-rose-800'
+                                                : 'bg-teal-500/10 text-teal-700 border-teal-300 dark:text-teal-400 dark:border-teal-800',
+                                            Icon:  isNegative ? ArrowDownCircle : ArrowUpCircle,
+                                        },
+                                    };
+                                    const cfg = typeConfig[type] ?? {
+                                        label: isNegative ? 'Deduction' : 'Credit',
+                                        cls:   isNegative
+                                            ? 'bg-red-500/10 text-red-600 border-red-300'
+                                            : 'bg-emerald-500/10 text-emerald-600 border-emerald-300',
+                                        Icon: isNegative ? ArrowDownCircle : ArrowUpCircle,
+                                    };
 
                                     return (
                                         <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
@@ -377,18 +412,13 @@ export default function BillingPage() {
                                                 {new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </TableCell>
                                             <TableCell>
-                                                {isDeduction ? (
-                                                    <Badge className="bg-red-500/10 text-red-600 border-red-300 text-xs font-bold gap-1">
-                                                        <ArrowDownCircle className="w-3 h-3" /> {isAdjustment ? 'Adjustment (Deduct)' : 'Deduction'}
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-300 text-xs font-bold gap-1">
-                                                        <ArrowUpCircle className="w-3 h-3" /> {isAdjustment ? 'Adjustment (Add)' : 'Top-Up'}
-                                                    </Badge>
-                                                )}
+                                                <Badge className={`text-xs font-bold gap-1 border ${cfg.cls}`}>
+                                                    <cfg.Icon className="w-3 h-3" />
+                                                    {cfg.label}
+                                                </Badge>
                                             </TableCell>
-                                            <TableCell className={`font-black text-sm ${isDeduction ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                {isDeduction ? '−' : '+'}KES {Math.abs(amount).toLocaleString()}
+                                            <TableCell className={`font-black text-sm ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                {isNegative ? '−' : '+'}KES {Math.abs(amount).toLocaleString()}
                                             </TableCell>
                                             <TableCell className="text-sm font-mono text-muted-foreground">{p.mpesa_reference ?? '—'}</TableCell>
                                             <TableCell className="text-sm font-semibold text-muted-foreground">KES {Number(p.wallet_before).toLocaleString()}</TableCell>
