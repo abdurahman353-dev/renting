@@ -100,37 +100,59 @@ function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () 
                         </div>
                     </div>
 
-                    {/* Payment Instructions */}
-                    <div className="mb-6">
-                        <h2 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-                            <CreditCard className="w-4 h-4 text-indigo-400" />
-                            Pay via M-Pesa
+                    {/* Standout Payment Instruction Callout */}
+                    <div className="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-indigo-950/60 border-2 border-emerald-500/50 rounded-2xl p-4 mb-5 shadow-lg shadow-emerald-500/10">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-emerald-500 text-white rounded-xl shrink-0 mt-0.5 shadow">
+                                <MessageCircle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-white font-bold text-sm leading-snug">
+                                    Send your monthly plan payment via M-Pesa to any of the numbers below. After paying, WhatsApp us your confirmation screenshot and we'll unlock your account <span className="text-emerald-400 underline underline-offset-2">within minutes</span>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Numbers */}
+                    <div className="mb-5">
+                        <h2 className="text-white font-bold text-xs uppercase tracking-wider mb-2.5 flex items-center gap-2 text-slate-300">
+                            <CreditCard className="w-4 h-4 text-emerald-400" />
+                            Official M-Pesa Payment Numbers
                         </h2>
                         <div className="space-y-2">
                             {[
-                                { label: 'M-Pesa Number 1', number: '0745 621 159' },
-                                { label: 'M-Pesa Number 2', number: '0754 973 757' },
+                                { label: 'M-Pesa Number 1 (Safaricom)', number: '0745 621 159' },
+                                { label: 'M-Pesa Number 2 (Safaricom)', number: '0754 973 757' },
                             ].map(({ label, number }) => (
                                 <div
                                     key={number}
-                                    className="flex items-center gap-3 bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3"
+                                    className="flex items-center justify-between bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 hover:border-emerald-500/40 transition-colors"
                                 >
-                                    <Phone className="w-4 h-4 text-indigo-400 shrink-0" />
-                                    <div>
-                                        <p className="text-slate-400 text-xs">{label}</p>
-                                        <p className="text-white font-bold text-lg tracking-widest">{number}</p>
+                                    <div className="flex items-center gap-3">
+                                        <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                                        <div>
+                                            <p className="text-slate-400 text-[11px] font-semibold">{label}</p>
+                                            <p className="text-white font-black text-lg tracking-widest font-mono">{number}</p>
+                                        </div>
                                     </div>
+                                    <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-md">
+                                        Active
+                                    </span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Step instructions */}
-                    <div className="bg-indigo-950/40 border border-indigo-800/40 rounded-xl p-4 mb-6 text-sm text-slate-300 space-y-1">
-                        <p className="font-bold text-indigo-300 mb-2">After paying:</p>
-                        <p>1. Take a screenshot of your M-Pesa confirmation message.</p>
-                        <p>2. WhatsApp us the screenshot at <span className="text-white font-bold">0745 621 159</span>.</p>
-                        <p>3. Your account will be unlocked within minutes.</p>
+                    <div className="bg-slate-900/60 border border-indigo-500/30 rounded-xl p-3.5 mb-5 text-xs text-slate-300 space-y-1.5">
+                        <p className="font-bold text-indigo-300 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Quick 3-Step Verification:
+                        </p>
+                        <p className="text-slate-300">1. Send payment via M-Pesa to any number above.</p>
+                        <p className="text-slate-300">2. Take a screenshot of the M-Pesa confirmation SMS.</p>
+                        <p className="text-slate-300">3. WhatsApp screenshot to <span className="text-white font-bold">0745 621 159</span> for immediate unlock.</p>
                     </div>
 
                     {/* WhatsApp Button */}
@@ -138,9 +160,9 @@ function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () 
                         href={`https://wa.me/254745621159?text=${whatsappMessage}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 transition-all duration-200 mb-3"
+                        className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl py-3.5 transition-all duration-200 mb-3 shadow-lg shadow-emerald-600/30 text-sm"
                     >
-                        <MessageCircle className="w-5 h-5" />
+                        <MessageCircle className="w-5 h-5 fill-white text-emerald-600" />
                         WhatsApp Us Now — 0745 621 159
                     </a>
 
