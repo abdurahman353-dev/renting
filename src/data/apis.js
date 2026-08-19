@@ -746,6 +746,11 @@ export const saasAPI = {
         const response = await apiClient.get('/super-admin/saas/reports', { params });
         return response.data;
     },
+
+    getSaasMonthAudit: async (params = {}) => {
+        const response = await apiClient.get('/super-admin/saas/reports/month-audit', { params });
+        return response.data;
+    },
 };
 
 // ============================================================================
