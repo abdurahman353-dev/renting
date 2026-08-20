@@ -554,7 +554,9 @@ function TenantsContent() {
             include_deposit_1: !!(lease?.deposit_amount && Number(lease.deposit_amount) > 0),
             include_deposit_2: !!(lease?.deposit_2_amount && Number(lease.deposit_2_amount) > 0),
             overpaid_amount: overpayment ? overpayment.amount.toString() : "",
-            include_rent: hasRentInvoice // Set based on actual invoice existence
+            include_rent: (lease?.initial_month_included !== undefined && lease?.initial_month_included !== null)
+                ? Boolean(lease.initial_month_included)
+                : hasRentInvoice
         });
         setIsEditing(true);
         setEditingTenantId(tenant.id);
