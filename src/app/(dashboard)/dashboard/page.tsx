@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2, Activity, Shield, AlertTriangle, Info } from "lucide-react";
+import { DollarSign, Users, Home, AlertCircle, TrendingUp, Building2, Activity, Shield, AlertTriangle, Info, Wallet } from "lucide-react";
 import { dashboardAPI } from "@/data/apis";
 import {
   AreaChart,
@@ -358,8 +358,9 @@ export default function DashboardPage() {
                     if (severity === 'Critical') return { icon: AlertTriangle, color: 'red' };
                     if (severity === 'Warning') return { icon: AlertCircle, color: 'amber' };
                     if (title?.includes('Login') || title?.includes('Logout')) return { icon: Shield, color: 'blue' };
-                    if (title?.includes('Payment')) return { icon: DollarSign, color: 'emerald' };
-                    if (title?.includes('Admin') || title?.includes('Create') || title?.includes('Update')) return { icon: Users, color: 'violet' };
+                    if (title?.includes('Overpayment')) return { icon: Wallet, color: 'violet' };
+                    if (title?.includes('Payment') || title?.includes('Deposit') || title?.includes('Arrears') || title?.includes('Fee') || title?.includes('Utility')) return { icon: DollarSign, color: 'emerald' };
+                    if (title?.includes('Admin') || title?.includes('Create') || title?.includes('Update') || title?.includes('Register')) return { icon: Users, color: 'blue' };
                     return { icon: Activity, color: 'slate' };
                   };
 

@@ -6,9 +6,32 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Check, ChevronsUpDown, Loader2, DollarSign, CreditCard, User, Building2, Ticket, X, CheckSquare, Square, Trash2 } from "lucide-react";
+import {
+    Check,
+    ChevronsUpDown,
+    Loader2,
+    CreditCard,
+    User,
+    Building2,
+    Home,
+    X,
+    ArrowLeft,
+    Receipt,
+    History,
+    Calendar,
+    Smartphone,
+    Building,
+    Coins,
+    RotateCcw,
+    CheckCircle2,
+    AlertTriangle,
+    Wallet,
+    Search,
+    ArrowRight,
+    BadgePercent,
+} from "lucide-react";
 
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
     Command,
@@ -39,9 +62,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { tenantAPI, financeAPI, superAdminAPI, authAPI } from "@/data/apis";
 import { toast } from "sonner";
 import MpesaPaymentModal from "@/components/MpesaPaymentModal";
@@ -78,6 +100,8 @@ interface Invoice {
     description: string;
     month: number;
     year: number;
+    due_date?: string;
+    created_at?: string;
     month_year?: string;
     tenant?: { name: string };
     unit_number?: string;
@@ -96,29 +120,28 @@ export default function CashierPage() {
     const [submitting, setSubmitting] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
 
-    // Invoice-specific state
+    // Invoices state
     const [targetInvoice, setTargetInvoice] = useState<Invoice | null>(null);
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
     const [selectedInvoices, setSelectedInvoices] = useState<number[]>([]);
     const [loadingInvoice, setLoadingInvoice] = useState(false);
     const [isMpesaModalOpen, setIsMpesaModalOpen] = useState(false);
-    const [reversingId, setReversingId] = useState<number | null>(null);
     const [currentUser, setCurrentUser] = useState<any>(null);
 
     useEffect(() => {
         setCurrentUser(authAPI.getUser());
     }, []);
 
-    const isSuperAdmin = currentUser?.role === 'super_admin';
-
     const form = useForm<z.infer<typeof paymentSchema>>({
         resolver: zodResolver(paymentSchema),
         defaultValues: {
             amount: "",
-            method: "Cash",
+            method: "M-Pesa",
             reference: "",
         },
     });
+
+    const watchedAmount = form.watch("amount");
 
     // Fetch invoice if invoice_id is in URL
     useEffect(() => {
@@ -133,7 +156,6 @@ export default function CashierPage() {
             const invoice = await financeAPI.getInvoice(invoiceId);
             setTargetInvoice(invoice);
 
-            // Auto-select tenant
             const res = await tenantAPI.getAll();
             const tenantsData = Array.isArray(res) ? res : (res.data || []);
             setTenants(tenantsData);
@@ -142,7 +164,6 @@ export default function CashierPage() {
                 setSelectedTenant(tenant);
                 setSelectedInvoices([invoice.id]);
 
-                // Prefill amount with invoice balance
                 const balance = invoice.amount - invoice.paid_amount;
                 form.setValue("amount", balance.toString());
             }
@@ -174,7 +195,7 @@ export default function CashierPage() {
         }
     }, [invoiceIdParam]);
 
-    // Fetch pending invoices when tenant is selected
+    // Fetch pending invoices & payments when tenant is selected
     useEffect(() => {
         if (selectedTenant) {
             fetchPendingInvoices(selectedTenant.id);
@@ -186,41 +207,23 @@ export default function CashierPage() {
         }
     }, [selectedTenant]);
 
-    // const fetchPendingInvoices = async (tenantId: number) => {
-    //     try {
-    //         const invoices = await financeAPI.getInvoices({ tenant_id: tenantId });
-    //         const pending = invoices.filter((inv: Invoice) =>
-    //             inv.status === 'PENDING' || inv.status === 'PARTIAL'
-    //         );
-    //         setPendingInvoices(pending);
-    //     } catch (error) {
-    //         console.error("Failed to fetch invoices", error);
-    //     }
-    // };
-
     const fetchPendingInvoices = async (tenantId: number) => {
         try {
-            const res = await financeAPI.getInvoices({
-                tenant_id: tenantId,
-            });
-
+            const res = await financeAPI.getInvoices({ tenant_id: tenantId });
             const invoices = Array.isArray(res) ? res : (res.data || []);
-
             const pending = invoices.filter(
                 (inv: Invoice) => inv.status === "PENDING" || inv.status === "PARTIAL"
             );
-
             setPendingInvoices(pending);
         } catch (error) {
             console.error("Failed to fetch invoices", error);
         }
     };
 
-
     const fetchPaymentHistory = async (tenantId: number) => {
         try {
             const history = await tenantAPI.getPaymentHistory(tenantId);
-            setPaymentHistory(history);
+            setPaymentHistory(Array.isArray(history) ? history : (history?.data || []));
         } catch (error) {
             console.error("Failed to fetch history", error);
         }
@@ -229,7 +232,11 @@ export default function CashierPage() {
     const onTenantSelect = (tenant: Tenant) => {
         setSelectedTenant(tenant);
         setOpen(false);
-        form.reset();
+        form.reset({
+            amount: "",
+            method: "M-Pesa",
+            reference: ""
+        });
         setSelectedInvoices([]);
     };
 
@@ -252,18 +259,24 @@ export default function CashierPage() {
     // Update form amount when selection changes
     useEffect(() => {
         const total = calculateSelectedTotal();
-        form.setValue("amount", total.toString());
+        if (total > 0) {
+            form.setValue("amount", total.toString());
+        }
     }, [selectedInvoices, pendingInvoices]);
 
-    const handlePayAllInvoices = () => {
-        const allInvoiceIds = pendingInvoices.map(inv => inv.id);
-        setSelectedInvoices(allInvoiceIds);
+    const handleSelectAllInvoices = () => {
+        if (selectedInvoices.length === pendingInvoices.length) {
+            setSelectedInvoices([]);
+        } else {
+            setSelectedInvoices(pendingInvoices.map(inv => inv.id));
+        }
     };
 
     const onSubmit = async (values: z.infer<typeof paymentSchema>) => {
         if (!selectedTenant) return;
-        if (values.amount === "" || parseFloat(values.amount) <= 0) {
-            toast.error("Please enter a valid amount");
+        const amountNum = parseFloat(values.amount);
+        if (isNaN(amountNum) || amountNum <= 0) {
+            toast.error("Please enter a valid payment amount");
             return;
         }
 
@@ -271,14 +284,13 @@ export default function CashierPage() {
         try {
             const payload = {
                 tenant_id: selectedTenant.id,
-                amount: parseFloat(values.amount),
+                amount: amountNum,
                 method: values.method,
                 reference: values.reference,
-                invoice_ids: selectedInvoices, // Pass selected invoice IDs
+                invoice_ids: selectedInvoices,
             };
 
             await financeAPI.recordPayment(payload);
-
             toast.success("Payment recorded successfully");
 
             // Refresh data
@@ -291,25 +303,19 @@ export default function CashierPage() {
                 setSelectedTenant(updatedSelectedTenant);
             }
 
-            // Refresh invoices
             await fetchPendingInvoices(selectedTenant.id);
+            await fetchPaymentHistory(selectedTenant.id);
 
             form.reset({
                 amount: "",
-                method: "Cash",
+                method: "M-Pesa",
                 reference: ""
             });
             setSelectedInvoices([]);
 
-            // If came from specific invoice, redirect back to finance page
             if (invoiceIdParam) {
-                toast.success("Redirecting to finance page...");
-                setTimeout(() => router.push("/finance"), 1500);
+                setTimeout(() => router.push("/finance"), 1000);
             }
-
-            toast.success("Redirecting to finance page...");
-            setTimeout(() => router.push("/finance"), 1500);
-
         } catch (error: any) {
             console.error("Payment failed", error);
             const msg = error.response?.data?.message || "Payment processing failed";
@@ -319,194 +325,228 @@ export default function CashierPage() {
         }
     };
 
-    const handleReversePayment = async (paymentId: number) => {
-        if (!window.confirm("Are you sure you want to reverse this payment? This will restore the tenant's balance and reopen the invoices. This action cannot be undone.")) {
-            return;
+    // Helper for Type Badges
+    const renderTypeBadge = (typeRaw?: string) => {
+        const type = (typeRaw || 'Rent').toLowerCase().trim();
+
+        if (type.includes('opening')) {
+            return (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 font-semibold text-xs">
+                    Opening Balance
+                </Badge>
+            );
         }
 
-        setReversingId(paymentId);
-        try {
-            await superAdminAPI.deletePayment(paymentId);
-            toast.success("Payment reversed successfully");
-
-            // Refresh data
-            if (selectedTenant) {
-                fetchPendingInvoices(selectedTenant.id);
-                fetchPaymentHistory(selectedTenant.id);
-
-                // Refresh tenants to get updated balance
-                tenantAPI.getAll().then(res => {
-                    const data = Array.isArray(res) ? res : (res.data || []);
-                    setTenants(data);
-                    const updated = data.find((t: any) => t.id === selectedTenant.id);
-                    if (updated) setSelectedTenant(updated);
-                });
-            }
-        } catch (error: any) {
-            console.error("Failed to reverse payment", error);
-            toast.error(error.response?.data?.message || "Failed to reverse payment");
-        } finally {
-            setReversingId(null);
+        if (type.includes('agr') || type.includes('agreement')) {
+            return (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800 font-semibold text-xs">
+                    Agreement
+                </Badge>
+            );
         }
+
+        if (type.includes('deposit')) {
+            return (
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 font-semibold text-xs">
+                    Deposit
+                </Badge>
+            );
+        }
+
+        if (type.includes('maint') || type.includes('repair')) {
+            return (
+                <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 font-semibold text-xs">
+                    Repair / Maintenance
+                </Badge>
+            );
+        }
+
+        // Default to Rent (Blue)
+        return (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-semibold text-xs">
+                Rent
+            </Badge>
+        );
     };
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
+    // Helper for Method Badges
+    const renderMethodBadge = (methodRaw?: string) => {
+        const method = (methodRaw || 'Cash').toLowerCase().trim();
+
+        if (method.includes('mpesa') || method.includes('m-pesa')) {
+            return (
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 font-semibold text-xs inline-flex items-center gap-1">
+                    <Smartphone className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>M-Pesa</span>
+                </Badge>
+            );
+        }
+
+        if (method.includes('credit') || method.includes('overpayment') || method.includes('auto') || method.includes('wallet')) {
+            return (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800 font-semibold text-xs inline-flex items-center gap-1">
+                    <RotateCcw className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                    <span>{methodRaw || 'Credit Balance'}</span>
+                </Badge>
+            );
+        }
+
+        if (method.includes('bank') || method.includes('transfer') || method.includes('cheque') || method.includes('check')) {
+            return (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 font-semibold text-xs inline-flex items-center gap-1">
+                    <Building className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                    <span>{methodRaw || 'Bank Transfer'}</span>
+                </Badge>
+            );
+        }
+
+        if (method.includes('cash')) {
+            return (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 font-semibold text-xs inline-flex items-center gap-1">
+                    <Coins className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                    <span>Cash</span>
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge variant="outline" className="bg-muted text-muted-foreground border-border font-semibold text-xs">
+                {methodRaw || 'Payment'}
+            </Badge>
+        );
     };
 
     if (loadingInvoice) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center space-y-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <p className="text-sm text-muted-foreground font-medium">Loading cashier workspace...</p>
+                </div>
             </div>
         );
     }
 
+    const tenantBalance = selectedTenant ? Number(selectedTenant.balance || 0) : 0;
+    const paymentAmountNum = parseFloat(watchedAmount) || 0;
+    const selectedInvoicesTotal = calculateSelectedTotal();
+
     return (
-        <div className="p-8 space-y-8 min-h-screen bg-slate-50 dark:bg-[#0F1115] transition-colors duration-300">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-[#FFFFFF]">Cashier</h2>
-                    <p className="text-slate-700 dark:text-[#9CA3AF] text-lg font-medium">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-muted/30 min-h-screen transition-colors duration-300 text-foreground">
+            {/* Header & Navigation */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push("/finance")}
+                            className="text-muted-foreground hover:text-foreground p-0 h-auto gap-1 text-xs font-semibold"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>Back to Finance</span>
+                        </Button>
+                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Cashier Workspace</h1>
+                    <p className="text-sm text-muted-foreground">
                         {targetInvoice
-                            ? `Processing payment for Invoice #${targetInvoice.invoice_number}`
-                            : "Process rent payments and view tenant balances."}
+                            ? `Recording payment for Invoice #${targetInvoice.invoice_number}`
+                            : "Record rent payments, issue receipts, and allocate funds to tenant invoices."}
                     </p>
                 </div>
+
                 {invoiceIdParam && (
                     <Button
-                        variant="ghost"
-                        className="text-slate-500 dark:text-[#9CA3AF] hover:bg-slate-100 dark:hover:bg-[#1E2430] rounded-xl"
+                        variant="outline"
+                        size="sm"
+                        className="border-border text-foreground hover:bg-muted font-medium"
                         onClick={() => router.push("/finance")}
                     >
-                        <X className="h-4 w-4 mr-2" />
+                        <X className="h-4 w-4 mr-1.5" />
                         Cancel
                     </Button>
                 )}
             </div>
 
-            {/* Target Invoice Card (Show if targetInvoice exists OR if tenant is selected and has pending invoices) */}
-            {(targetInvoice || (selectedTenant && pendingInvoices.length > 0)) && (
-                <Card className="border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-2xl">
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
-                            <Ticket className="w-5 h-5 text-[#6366F1]" />
-                            Invoice Details
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                        {(() => {
-                            // Determine which invoice to display
-                            // Priority: targetInvoice -> First Selected Invoice -> First Pending Invoice
-                            const displayInvoice = targetInvoice
-                                || pendingInvoices.find(inv => selectedInvoices.includes(inv.id))
-                                || pendingInvoices[0];
-
-                            if (!displayInvoice) return null;
-
-                            const invoiceBalance = displayInvoice.amount - displayInvoice.paid_amount;
-                            // Calculate Arrears: Total Tenant Balance - Current Invoice Balance
-                            // Tenant Balance is negative for debt. We take absolute value to represent debt magnitude.
-                            const currentTenant = selectedTenant || tenants.find(t => t.id === displayInvoice.tenant_id);
-                            const totalDebt = currentTenant ? Math.abs(currentTenant.balance) : 0;
-                            const arrears = Math.max(0, totalDebt - invoiceBalance);
-
-                            return (
-                                <>
-                                    <div>
-                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Invoice Number</p>
-                                        <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">{displayInvoice.invoice_number}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Type</p>
-                                        <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{displayInvoice.type}</Badge>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Amount</p>
-                                        <p className="font-bold text-slate-900 dark:text-[#FFFFFF]">KES {displayInvoice.amount.toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Balance Due</p>
-                                        <p className="font-black text-rose-500">
-                                            KES {invoiceBalance.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-slate-700 dark:text-[#9CA3AF]">Previous Balance</p>
-                                        <p className="font-black text-orange-500">
-                                            KES {arrears.toLocaleString()}
-                                        </p>
-                                    </div>
-                                </>
-                            );
-                        })()}
-                    </CardContent>
-                </Card>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* LEFT COLUMN: Tenant Selection & Payment Form */}
+            {/* Main Content Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* LEFT COLUMN: Tenant Search & Payment Entry */}
                 <div className="lg:col-span-2 space-y-6">
-
-                    {/* 1. Tenant Selector */}
+                    {/* Tenant Selector Card */}
                     {!targetInvoice && (
-                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] overflow-hidden transition-all duration-300">
-                            <CardHeader className="bg-white dark:bg-[#161B22] border-b border-slate-100 dark:border-[#2A3242] pb-4">
-                                <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
-                                    <User className="w-5 h-5 text-primary" />
+                        <Card className="bg-card border-border shadow-sm rounded-xl">
+                            <CardHeader className="bg-muted/40 border-b border-border py-4 px-6">
+                                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center">
+                                        <User className="w-4 h-4" />
+                                    </div>
                                     Select Tenant
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="pt-6">
+                            <CardContent className="p-6">
                                 <Popover open={open} onOpenChange={setOpen}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
                                             role="combobox"
                                             aria-expanded={open}
-                                            className="w-full justify-between h-14 text-base bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl hover:bg-slate-50 dark:hover:bg-[#1F2633]/80 transition-all font-medium"
+                                            className="w-full justify-between h-12 text-sm bg-background border-border text-foreground rounded-lg hover:bg-muted/50 transition-all font-medium"
                                         >
-                                            {selectedTenant
-                                                ? `${selectedTenant.name} - ${selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'No Unit'}`
-                                                : "Search tenant by name..."}
+                                            <div className="flex items-center gap-2 truncate">
+                                                <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                                                {selectedTenant ? (
+                                                    <span className="font-bold text-foreground truncate">
+                                                        {selectedTenant.name} — Unit {selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'N/A'} ({selectedTenant.property?.name || selectedTenant.property_name || 'Property'})
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">Search tenant by name, unit, or phone...</span>
+                                                )}
+                                            </div>
                                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[400px] p-0 bg-white dark:bg-[#161A22] border-slate-200 dark:border-[#2A2F3A] shadow-2xl" align="start">
-                                        <Command className="dark:bg-[#161A22]">
-                                            <CommandInput placeholder="Search tenant..." className="dark:text-[#E5E7EB]" />
-                                            <CommandEmpty className="py-6 text-center text-[#9CA3AF]">No tenant found.</CommandEmpty>
-                                            <CommandGroup className="max-h-[350px] overflow-auto p-2">
+                                    <PopoverContent className="w-[420px] p-0 bg-popover border-border shadow-xl rounded-xl" align="start">
+                                        <Command className="bg-transparent">
+                                            <CommandInput placeholder="Type tenant name, unit or phone..." className="text-sm" />
+                                            <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">No tenant found.</CommandEmpty>
+                                            <CommandGroup className="max-h-[300px] overflow-auto p-1.5">
                                                 {loadingTenants ? (
-                                                    <div className="p-4 text-center text-sm text-[#9CA3AF]">
-                                                        <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-                                                        Loading...
+                                                    <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                                        Loading tenants...
                                                     </div>
                                                 ) : (
                                                     tenants.map((tenant) => (
                                                         <CommandItem
                                                             key={tenant.id}
-                                                            value={tenant.name}
+                                                            value={`${tenant.name} ${tenant.unit?.unit_number || tenant.unit_number || ''} ${tenant.phone || ''}`}
                                                             onSelect={() => onTenantSelect(tenant)}
-                                                            className="cursor-pointer py-3 px-4 rounded-lg aria-selected:bg-indigo-50 dark:aria-selected:bg-[#1E2430] group transition-colors"
+                                                            className="cursor-pointer py-2.5 px-3 rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
                                                         >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-3 h-4 w-4 text-[#6366F1]",
-                                                                    selectedTenant?.id === tenant.id ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-slate-900 dark:text-[#E5E7EB] group-aria-selected:text-[#6366F1]">{tenant.name}</span>
-                                                                <span className="text-xs text-slate-500 dark:text-[#9CA3AF]">
-                                                                    {tenant.unit?.unit_number || tenant.unit_number || 'No Unit'} • {tenant.property?.name || tenant.property_name || 'No Property'}
-                                                                </span>
+                                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                                <Check
+                                                                    className={cn(
+                                                                        "h-4 w-4 text-primary shrink-0",
+                                                                        selectedTenant?.id === tenant.id ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                <div className="truncate">
+                                                                    <p className="font-bold text-sm text-foreground truncate">{tenant.name}</p>
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        Unit {tenant.unit?.unit_number || tenant.unit_number || 'N/A'} • {tenant.property?.name || tenant.property_name || 'Property'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`text-[10px] uppercase font-bold shrink-0 ${
+                                                                    tenant.balance < 0
+                                                                        ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300'
+                                                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                                                }`}
+                                                            >
+                                                                {tenant.balance < 0 ? `Due: ${Math.abs(tenant.balance).toLocaleString()}` : 'Cleared'}
+                                                            </Badge>
                                                         </CommandItem>
                                                     ))
                                                 )}
@@ -518,110 +558,137 @@ export default function CashierPage() {
                         </Card>
                     )}
 
-                    {/* Pending Invoices Selection */}
-                    {selectedTenant && pendingInvoices.length > 0 && (
-                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
-                            <CardHeader className="bg-white dark:bg-[#161B22] border-b border-slate-100 dark:border-[#2A3242]">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
-                                        <Ticket className="w-5 h-5 text-primary" />
-                                        Pending Invoices
-                                    </CardTitle>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handlePayAllInvoices}
-                                        className="text-primary font-bold hover:bg-slate-50 dark:hover:bg-[#1F2633]"
-                                    >
-                                        Select All
-                                    </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="pt-4">
-                                <div className="space-y-3">
-                                    {pendingInvoices.map((invoice) => {
-                                        const balance = invoice.amount - invoice.paid_amount;
-                                        const isSelected = selectedInvoices.includes(invoice.id);
-
-                                        return (
-                                            <div
-                                                key={invoice.id}
-                                                className={cn(
-                                                    "flex items-center justify-between p-4 rounded-xl border transition-all duration-300 transform active:scale-[0.98]",
-                                                    isSelected
-                                                        ? "bg-blue-50/50 dark:bg-primary/10 border-primary dark:border-primary shadow-sm"
-                                                        : "bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md cursor-pointer"
-                                                )}
-                                                onClick={() => toggleInvoiceSelection(invoice.id)}
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn(
-                                                        "w-6 h-6 rounded-md border flex items-center justify-center transition-all",
-                                                        isSelected
-                                                            ? "bg-[#6366F1] border-[#6366F1]"
-                                                            : "bg-white dark:bg-transparent border-slate-300 dark:border-[#2A2F3A]"
-                                                    )}>
-                                                        {isSelected && <Check className="w-4 h-4 text-white" />}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-900 dark:text-[#E5E7EB]">{invoice.invoice_number}</p>
-                                                        <p className="text-xs text-slate-700 dark:text-[#9CA3AF] font-medium">{invoice.description}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="font-black text-primary">KES {balance.toLocaleString()}</p>
-                                                    <Badge className="bg-emerald-500/15 text-[#22C55E] border border-emerald-500/40 shadow-[0_0_15px_rgba(34,197,94,0.1)] text-[10px] font-bold">
-                                                        {invoice.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {selectedInvoices.length > 0 && (
-                                    <div className="mt-6 p-4 bg-slate-50 dark:bg-[#1B2230] rounded-xl border border-slate-200 dark:border-[#2A3242]">
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold text-slate-800 dark:text-[#9CA3AF]">Selected Total:</span>
-                                            <span className="text-xl font-black text-primary">
-                                                KES {calculateSelectedTotal().toLocaleString()}
-                                            </span>
+                    {/* Pending Invoices Card (Selectable) */}
+                    {selectedTenant && (
+                        <Card className="bg-card border-border shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="bg-muted/40 border-b border-border py-4 px-6 flex flex-row items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center">
+                                            <Receipt className="w-4 h-4" />
                                         </div>
+                                        Pending Invoices
+                                        <span className="text-xs font-semibold text-muted-foreground">({pendingInvoices.length})</span>
+                                    </CardTitle>
+                                </div>
+                                {pendingInvoices.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleSelectAllInvoices}
+                                        className="text-xs font-semibold border-border hover:bg-muted h-8"
+                                    >
+                                        {selectedInvoices.length === pendingInvoices.length ? "Deselect All" : "Select All"}
+                                    </Button>
+                                )}
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-3">
+                                {pendingInvoices.length === 0 ? (
+                                    <div className="text-center py-8 border border-dashed border-border rounded-xl">
+                                        <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
+                                        <p className="text-sm font-semibold text-foreground">No Pending Invoices</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">This tenant has cleared all invoices. You can still record an advance overpayment below.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5">
+                                        {pendingInvoices.map((invoice) => {
+                                            const balance = invoice.amount - invoice.paid_amount;
+                                            const isSelected = selectedInvoices.includes(invoice.id);
+
+                                            return (
+                                                <div
+                                                    key={invoice.id}
+                                                    className={cn(
+                                                        "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer",
+                                                        isSelected
+                                                            ? "bg-blue-50/60 dark:bg-blue-950/30 border-blue-500 ring-1 ring-blue-500 shadow-sm"
+                                                            : "bg-background border-border hover:bg-muted/40"
+                                                    )}
+                                                    onClick={() => toggleInvoiceSelection(invoice.id)}
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className={cn(
+                                                            "w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0",
+                                                            isSelected
+                                                                ? "bg-blue-600 border-blue-600 text-white"
+                                                                : "border-border bg-background"
+                                                        )}>
+                                                            {isSelected && <Check className="w-3.5 h-3.5" />}
+                                                        </div>
+                                                        <div className="space-y-0.5 min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <span className="font-mono text-xs font-bold text-foreground">
+                                                                    {invoice.invoice_number}
+                                                                </span>
+                                                                {renderTypeBadge(invoice.type)}
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {invoice.description || 'Monthly Rent Invoice'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right shrink-0 pl-3">
+                                                        <p className="font-extrabold text-sm text-foreground">
+                                                            KES {balance.toLocaleString()}
+                                                        </p>
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            Total: KES {Number(invoice.amount).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {selectedInvoices.length > 0 && (
+                                            <div className="mt-4 p-3.5 bg-muted/40 rounded-xl border border-border flex justify-between items-center">
+                                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                                    Selected Invoices Total:
+                                                </span>
+                                                <span className="text-base font-extrabold text-primary">
+                                                    KES {selectedInvoicesTotal.toLocaleString()}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* 2. Payment Form (Only visible if tenant selected) */}
+                    {/* Payment Form Card */}
                     {selectedTenant && (
-                        <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
-                            <CardHeader className="bg-indigo-50/50 dark:bg-primary/5 border-b border-indigo-100 dark:border-[#2A3242]">
-                                <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-[#F9FAFB] font-bold">
-                                    <CreditCard className="w-5 h-5 text-primary" />
-                                    Record Payment
+                        <Card className="bg-card border-border shadow-sm rounded-xl">
+                            <CardHeader className="bg-muted/40 border-b border-border py-4 px-6">
+                                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
+                                        <CreditCard className="w-4 h-4" />
+                                    </div>
+                                    Record Payment Details
                                 </CardTitle>
-                                <CardDescription className="text-indigo-600/70 dark:text-[#9CA3AF] font-medium">
-                                    Enter payment details for <strong className="text-indigo-900 dark:text-[#F9FAFB]">{selectedTenant.name}</strong>
-                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="pt-8">
+                            <CardContent className="p-6">
                                 <Form {...form}>
-                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                            {/* Amount Input */}
                                             <FormField
                                                 control={form.control}
                                                 name="amount"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Amount (KES)</FormLabel>
+                                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">
+                                                            Amount to Pay (KES)
+                                                        </FormLabel>
                                                         <FormControl>
                                                             <div className="relative">
-                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">KES</div>
+                                                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-muted-foreground">
+                                                                    KES
+                                                                </div>
                                                                 <Input
                                                                     placeholder="0.00"
-                                                                    className="pl-14 h-14 text-2xl font-black bg-slate-50 dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    className="pl-12 h-11 text-lg font-bold bg-background border-border text-foreground rounded-lg"
                                                                     type="number"
-                                                                    disabled={pendingInvoices.length > 0 && selectedInvoices.length === 0}
+                                                                    step="any"
                                                                     {...field}
                                                                 />
                                                             </div>
@@ -631,23 +698,27 @@ export default function CashierPage() {
                                                 )}
                                             />
 
+                                            {/* Payment Method Select */}
                                             <FormField
                                                 control={form.control}
                                                 name="method"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Payment Method</FormLabel>
+                                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">
+                                                            Payment Method
+                                                        </FormLabel>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                             <FormControl>
-                                                                <SelectTrigger className="h-14 bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl font-medium">
+                                                                <SelectTrigger className="h-11 bg-background border-border text-foreground rounded-lg text-sm font-medium">
                                                                     <SelectValue placeholder="Select method" />
                                                                 </SelectTrigger>
                                                             </FormControl>
-                                                            <SelectContent className="dark:bg-[#161B22] dark:border-[#2A3242]">
-                                                                <SelectItem value="Cash">Cash</SelectItem>
+                                                            <SelectContent>
                                                                 <SelectItem value="M-Pesa">M-Pesa</SelectItem>
                                                                 <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                                                <SelectItem value="Cash">Cash</SelectItem>
                                                                 <SelectItem value="Cheque">Cheque</SelectItem>
+                                                                <SelectItem value="Card">Credit / Debit Card</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
@@ -656,40 +727,55 @@ export default function CashierPage() {
                                             />
                                         </div>
 
+                                        {/* Reference Code */}
                                         <FormField
                                             control={form.control}
                                             name="reference"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="font-bold text-slate-700 dark:text-[#FFFFFF]">Reference Code (Optional)</FormLabel>
+                                                    <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">
+                                                        Reference Code / Transaction ID (Optional)
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input
-                                                            placeholder="e.g. M-Pesa Code, Receipt No."
-                                                            className="h-14 bg-white dark:bg-[#1F2633] border-slate-200 dark:border-[#2A3242] text-slate-900 dark:text-[#F9FAFB] rounded-xl font-medium"
+                                                            placeholder="e.g. M-Pesa Code (QA892X123), Bank Slip No."
+                                                            className="h-11 bg-background border-border text-foreground font-mono text-sm rounded-lg"
                                                             {...field}
                                                         />
                                                     </FormControl>
-                                                    <FormDescription className="text-slate-700 dark:text-[#9CA3AF]">
-                                                        Transaction ID or receipt number for tracking.
+                                                    <FormDescription className="text-xs text-muted-foreground">
+                                                        Attaches an audit trail reference code to this payment transaction.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
 
-                                        <div className="flex justify-end pt-4">
+                                        {/* Submit Action */}
+                                        <div className="flex items-center justify-end gap-3 pt-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => router.push("/finance")}
+                                                className="border-border text-foreground hover:bg-muted text-xs font-semibold"
+                                            >
+                                                Cancel
+                                            </Button>
                                             <Button
                                                 type="submit"
-                                                disabled={submitting}
-                                                className="bg-indigo-600 hover:bg-indigo-700"
+                                                disabled={submitting || paymentAmountNum <= 0}
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-6 h-10 shadow-sm"
                                             >
                                                 {submitting ? (
                                                     <>
-                                                        <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                                                        Processing...
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Processing Payment...
                                                     </>
                                                 ) : (
-                                                    "Record Payment"
+                                                    <>
+                                                        <CreditCard className="mr-1.5 h-4 w-4" />
+                                                        Record Payment of KES {paymentAmountNum.toLocaleString()}
+                                                    </>
                                                 )}
                                             </Button>
                                         </div>
@@ -700,120 +786,166 @@ export default function CashierPage() {
                     )}
                 </div>
 
-                {/* RIGHT COLUMN: Tenant Overview & History */}
+                {/* RIGHT COLUMN: Tenant Snapshot & Payment History */}
                 <div className="space-y-6">
                     {selectedTenant ? (
                         <>
-                            {/* Tenant Snapshot */}
-                            <Card className="bg-[#161A22] dark:bg-[#161A22] text-white border border-slate-200 dark:border-[#2A2F3A] shadow-xl rounded-[18px] overflow-hidden relative">
-                                <div className="absolute top-0 right-0 p-4 opacity-5">
-                                    <Building2 className="w-32 h-32 text-white" />
-                                </div>
-                                <div className="h-1 bg-[#6366F1]"></div>
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-14 w-14 rounded-2xl bg-[#6366F1] flex items-center justify-center font-black text-xl shadow-lg">
-                                            {getInitials(selectedTenant.name)}
+                            {/* Tenant Profile Snapshot Card */}
+                            <Card className="bg-card border-border shadow-sm rounded-xl">
+                                <CardHeader className="bg-muted/40 border-b border-border py-4 px-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center font-bold text-base shrink-0">
+                                            <User className="w-5 h-5" />
                                         </div>
-                                        <div>
-                                            <CardTitle className="text-xl font-black">{selectedTenant.name}</CardTitle>
-                                            <p className="text-[#9CA3AF] text-sm font-medium">{selectedTenant.email || selectedTenant.phone}</p>
+                                        <div className="min-w-0">
+                                            <CardTitle className="text-base font-bold text-foreground truncate">
+                                                {selectedTenant.name}
+                                            </CardTitle>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {selectedTenant.email || selectedTenant.phone || 'No contact email'}
+                                            </p>
                                         </div>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="mt-6">
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div className="p-4 bg-[#1B2230] rounded-2xl border border-[#2A3242]">
-                                            <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Current Balance</p>
-                                            <div className="flex items-baseline gap-2 mt-1">
-                                                <p className={cn(
-                                                    "text-3xl font-black",
-                                                    selectedTenant.balance < 0 ? "text-rose-500" : "text-[#22C55E]"
+                                <CardContent className="p-6 space-y-4">
+                                    {/* Current Balance Box */}
+                                    <div className={cn(
+                                        "p-4 rounded-xl border transition-all",
+                                        tenantBalance < 0
+                                            ? "bg-red-50/70 border-red-200 dark:bg-red-950/30 dark:border-red-900/50"
+                                            : tenantBalance > 0
+                                            ? "bg-emerald-50/70 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900/50"
+                                            : "bg-muted/40 border-border"
+                                    )}>
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Current Balance</span>
+                                                <div className="text-xs text-muted-foreground mt-0.5">
+                                                    {tenantBalance < 0 ? 'Total outstanding arrears' : tenantBalance > 0 ? 'Advance credit balance' : 'Account is cleared'}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={cn(
+                                                    "text-2xl font-black",
+                                                    tenantBalance < 0 ? "text-red-600 dark:text-red-400" : tenantBalance > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
                                                 )}>
-                                                    KES {Math.abs(selectedTenant.balance).toLocaleString()}
-                                                </p>
-                                                <span className="text-xs font-bold text-[#9CA3AF]">
-                                                    {selectedTenant.balance < 0 ? "Due" : "Credit"}
+                                                    KES {Math.abs(tenantBalance).toLocaleString()}
+                                                </div>
+                                                <Badge
+                                                    className={cn(
+                                                        "text-[10px] uppercase font-bold px-2 py-0.5 border",
+                                                        tenantBalance < 0
+                                                            ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300"
+                                                            : tenantBalance > 0
+                                                            ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300"
+                                                            : "bg-muted text-muted-foreground border-border"
+                                                    )}
+                                                >
+                                                    {tenantBalance < 0 ? "Due" : tenantBalance > 0 ? "Credit" : "Cleared"}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Property & Unit Chips */}
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <div className="p-3 bg-muted/30 border border-border/70 rounded-lg">
+                                            <span className="text-[10px] font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                                <Home className="w-3 h-3 text-indigo-500" />
+                                                Unit
+                                            </span>
+                                            <p className="font-bold text-sm text-foreground mt-0.5">
+                                                Unit {selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 bg-muted/30 border border-border/70 rounded-lg">
+                                            <span className="text-[10px] font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                                <Building2 className="w-3 h-3 text-blue-500" />
+                                                Property
+                                            </span>
+                                            <p className="font-bold text-sm text-foreground mt-0.5 truncate">
+                                                {selectedTenant.property?.name || selectedTenant.property_name || 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Live Payment Impact Calculator */}
+                                    {paymentAmountNum > 0 && (
+                                        <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs space-y-2">
+                                            <p className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+                                                <BadgePercent className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                Estimated Balance After Payment
+                                            </p>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-muted-foreground">New Balance:</span>
+                                                <span className="font-bold text-foreground">
+                                                    KES {Math.max(0, Math.abs(tenantBalance) - paymentAmountNum).toLocaleString()} {tenantBalance + paymentAmountNum >= 0 ? '(Cleared/Credit)' : '(Remaining Due)'}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 bg-[#1B2230]/40 rounded-2xl border border-[#2A3242]/50">
-                                                <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Unit</p>
-                                                <p className="text-lg font-black mt-1 text-white">
-                                                    {selectedTenant.unit?.unit_number || selectedTenant.unit_number || 'N/A'}
-                                                </p>
-                                            </div>
-                                            <div className="p-4 bg-[#1B2230]/40 rounded-2xl border border-[#2A3242]/50">
-                                                <p className="text-[#9CA3AF] text-[10px] uppercase font-black tracking-[0.1em]">Property</p>
-                                                <p className="text-sm font-bold mt-1 text-white line-clamp-1">
-                                                    {selectedTenant.property?.name || selectedTenant.property_name || 'N/A'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </CardContent>
                             </Card>
 
-                            {/* Recent Transactions */}
-                            <Card className="bg-white dark:bg-[#161B22] border border-slate-200 dark:border-[#2A3242] shadow-sm dark:shadow-[0_12px_28px_rgba(0,0,0,0.6)] h-full max-h-[600px] flex flex-col overflow-hidden transition-all duration-300">
-                                <CardHeader className="pb-4 border-b border-slate-100 dark:border-[#2A3242]">
-                                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-[#FFFFFF] flex items-center gap-2">
-                                        <Ticket className="w-5 h-5 text-primary" />
-                                        Recent Transactions
+                            {/* Recent Payment History */}
+                            <Card className="bg-card border-border shadow-sm rounded-xl overflow-hidden">
+                                <CardHeader className="bg-muted/40 border-b border-border py-4 px-6">
+                                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                                        <History className="w-4 h-4 text-primary" />
+                                        Recent Payments
                                     </CardTitle>
                                 </CardHeader>
-                                <div className="flex-1 overflow-auto">
+                                <CardContent className="p-0 max-h-[320px] overflow-y-auto">
                                     {paymentHistory.length === 0 ? (
-                                        <div className="p-10 text-center text-[#9CA3AF] flex flex-col items-center">
-                                            <div className="h-16 w-16 rounded-3xl bg-slate-50 dark:bg-[#1E2430] flex items-center justify-center mb-4">
-                                                <CreditCard className="w-8 h-8 text-slate-300 dark:text-[#2A2F3A]" />
-                                            </div>
-                                            <p className="font-medium">No payment history found</p>
+                                        <div className="text-center py-8 text-xs text-muted-foreground italic">
+                                            No recent payments found for this tenant.
                                         </div>
                                     ) : (
-                                        <div className="divide-y divide-slate-50 dark:divide-[#2A2F3A]">
-                                            {paymentHistory.map((payment: any) => (
-                                                <div key={payment.id} className="p-5 hover:bg-slate-50 dark:hover:bg-[#1F2633] transition-colors flex justify-between items-center group border-b border-slate-50 dark:border-[#2A3242]">
-                                                    <div>
-                                                        <p className="font-black text-slate-900 dark:text-[#FFFFFF]">KES {Number(payment.amount).toLocaleString()}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
-                                                                {payment.method}
-                                                            </Badge>
-                                                            <span className="text-xs text-slate-700 dark:text-[#9CA3AF] font-medium">
-                                                                {format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}
-                                                            </span>
+                                        <div className="divide-y divide-border/60">
+                                            {paymentHistory.slice(0, 5).map((payment: any) => (
+                                                <div key={payment.id} className="p-3.5 hover:bg-muted/30 transition-colors flex justify-between items-center">
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            {renderMethodBadge(payment.method)}
+                                                            {payment.reference && (
+                                                                <span className="font-mono text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
+                                                                    {payment.reference}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <span>{format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right flex flex-col items-end gap-2">
-                                                        {payment.reference && (
-                                                            <span className="text-[10px] font-black text-slate-800 dark:text-[#CBD5E1] bg-slate-100 dark:bg-[#1B2230] px-2 py-1 rounded-md border border-slate-300 dark:border-[#2A3242] uppercase tracking-tighter shadow-sm">
-                                                                {payment.reference}
-                                                            </span>
-                                                        )}
+                                                    <div className="text-right">
+                                                        <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 inline-block">
+                                                            +KES {Number(payment.amount).toLocaleString()}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
-                                </div>
+                                </CardContent>
                             </Card>
                         </>
                     ) : (
-                        // Placeholder when no tenant selected
-                        <div className="h-full min-h-[400px] rounded-3xl border-2 border-dashed border-slate-200 dark:border-[#2A3242] flex flex-col items-center justify-center p-10 text-center bg-white dark:bg-[#161B22] shadow-inner transition-all">
-                            <div className="w-20 h-20 bg-slate-50 dark:bg-[#0E1117] rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-                                <User className="h-10 w-10 text-slate-300 dark:text-[#2A3242]" />
+                        /* Empty State Sidebar */
+                        <div className="h-full min-h-[350px] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center p-8 text-center bg-card shadow-sm">
+                            <div className="w-14 h-14 bg-muted/60 rounded-xl flex items-center justify-center mb-3 text-muted-foreground border border-border">
+                                <User className="h-7 w-7" />
                             </div>
-                            <h3 className="font-black text-2xl text-slate-800 dark:text-[#F9FAFB]">No Tenant Selected</h3>
-                            <p className="text-slate-700 dark:text-[#9CA3AF] mt-3 max-w-[240px] font-medium leading-relaxed">
-                                Use the search box on the left to find a tenant and process payments.
+                            <h3 className="font-bold text-base text-foreground">No Tenant Selected</h3>
+                            <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+                                Search and select a tenant from the left to view their pending invoices and process payments.
                             </p>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* M-Pesa Modal */}
             {selectedTenant && isMpesaModalOpen && (
                 <MpesaPaymentModal
                     isOpen={isMpesaModalOpen}
