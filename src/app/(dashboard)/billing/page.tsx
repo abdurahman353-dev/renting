@@ -45,6 +45,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 function fmt(n: number) {
     return `KES ${Number(n).toLocaleString()}`;
@@ -98,6 +99,10 @@ export default function BillingPage() {
     const [filterType, setFilterType]           = useState('all');
     const [fromDate, setFromDate]               = useState('');
     const [toDate, setToDate]                   = useState('');
+
+    // Pagination state
+    const [currentPage, setCurrentPage]         = useState(1);
+    const itemsPerPage                          = 10;
 
     const copyToClipboard = (num: string) => {
         const cleanNum = num.replace(/\s+/g, '');
@@ -174,6 +179,18 @@ export default function BillingPage() {
             return true;
         });
     }, [payments, searchQuery, filterType, fromDate, toDate]);
+
+    // Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, filterType, fromDate, toDate]);
+
+    // Slice for current page
+    const totalPages = Math.ceil(filteredPayments.length / itemsPerPage) || 1;
+    const paginatedPayments = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredPayments.slice(start, start + itemsPerPage);
+    }, [filteredPayments, currentPage, itemsPerPage]);
 
     // Quick Date Presets helper
     const applyDatePreset = (preset: 'all' | 'this_month' | 'last_month' | 'this_year') => {
@@ -755,7 +772,7 @@ export default function BillingPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredPayments.map((p) => {
+                                {paginatedPayments.map((p) => {
                                     const amount     = Number(p.amount_paid);
                                     const isNegative = amount < 0;
                                     const type       = p.payment_type;
@@ -810,6 +827,17 @@ export default function BillingPage() {
                             </TableBody>
                         </Table>
                     </div>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredPayments.length > 0 && (
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={filteredPayments.length}
+                        itemsPerPage={itemsPerPage}
+                    />
                 )}
             </div>
 

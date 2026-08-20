@@ -1368,6 +1368,15 @@ function TenantsContent() {
                     </Table>
                 </div>
 
+                {/* Pagination Controls */}
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={lastPage}
+                    onPageChange={handlePageChange}
+                    totalItems={totalItems}
+                    itemsPerPage={perPage}
+                />
+
                 {/* Send SMS Dialog */}
                 <Dialog open={smsOpen} onOpenChange={setSmsOpen}>
                     <DialogContent>
