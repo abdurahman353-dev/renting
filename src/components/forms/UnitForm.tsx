@@ -168,6 +168,12 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
         }
     };
 
+    const safeProperties: any[] = Array.isArray(properties)
+        ? properties
+        : (properties && typeof properties === 'object' && Array.isArray((properties as any).data))
+            ? (properties as any).data
+            : [];
+
     const storageBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') + '/storage/';
 
     return (
@@ -187,7 +193,7 @@ export default function UnitForm({ initialData, onSubmit, isSubmitting, properti
                             required
                         >
                             <option value="">Select Property</option>
-                            {properties.map(p => (
+                            {safeProperties.map((p: any) => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                         </select>

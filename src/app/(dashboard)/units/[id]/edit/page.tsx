@@ -24,7 +24,7 @@ export default function EditUnitPage() {
                     propertyAPI.getAll()
                 ]);
                 setUnit(unitData);
-                setProperties(propertiesData);
+                setProperties(Array.isArray(propertiesData) ? propertiesData : (propertiesData?.data || []));
             } catch (error) {
                 console.error("Failed to fetch data:", error);
                 toast.error("Failed to load unit details");

@@ -91,7 +91,7 @@ export default function PropertyViewPage() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [planLimits, setPlanLimits] = useState<{ max_units: number | null } | null>(null);
+    const [planLimits, setPlanLimits] = useState<{ max_units: number | null; units_count: number } | null>(null);
 
     const normalizeUnitType = (type: string) => {
         if (!type) return 'N/A';
@@ -122,8 +122,16 @@ export default function PropertyViewPage() {
         }
         // Fetch plan limits
         saasAPI.getSubscriptionStatus().then((data: any) => {
-            if (data?.organization) {
-                setPlanLimits({ max_units: data.organization.max_units ?? null });
+            if (data?.usage) {
+                setPlanLimits({
+                    max_units: data.usage.max_units ?? null,
+                    units_count: data.usage.units_count ?? 0,
+                });
+            } else if (data?.organization) {
+                setPlanLimits({
+                    max_units: data.organization.max_units ?? null,
+                    units_count: 0,
+                });
             }
         }).catch(() => {});
     }, [params?.id]);
@@ -426,46 +434,51 @@ export default function PropertyViewPage() {
                                     <CardHeader className="bg-muted/40 border-b border-border flex flex-row items-center justify-between pb-4">
                                         <CardTitle className="text-xl font-bold text-foreground">Units</CardTitle>
                                         <div className="flex flex-col items-end gap-1">
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        if (planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units) {
-                                                            toast.error(`🔒 Unit limit reached (${property.units?.length}/${planLimits.max_units}). Upgrade your plan to add more units.`);
-                                                            return;
-                                                        }
-                                                        setBulkModalOpen(true);
-                                                    }}
-                                                    size="sm"
-                                                    className={planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units
-                                                        ? 'opacity-50 cursor-not-allowed border-slate-300'
-                                                        : 'bg-card text-primary border-primary/20 hover:bg-primary/10'}
-                                                >
-                                                    {planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units
-                                                        ? <><Lock className="h-3.5 w-3.5 mr-1" /> Limit Reached</>
-                                                        : 'Bulk Add'
-                                                    }
-                                                </Button>
-                                                <Button
-                                                    variant="default"
-                                                    onClick={() => {
-                                                        if (planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units) {
-                                                            toast.error(`🔒 Unit limit reached (${property.units?.length}/${planLimits.max_units}). Upgrade your plan to add more units.`);
-                                                            return;
-                                                        }
-                                                        router.push(`/units/new?property_id=${property.id}`);
-                                                    }}
-                                                    size="sm"
-                                                    className={planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units
-                                                        ? 'bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-70'
-                                                        : 'bg-primary text-primary-foreground hover:bg-primary/90'}
-                                                >
-                                                    {planLimits?.max_units != null && (property.units?.length ?? 0) >= planLimits.max_units
-                                                        ? <><Lock className="h-3.5 w-3.5 mr-1" /> Locked</>
-                                                        : '+ Add Unit'
-                                                    }
-                                                </Button>
-                                            </div>
+                                            {(() => {
+                                                const isUnitLimitReached = planLimits?.max_units != null && (planLimits.units_count ?? 0) >= planLimits.max_units;
+                                                return (
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                if (isUnitLimitReached) {
+                                                                    toast.error(`🔒 Unit limit reached (${planLimits.units_count}/${planLimits.max_units} units). Upgrade your plan to add more units.`);
+                                                                    return;
+                                                                }
+                                                                setBulkModalOpen(true);
+                                                            }}
+                                                            size="sm"
+                                                            className={isUnitLimitReached
+                                                                ? 'opacity-50 cursor-not-allowed border-slate-300'
+                                                                : 'bg-card text-primary border-primary/20 hover:bg-primary/10'}
+                                                        >
+                                                            {isUnitLimitReached
+                                                                ? <><Lock className="h-3.5 w-3.5 mr-1" /> Limit Reached</>
+                                                                : 'Bulk Add'
+                                                            }
+                                                        </Button>
+                                                        <Button
+                                                            variant="default"
+                                                            onClick={() => {
+                                                                if (isUnitLimitReached) {
+                                                                    toast.error(`🔒 Unit limit reached (${planLimits.units_count}/${planLimits.max_units} units). Upgrade your plan to add more units.`);
+                                                                    return;
+                                                                }
+                                                                router.push(`/units/new?property_id=${property.id}`);
+                                                            }}
+                                                            size="sm"
+                                                            className={isUnitLimitReached
+                                                                ? 'bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-70'
+                                                                : 'bg-primary text-primary-foreground hover:bg-primary/90'}
+                                                        >
+                                                            {isUnitLimitReached
+                                                                ? <><Lock className="h-3.5 w-3.5 mr-1" /> Locked</>
+                                                                : '+ Add Unit'
+                                                            }
+                                                        </Button>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="pt-6">

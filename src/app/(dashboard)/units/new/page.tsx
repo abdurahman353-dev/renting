@@ -141,9 +141,7 @@ export default function AddUnitPage() {
         const fetchProperties = async () => {
             try {
                 const data = await propertyAPI.getAll();
-                setProperties(data.data);
-                console.log(properties);
-                console.log(Array.isArray(properties));
+                setProperties(Array.isArray(data) ? data : (data?.data || []));
                 if (propertyIdParam) {
                     form.setValue("property_id", propertyIdParam);
                 }
