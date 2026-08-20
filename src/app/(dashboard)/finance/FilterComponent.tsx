@@ -1,5 +1,7 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Filter } from "lucide-react";
+import { RefreshCw, Filter, Building2, Home, CheckCircle2, Calendar } from "lucide-react";
 
 interface FilterComponentProps {
     properties: any[];
@@ -16,7 +18,6 @@ interface FilterComponentProps {
 }
 
 export default function FilterComponent({ properties, units, currentFilters, onFilterChange, onRefresh }: FilterComponentProps) {
-    // Generate month options
     const months = [
         { value: "1", label: "January" },
         { value: "2", label: "February" },
@@ -32,32 +33,35 @@ export default function FilterComponent({ properties, units, currentFilters, onF
         { value: "12", label: "December" },
     ];
 
-    // Generate year options
-    // Starting from 2036 down to 2026
-    const years = Array.from({ length: 11 }, (_, i) => (2036 - i).toString());
-
-    // Filter units based on selected property
     const filteredUnits = currentFilters.property_id !== "all"
         ? units.filter((u: any) => u.property_id.toString() === currentFilters.property_id)
         : [];
 
+    const hasActiveFilters = currentFilters.property_id !== "all" || currentFilters.unit_id !== "all" || currentFilters.status !== "all" || Boolean(currentFilters.month) || Boolean(currentFilters.year);
+
     return (
-        <div className="bg-white dark:bg-[#161B22] p-4 rounded-xl border border-slate-100 dark:border-[#2A3242] shadow-sm flex flex-wrap items-center gap-3 transition-all">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-[#9CA3AF] mr-2 border-r pr-4 border-slate-200 dark:border-[#2A3242]">
-                <Filter className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider">Filters</span>
+        <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-wrap items-center gap-3 transition-all">
+            {/* Filter Badge Header */}
+            <div className="flex items-center gap-2 mr-1 border-r pr-3.5 border-border">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/60">
+                    <Filter className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground">Filters</span>
             </div>
 
             {/* Property Filter */}
-            <div className="flex flex-col gap-1 min-w-[150px]">
-                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Property</span>
+            <div className="flex flex-col gap-1 min-w-[140px]">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pl-0.5 flex items-center gap-1">
+                    <Building2 className="w-2.5 h-2.5 text-blue-500" />
+                    <span>Property</span>
+                </span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 py-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-muted/40"
                     value={currentFilters.property_id}
                     onChange={(e) => {
                         onFilterChange({
                             property_id: e.target.value,
-                            unit_id: "all" // Reset unit on property change
+                            unit_id: "all"
                         });
                     }}
                 >
@@ -69,10 +73,13 @@ export default function FilterComponent({ properties, units, currentFilters, onF
             </div>
 
             {/* Unit Filter */}
-            <div className={`flex flex-col gap-1 min-w-[120px] transition-opacity duration-300 ${currentFilters.property_id === 'all' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Unit</span>
+            <div className={`flex flex-col gap-1 min-w-[110px] transition-opacity duration-200 ${currentFilters.property_id === 'all' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pl-0.5 flex items-center gap-1">
+                    <Home className="w-2.5 h-2.5 text-indigo-500" />
+                    <span>Unit</span>
+                </span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 py-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-muted/40"
                     value={currentFilters.unit_id}
                     onChange={(e) => onFilterChange({ unit_id: e.target.value })}
                     disabled={currentFilters.property_id === 'all'}
@@ -89,10 +96,13 @@ export default function FilterComponent({ properties, units, currentFilters, onF
             </div>
 
             {/* Status Filter */}
-            <div className="flex flex-col gap-1 min-w-[130px]">
-                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Status</span>
+            <div className="flex flex-col gap-1 min-w-[120px]">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pl-0.5 flex items-center gap-1">
+                    <CheckCircle2 className="w-2.5 h-2.5 text-amber-500" />
+                    <span>Status</span>
+                </span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 py-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-muted/40"
                     value={currentFilters.status}
                     onChange={(e) => onFilterChange({ status: e.target.value })}
                 >
@@ -104,10 +114,13 @@ export default function FilterComponent({ properties, units, currentFilters, onF
             </div>
 
             {/* Month Filter */}
-            <div className="flex flex-col gap-1 min-w-[120px]">
-                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Month</span>
+            <div className="flex flex-col gap-1 min-w-[110px]">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pl-0.5 flex items-center gap-1">
+                    <Calendar className="w-2.5 h-2.5 text-purple-500" />
+                    <span>Month</span>
+                </span>
                 <select
-                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 py-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-muted/40"
                     value={currentFilters.month}
                     onChange={(e) => onFilterChange({ month: e.target.value })}
                 >
@@ -119,14 +132,17 @@ export default function FilterComponent({ properties, units, currentFilters, onF
             </div>
 
             {/* Year Filter */}
-            <div className="flex flex-col gap-1 min-w-[100px]">
-                <span className="text-[10px] text-slate-400 dark:text-[#9CA3AF] font-bold uppercase tracking-wider pl-1">Year</span>
+            <div className="flex flex-col gap-1 min-w-[90px]">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pl-0.5 flex items-center gap-1">
+                    <Calendar className="w-2.5 h-2.5 text-purple-500" />
+                    <span>Year</span>
+                </span>
                 <input
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
                     maxLength={4}
-                    className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#2A3242] bg-slate-50 dark:bg-[#1F2633] px-3 py-1 text-sm text-slate-900 dark:text-[#F9FAFB] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200 hover:bg-white dark:hover:bg-[#1F2633]/80"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 py-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-muted/40"
                     placeholder="YYYY"
                     value={currentFilters.year}
                     onChange={(e) => {
@@ -138,13 +154,19 @@ export default function FilterComponent({ properties, units, currentFilters, onF
 
             <div className="flex-1"></div>
 
+            {/* Reset Button */}
             <Button
                 variant="outline"
                 onClick={onRefresh}
                 size="sm"
-                className="mt-4 h-9 border-slate-200 dark:border-[#2A3242] text-slate-600 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-[#2563EB] hover:border-indigo-200 dark:hover:border-[#2563EB] hover:bg-indigo-50 dark:hover:bg-[#1F2633]"
+                className={`mt-4 h-9 text-xs transition-colors font-semibold ${
+                    hasActiveFilters
+                        ? 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:border-indigo-900/60 dark:text-indigo-400 dark:bg-indigo-950/40'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                }`}
             >
-                <RefreshCw className="mr-2 h-3.5 w-3.5" /> Refresh
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                Reset Filters
             </Button>
         </div>
     );
