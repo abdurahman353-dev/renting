@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Search, Phone, Mail, FileText, Download, Trash2, ArrowLeft, MoreVertical, RotateCcw, User, Loader2 } from "lucide-react"
-import { tenantAPI } from "@/data/apis"
+import { tenantAPI, propertyAPI } from "@/data/apis"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import * as XLSX from 'xlsx'
@@ -87,10 +87,22 @@ function PreviousTenantsContent() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [confirmReactivateOpen, setConfirmReactivateOpen] = useState(false);
     const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
+    const [properties, setProperties] = useState<any[]>([]);
+    const [selectedUnitId, setSelectedUnitId] = useState<string>("");
 
     useEffect(() => {
         fetchTenants(1);
+        fetchProperties();
     }, [debouncedSearch]);
+
+    const fetchProperties = async () => {
+        try {
+            const data = await propertyAPI.getAll();
+            setProperties(Array.isArray(data) ? data : data?.data || []);
+        } catch (e) {
+            console.error("Failed to fetch properties:", e);
+        }
+    };
 
     const fetchTenants = async (page = 1) => {
         setLoading(true);
@@ -121,15 +133,19 @@ function PreviousTenantsContent() {
         fetchTenants(page);
     };
 
-    const handleReactivate = async (tenantId: number) => {
+    const handleReactivate = async (tenantId: number, unitId?: number) => {
         try {
-            await tenantAPI.toggleStatus(tenantId, { status: 'Active' });
+            const payload: any = { status: 'Active' };
+            if (unitId) payload.unit_id = unitId;
+
+            await tenantAPI.toggleStatus(tenantId, payload);
             toast.success("Tenant Reactivated Successfully");
             fetchTenants(); // Refresh
+            fetchProperties();
         } catch (error: any) {
-            console.error("Failed to reactivate tenant:", error);
             const msg = error?.response?.data?.message || "Tenant Reactivation Failed";
             toast.error(msg, {
+                duration: 5000,
                 style: {
                     background: '#ef4444',
                     color: '#fff',
@@ -138,6 +154,7 @@ function PreviousTenantsContent() {
         } finally {
             setConfirmReactivateOpen(false);
             setSelectedTenantId(null);
+            setSelectedUnitId("");
         }
     };
 
@@ -370,18 +387,75 @@ function PreviousTenantsContent() {
             </AlertDialog>
 
             {/* Reactivate Confirmation Dialog */}
-            <AlertDialog open={confirmReactivateOpen} onOpenChange={setConfirmReactivateOpen}>
+            <AlertDialog open={confirmReactivateOpen} onOpenChange={(open) => {
+                setConfirmReactivateOpen(open);
+                if (!open) {
+                    setSelectedTenantId(null);
+                    setSelectedUnitId("");
+                }
+            }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Reactivate Tenant?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to reactivate this tenant? They will be moved back to the active tenants list.
+                            Are you sure you want to reactivate {tenants.find(t => t.id === selectedTenantId)?.name || 'this tenant'}? They will be moved back to the active tenants list.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
+                    {(() => {
+                        const tenant = tenants.find(t => t.id === selectedTenantId);
+                        const prevUnitNumber = tenant?.unit?.unit_number || tenant?.unit_number;
+                        
+                        const prevUnitObj = properties.flatMap((p: any) => p.units || []).find((u: any) => String(u.unit_number) === String(prevUnitNumber));
+                        const isPrevUnitOccupied = prevUnitObj ? ['occupied'].includes((prevUnitObj.status || '').toLowerCase()) : false;
+
+                        const availableUnits = properties.flatMap((p: any) => 
+                            (p.units || [])
+                                .filter((u: any) => {
+                                    const st = (u.status || '').toLowerCase();
+                                    return st === 'available' || st === 'vacant';
+                                })
+                                .map((u: any) => ({
+                                    id: u.id,
+                                    label: `${p.name} - Unit ${u.unit_number} (KES ${Number(u.rent_amount || u.price || 0).toLocaleString()})`
+                                }))
+                        );
+
+                        return (
+                            <div className="py-2 space-y-3">
+                                {isPrevUnitOccupied && (
+                                    <div className="p-3 text-xs bg-amber-500/10 border border-amber-500/30 text-amber-600 rounded-md font-medium">
+                                        ⚠️ Previous Unit <strong>{prevUnitNumber || 'N/A'}</strong> is currently occupied by another tenant. Please select an available unit below to reactivate.
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-1">
+                                        Assign Unit:
+                                    </label>
+                                    <select
+                                        className="w-full h-10 px-3 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                        value={selectedUnitId}
+                                        onChange={(e) => setSelectedUnitId(e.target.value)}
+                                    >
+                                        {!isPrevUnitOccupied && (
+                                            <option value="">Auto-restore previous unit ({prevUnitNumber || 'N/A'})</option>
+                                        )}
+                                        {isPrevUnitOccupied && (
+                                            <option value="">-- Select an available unit --</option>
+                                        )}
+                                        {availableUnits.map((u: any) => (
+                                            <option key={u.id} value={u.id}>
+                                                {u.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        );
+                    })()}
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setSelectedTenantId(null)}>No, Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => { setSelectedTenantId(null); setSelectedUnitId(""); }}>No, Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={() => selectedTenantId && handleReactivate(selectedTenantId)}
+                            onClick={() => selectedTenantId && handleReactivate(selectedTenantId, selectedUnitId ? parseInt(selectedUnitId) : undefined)}
                             className="bg-green-600 hover:bg-green-700"
                         >
                             Yes, Reactivate

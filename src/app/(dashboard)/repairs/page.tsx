@@ -21,6 +21,8 @@ import {
   ChevronRight,
   MoreVertical,
   X,
+  User,
+  Calendar,
 } from "lucide-react";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Badge } from "@/components/ui/badge";
@@ -122,10 +124,31 @@ interface Unit {
       id: number;
       name: string;
       phone?: string;
+      id_number?: string;
     };
   };
 }
-interface Tenant { id: number; name: string; unit_id?: number; unit?: { id: number }; }
+interface Tenant { id: number; name: string; phone?: string; id_number?: string; unit_id?: number; unit?: { id: number }; leases?: any[]; }
+
+function getTenantForUnit(unitIdStr: string, unitsList: Unit[], tenantsList: Tenant[]) {
+  if (!unitIdStr) return null;
+  const unitId = Number(unitIdStr);
+
+  const unitObj = unitsList.find((u) => u.id === unitId);
+  if (unitObj?.active_lease?.tenant) {
+    return unitObj.active_lease.tenant;
+  }
+
+  const matchedTenant = tenantsList.find((t: any) => {
+    if (t.unit_id === unitId || t.unit?.id === unitId) return true;
+    if (t.leases && Array.isArray(t.leases)) {
+      return t.leases.some((l: any) => l.unit_id === unitId && (l.status || '').toLowerCase() === 'active');
+    }
+    return false;
+  });
+
+  return matchedTenant ?? null;
+}
 
 const EMPTY_FORM: RepairForm = {
   property_id: "",
@@ -152,8 +175,8 @@ const STATUS_CONFIG = {
 };
 
 const PAID_BY_CONFIG = {
-  tenant:   { label: "Tenant",   color: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-0" },
-  landlord: { label: "Landlord", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-0" },
+  tenant:   { label: "Tenant",   color: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-0 font-medium" },
+  landlord: { label: "Landlord", color: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-0 font-medium" },
 };
 
 function StatusBadge({ status }: { status: Repair["status"] }) {
@@ -188,6 +211,8 @@ export default function RepairsPage() {
   const [filterProperty, setFilterProperty] = useState("all");
   const [filterStatus, setFilterStatus]     = useState("all");
   const [filterPaidBy, setFilterPaidBy]     = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo]     = useState("");
   const [page, setPage]                     = useState(1);
   const PER_PAGE = 15;
 
@@ -222,6 +247,8 @@ export default function RepairsPage() {
       if (filterProperty !== "all")        params.property_id = filterProperty;
       if (filterStatus   !== "all")        params.status      = filterStatus;
       if (filterPaidBy   !== "all")        params.paid_by     = filterPaidBy;
+      if (filterDateFrom)                  params.date_from   = filterDateFrom;
+      if (filterDateTo)                    params.date_to     = filterDateTo;
 
       const data = await repairAPI.getAll(params);
       setRepairs(data.data ?? []);
@@ -232,14 +259,17 @@ export default function RepairsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterProperty, filterStatus, filterPaidBy]);
+  }, [page, search, filterProperty, filterStatus, filterPaidBy, filterDateFrom, filterDateTo]);
 
   useEffect(() => { fetchRepairs(); }, [fetchRepairs]);
 
   // ── Open modal ───────────────────────────────────────────────────────────
   const openAdd = () => {
     setEditRepair(null);
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      reported_date: new Date().toISOString().split("T")[0],
+    });
     setModalOpen(true);
   };
 
@@ -342,10 +372,16 @@ export default function RepairsPage() {
 
   // ── Clear filters ────────────────────────────────────────────────────────
   const clearFilters = () => {
-    setSearch(""); setFilterProperty("all"); setFilterStatus("all"); setFilterPaidBy("all"); setPage(1);
+    setSearch("");
+    setFilterProperty("all");
+    setFilterStatus("all");
+    setFilterPaidBy("all");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+    setPage(1);
   };
 
-  const hasActiveFilters = search || filterProperty !== "all" || filterStatus !== "all" || filterPaidBy !== "all";
+  const hasActiveFilters = search || filterProperty !== "all" || filterStatus !== "all" || filterPaidBy !== "all" || filterDateFrom || filterDateTo;
   const filterPropertyObj = properties.find(p => String(p.id) === filterProperty);
   const filterPropertyName = filterPropertyObj?.name || filterProperty;
 
@@ -426,7 +462,7 @@ export default function RepairsPage() {
           </div>
 
           {/* Paid By Filter */}
-          <div className="lg:w-48">
+          <div className="lg:w-44">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
               <DollarSign className="inline w-4 h-4 mr-1" />
               Paid By
@@ -440,6 +476,34 @@ export default function RepairsPage() {
               <option value="tenant">Tenant</option>
               <option value="landlord">Landlord</option>
             </select>
+          </div>
+
+          {/* Date From Filter */}
+          <div className="lg:w-44">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <Calendar className="inline w-4 h-4 mr-1" />
+              Date From
+            </label>
+            <Input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }}
+              className="h-12 text-sm rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none"
+            />
+          </div>
+
+          {/* Date To Filter */}
+          <div className="lg:w-44">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <Calendar className="inline w-4 h-4 mr-1" />
+              Date To
+            </label>
+            <Input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }}
+              className="h-12 text-sm rounded-lg border border-input bg-background shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none"
+            />
           </div>
         </div>
 
@@ -472,6 +536,18 @@ export default function RepairsPage() {
                   <button onClick={() => setFilterPaidBy("all")} className="ml-2 hover:text-amber-900">×</button>
                 </Badge>
               )}
+              {filterDateFrom && (
+                <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border-0">
+                  From: {filterDateFrom}
+                  <button onClick={() => setFilterDateFrom("")} className="ml-2 hover:text-indigo-900">×</button>
+                </Badge>
+              )}
+              {filterDateTo && (
+                <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border-0">
+                  To: {filterDateTo}
+                  <button onClick={() => setFilterDateTo("")} className="ml-2 hover:text-indigo-900">×</button>
+                </Badge>
+              )}
               <button
                 onClick={clearFilters}
                 className="text-sm text-muted-foreground hover:text-foreground underline ml-2"
@@ -493,6 +569,7 @@ export default function RepairsPage() {
                 <TableHead className="bg-card">Property / Unit</TableHead>
                 <TableHead className="bg-card">Tenant</TableHead>
                 <TableHead className="bg-card">Vendor</TableHead>
+                <TableHead className="bg-card">Activity Dates</TableHead>
                 <TableHead className="bg-card text-right">Cost (KES)</TableHead>
                 <TableHead className="bg-card">Paid By</TableHead>
                 <TableHead className="bg-card">Status</TableHead>
@@ -502,7 +579,7 @@ export default function RepairsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-40 text-center">
+                  <TableCell colSpan={9} className="h-40 text-center">
                     <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
                       <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
                       <span className="font-semibold text-base">Loading repairs...</span>
@@ -518,11 +595,6 @@ export default function RepairsPage() {
                       {r.description && (
                         <div className="text-xs text-muted-foreground line-clamp-1 max-w-[240px]">
                           {r.description}
-                        </div>
-                      )}
-                      {r.reported_date && (
-                        <div className="text-[10px] text-muted-foreground mt-0.5">
-                          Reported: {new Date(r.reported_date).toLocaleDateString()}
                         </div>
                       )}
                     </TableCell>
@@ -542,6 +614,25 @@ export default function RepairsPage() {
 
                     <TableCell className="text-sm">
                       {r.vendor || <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
+
+                    <TableCell className="text-xs space-y-1">
+                      <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-medium">
+                        <Calendar className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <span>Reported: {r.reported_date ? new Date(r.reported_date).toLocaleDateString() : (r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A')}</span>
+                      </div>
+                      {r.completed_date && (
+                        <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          <span>Completed: {new Date(r.completed_date).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      {r.created_at && (
+                        <div className="flex items-center gap-1 text-slate-400 text-[10px]">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span>Logged: {new Date(r.created_at).toLocaleDateString()}</span>
+                        </div>
+                      )}
                     </TableCell>
 
                     <TableCell className="text-right font-semibold">
@@ -568,15 +659,30 @@ export default function RepairsPage() {
                             }
                           }}
                         >
-                          <SelectTrigger className="h-8 border-none bg-transparent p-0 shadow-none focus:ring-0">
+                          <SelectTrigger className="h-9 border-2 border-slate-300 dark:border-slate-600 bg-card hover:bg-muted px-3 py-1 rounded-lg shadow-sm focus:ring-2 focus:ring-ring flex items-center justify-between gap-2 cursor-pointer text-xs font-semibold min-w-[135px]">
                             <SelectValue>
                               <StatusBadge status={r.status} />
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="pending">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                <span>Pending</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="in_progress">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span>In Progress</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="completed">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                <span>Completed</span>
+                              </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -624,7 +730,7 @@ export default function RepairsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-20 text-center">
+                  <TableCell colSpan={9} className="py-20 text-center">
                     <div className="flex flex-col items-center justify-center space-y-4">
                       <div className="bg-muted p-6 rounded-full">
                         <Wrench className="h-12 w-12 text-muted-foreground" />
@@ -699,13 +805,11 @@ export default function RepairsPage() {
                 disabled={!form.property_id}
                 onValueChange={(v) => {
                   setField("unit_id", v);
-                  const selectedUnit = units.find((u) => String(u.id) === v);
-                  const tenantId = selectedUnit?.active_lease?.tenant?.id;
-                  if (tenantId) {
-                    setField("tenant_id", String(tenantId));
+                  const t = getTenantForUnit(v, units, tenants);
+                  if (t?.id) {
+                    setField("tenant_id", String(t.id));
                   } else {
-                    const unitTenant = tenants.find((t) => String(t.unit_id) === v || String(t.unit?.id) === v);
-                    setField("tenant_id", unitTenant ? String(unitTenant.id) : "");
+                    setField("tenant_id", "");
                   }
                 }}
               >
@@ -715,14 +819,56 @@ export default function RepairsPage() {
                 <SelectContent>
                   {units
                     .filter((u) => String(u.property_id) === form.property_id)
-                    .map((u) => (
-                      <SelectItem key={u.id} value={String(u.id)}>
-                        {u.unit_number}
-                      </SelectItem>
-                    ))}
+                    .map((u) => {
+                      const t = getTenantForUnit(String(u.id), units, tenants);
+                      return (
+                        <SelectItem key={u.id} value={String(u.id)}>
+                          Unit {u.unit_number} {t ? `— Tenant: ${t.name}` : `(Vacant)`}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Tenant / Unit Confidence Card */}
+            {form.unit_id && (() => {
+              const selectedTenant = getTenantForUnit(form.unit_id, units, tenants);
+              const selectedUnitObj = units.find((u) => String(u.id) === form.unit_id);
+
+              if (selectedTenant) {
+                return (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-300 text-sm">
+                      <User className="h-4 w-4" />
+                      Active Tenant: {selectedTenant.name}
+                    </div>
+                    <div className="text-muted-foreground font-medium">
+                      {selectedTenant.id_number ? `ID: ${selectedTenant.id_number} ` : ''}
+                      {selectedTenant.phone ? `| Phone: ${selectedTenant.phone}` : ''}
+                    </div>
+                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-0.5">
+                      ✓ Confirmed: Unit {selectedUnitObj?.unit_number} is occupied by {selectedTenant.name}.
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs space-y-1 font-medium">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-300 text-sm">
+                      <Home className="h-4 w-4" />
+                      Unit Status: Vacant (No Active Tenant)
+                    </div>
+                    <div className="text-muted-foreground">
+                      Unit {selectedUnitObj?.unit_number} has no active tenant registered.
+                    </div>
+                    <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pt-0.5">
+                      ℹ️ Note: Set "Paid By" to Landlord for vacant unit maintenance.
+                    </div>
+                  </div>
+                );
+              }
+            })()}
 
             <div className="grid gap-1.5">
               <Label htmlFor="form-cost">Cost (KES) *</Label>
@@ -776,6 +922,27 @@ export default function RepairsPage() {
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="form-reported-date">Reported Date</Label>
+                <Input
+                  id="form-reported-date"
+                  type="date"
+                  value={form.reported_date}
+                  onChange={(e) => setField("reported_date", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="form-completed-date">Completed Date</Label>
+                <Input
+                  id="form-completed-date"
+                  type="date"
+                  value={form.completed_date}
+                  onChange={(e) => setField("completed_date", e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="grid gap-1.5">
