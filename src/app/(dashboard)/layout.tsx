@@ -7,6 +7,7 @@ import { LayoutWrapper } from "@/components/layout-wrapper";
 import { Loader2, Lock, Phone, MessageCircle, CreditCard, RefreshCw } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import apiClient from "@/data/apis";
 
 // Pages that landlord-only users should NOT access
 const LANDLORD_ONLY_PATHS = ["/dashboard", "/properties", "/units", "/tenants", "/finance", "/invoices", "/repairs"];
@@ -203,15 +204,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             setCheckingBlock(true);
         }
         try {
-            await axios.get(
-                `${(process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000')}/api/billing/status`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${Cookies.get('admin_token')}`,
-                        Accept: 'application/json',
-                    },
-                }
-            );
+            await apiClient.get('/billing/status');
             setBlocked(null);
         } catch (err: any) {
             const data       = err?.response?.data;
