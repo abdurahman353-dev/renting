@@ -287,9 +287,9 @@ export default function UnitDetailsPage() {
                                     className="w-full justify-start text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm"
                                     variant="outline"
                                     onClick={() => {
-                                        const phone = unit.property?.owner_contact || '0745621158';
+                                        const phone = unit.organization_whatsapp || unit.property?.whatsapp_number || unit.property?.owner_contact;
                                         if (!phone) {
-                                            toast.error("Contact number not available");
+                                            toast.error("WhatsApp contact number not available for this agent");
                                             return;
                                         }
                                         // Robust cleanup and international formatting for Kenyan numbers

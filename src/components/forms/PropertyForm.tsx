@@ -21,6 +21,61 @@ interface ImageItem {
     isExisting: boolean; // Track if it's from DB
 }
 
+// Fast client-side image compression (< 50ms) to make uploads finish in 1-2 seconds
+async function compressImageFile(file: File, maxWidth = 1600, quality = 0.82): Promise<File> {
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif' || file.size < 200 * 1024) {
+        return file;
+    }
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    resolve(file);
+                    return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob || blob.size >= file.size) {
+                            resolve(file);
+                        } else {
+                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(compressedFile);
+                        }
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+            img.onerror = () => resolve(file);
+        };
+        reader.onerror = () => resolve(file);
+    });
+}
+
 interface PropertyFormProps {
     initialData?: any;
     isEditMode?: boolean;
@@ -92,47 +147,44 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             });
 
             // Handle existing images
-            if (initialData.images && Array.isArray(initialData.images)) {
-                const formattedImages = initialData.images.map((imgUrl: string, index: number) => ({
-                    id: `existing-${index}`,
-                    url: imgUrl,
-                    isFeatured: initialData.featured_image === imgUrl,
-                    isExisting: true
-                }));
-                // If getting objects like {image_path: '...'} adapt here, but usually it's array of strings based on implementation plan analysis
-                // Actually wait, in AddPropertyModal we sent `images` as array of strings. 
-                // But PropertyController stores them in PropertyImage model. 
-                // So `initialData.images` might be relation array like [{image_path: '...'}, ...].
-                // Let's safe-guard this.
+            const rawImages = initialData.property_images || initialData.propertyImages || initialData.images || initialData.image_urls || [];
+            let processedImages: ImageItem[] = [];
 
-                let processedImages: ImageItem[] = [];
-                if (initialData.images.length > 0) {
-                    // Check if first item is string or object
-                    if (typeof initialData.images[0] === 'string') {
-                        processedImages = initialData.images.map((img: string, i: number) => ({
-                            id: `existing-${i}`,
-                            url: img,
-                            isFeatured: initialData.featured_image === img || i === 0, // Fallback feature
-                            isExisting: true
-                        }));
-                    } else if (typeof initialData.images[0] === 'object' && initialData.images[0].image_path) {
-                        processedImages = initialData.images.map((img: any, i: number) => ({
-                            id: `existing-${img.id || i}`,
-                            url: img.image_path,
-                            isFeatured: !!img.is_featured,
-                            isExisting: true
-                        }));
-                    }
-                }
-                setImages(processedImages);
-            } else if (initialData.featured_image) {
-                // Fallback if images array missing but featured image exists
-                setImages([{
+            if (Array.isArray(rawImages) && rawImages.length > 0) {
+                processedImages = rawImages.map((img: any, i: number) => {
+                    const imgUrl = typeof img === 'string' ? img : (img.image_path || img.url || '');
+                    const isFeat = typeof img === 'object' ? !!img.is_featured : (initialData.featured_image === imgUrl || i === 0);
+                    return {
+                        id: `existing-${typeof img === 'object' && img.id ? img.id : i}`,
+                        url: imgUrl,
+                        isFeatured: isFeat,
+                        isExisting: true
+                    };
+                }).filter(img => Boolean(img.url));
+            } else if (initialData.featured_image || initialData.featured_image_url) {
+                const feat = initialData.featured_image_url || initialData.featured_image;
+                processedImages = [{
                     id: 'existing-featured',
-                    url: initialData.featured_image,
+                    url: feat,
                     isFeatured: true,
                     isExisting: true
-                }]);
+                }];
+            }
+            setImages(processedImages);
+
+            // Restore location dropdowns from saved location string e.g. "Tudor, Mvita, Kisauni"
+            if (initialData.location) {
+                const parts = initialData.location.split(',').map((s: string) => s.trim());
+                if (parts.length === 3) {
+                    setSelectedSubcounty(parts[2]);
+                    setSelectedWard(parts[1]);
+                    setSelectedSubward(parts[0]);
+                } else if (parts.length === 2) {
+                    setSelectedSubcounty(parts[1]);
+                    setSelectedWard(parts[0]);
+                } else if (parts.length === 1) {
+                    setSelectedSubcounty(parts[0]);
+                }
             }
         }
     }, [initialData]);
@@ -181,8 +233,11 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
         });
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        // Instant visual preview
         const newImages = files.map(file => ({
             id: `new-${Date.now()}-${Math.random()}`,
             file,
@@ -191,6 +246,20 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             isExisting: false
         }));
         setImages(prev => [...prev, ...newImages]);
+
+        // Compress files in background right away
+        const compressedResults = await Promise.all(
+            newImages.map(async (item) => {
+                if (!item.file) return item;
+                const compressed = await compressImageFile(item.file);
+                return { ...item, file: compressed };
+            })
+        );
+
+        setImages(prev => prev.map(img => {
+            const matched = compressedResults.find(c => c.id === img.id);
+            return matched ? matched : img;
+        }));
     };
 
     const removeImage = (id: string) => {
@@ -232,54 +301,31 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
         setLoading(true);
 
         try {
-            // 1. Upload new images
-            const finalImagePaths: string[] = [];
-            let featuredImagePath = "";
-
-            /* 
-               Strategy: 
-               - Keep existing URLs (isExisting: true)
-               - Upload new files (isExisting: false) -> get URLs
-               - Combine all into one array
-            */
-
-            // Process sequencially to maintain somewhat order, or parallel upload then merge
-
-            // First, separate them
-            const existingImages = images.filter(img => img.isExisting);
-            const newImages = images.filter(img => !img.isExisting);
-
-            // Upload new
-            const uploadPromises = newImages.map(async (img) => {
+            // 1. Upload compressed files in parallel (takes ~1-2 seconds)
+            const uploadPromises = images.map(async (img) => {
+                if (img.isExisting && img.url) {
+                    return img.url;
+                }
                 if (!img.file) return null;
-                const response = await mediaAPI.upload(img.file);
-                return { ...img, url: response.path }; // Update url to cloud path
+                const fileToUpload = await compressImageFile(img.file);
+                const response = await mediaAPI.upload(fileToUpload);
+                return response.url || response.path;
             });
 
-            const uploadedImages = (await Promise.all(uploadPromises)).filter(Boolean) as ImageItem[];
+            const uploadedPaths = (await Promise.all(uploadPromises)).filter(Boolean) as string[];
+            const featuredIndex = images.findIndex(img => img.isFeatured);
+            const featuredPath = uploadedPaths[featuredIndex >= 0 ? featuredIndex : 0] || (uploadedPaths[0] ?? "");
 
-            // Reconstruct final list in order (not strictly necessary but nice) is hard if we split.
-            // Simpler: Just concat Existing + Uploaded. 
-            // BUT: modifying `images` state directly is tricky during submit.
-            // Let's just build the payload.
-
-            const allProcessedImages = [
-                ...existingImages.map(img => ({ path: img.url, isFeatured: img.isFeatured })),
-                ...uploadedImages.map(img => ({ path: img.url, isFeatured: img.isFeatured }))
-            ];
-
-            const imagePathList = allProcessedImages.map(img => img.path);
-            const featuredItem = allProcessedImages.find(img => img.isFeatured) || allProcessedImages[0];
-            const featuredPath = featuredItem?.path || "";
-
-            // 2. Prepare Payload
+            // 2. Prepare Payload — exclude UI-only fields
+            const { custom_amenity, ...restFormData } = formData;
             const payload = {
-                ...formData,
+                ...restFormData,
                 year_built: formData.year_built ? parseInt(formData.year_built) : null,
                 floors: formData.floors ? parseInt(formData.floors) : null,
                 parking_spaces: formData.parking_spaces ? parseInt(formData.parking_spaces) : null,
-                images: imagePathList,
-                featured_image_url: featuredPath
+                images: uploadedPaths,
+                featured_image_url: featuredPath,
+                featured_image_index: featuredIndex >= 0 ? featuredIndex : 0
             };
 
             // 3. API Call
@@ -292,7 +338,6 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
             }
 
             router.push('/properties');
-            router.refresh();
 
         } catch (error: any) {
             console.error("Submission failed:", error);
@@ -401,12 +446,17 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                         </div>
                         <div className="space-y-2">
                             <Label>Ward *</Label>
-                            <Select value={selectedWard} onValueChange={(val) => handleLocationChange('ward', val)} disabled={!selectedSubcounty}>
+                            <Select
+                                key={`ward-${selectedSubcounty}`}
+                                value={selectedWard}
+                                onValueChange={(val) => handleLocationChange('ward', val)}
+                                disabled={!selectedSubcounty}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Ward" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {selectedSubcounty && MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.map(w => (
+                                    {MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.map(w => (
                                         <SelectItem key={w.name} value={w.name}>{w.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -414,15 +464,19 @@ export default function PropertyForm({ initialData, isEditMode = false }: Proper
                         </div>
                         <div className="space-y-2">
                             <Label>Sub-Ward (Location) *</Label>
-                            <Select value={selectedSubward} onValueChange={(val) => handleLocationChange('subward', val)} disabled={!selectedWard}>
+                            <Select
+                                key={`subward-${selectedSubcounty}-${selectedWard}`}
+                                value={selectedSubward}
+                                onValueChange={(val) => handleLocationChange('subward', val)}
+                                disabled={!selectedWard}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Sub-Ward" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {selectedSubcounty && selectedWard &&
-                                        MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.find(w => w.name === selectedWard)?.subLocations.map(sw => (
-                                            <SelectItem key={sw.name} value={sw.name}>{sw.name}</SelectItem>
-                                        ))}
+                                    {MOMBASA_LOCATIONS.find(sc => sc.name === selectedSubcounty)?.wards.find(w => w.name === selectedWard)?.subLocations.map(sw => (
+                                        <SelectItem key={sw.name} value={sw.name}>{sw.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
