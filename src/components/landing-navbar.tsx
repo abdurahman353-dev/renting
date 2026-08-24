@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Building2, Menu, X } from "lucide-react";
 import { publicAPI } from "@/data/apis";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function LandingNavbar() {
+    const { user, isSuperAdmin } = useAuth();
     const [companyName, setCompanyName] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -50,18 +52,28 @@ export function LandingNavbar() {
                         Contact
                     </button>
                     
-                    <div className="flex items-center gap-3 ml-4">
-                        <Link href="/login">
-                            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 font-medium">
-                                Landlord Login
-                            </Button>
-                        </Link>
-                        <Link href="/register">
-                            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 shadow-sm shadow-blue-600/30">
-                                Start Free Trial
-                            </Button>
-                        </Link>
-                    </div>
+                    {user ? (
+                        <div className="flex items-center gap-3 ml-4">
+                            <Link href={isSuperAdmin?.() ? "/super-admin" : "/dashboard"}>
+                                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 shadow-sm shadow-indigo-600/30">
+                                    {isSuperAdmin?.() ? "Super Admin Portal →" : "Dashboard →"}
+                                </Button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3 ml-4">
+                            <Link href="/login">
+                                <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 font-medium">
+                                    Landlord Login
+                                </Button>
+                            </Link>
+                            <Link href="/register">
+                                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 shadow-sm shadow-blue-600/30">
+                                    Start Free Trial
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -106,18 +118,28 @@ export function LandingNavbar() {
                     >
                         Contact
                     </button>
-                    <div className="pt-3 border-t border-gray-100 space-y-2">
-                        <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                            <Button variant="outline" className="w-full border-blue-600 text-blue-600 font-bold py-5">
-                                Landlord Login
-                            </Button>
-                        </Link>
-                        <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5">
-                                Start 14-Day Free Trial
-                            </Button>
-                        </Link>
-                    </div>
+                    {user ? (
+                        <div className="pt-3 border-t border-gray-100 space-y-2">
+                            <Link href={isSuperAdmin?.() ? "/super-admin" : "/dashboard"} onClick={() => setIsMenuOpen(false)}>
+                                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5">
+                                    {isSuperAdmin?.() ? "Go to Super Admin Portal →" : "Go to Dashboard →"}
+                                </Button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="pt-3 border-t border-gray-100 space-y-2">
+                            <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                                <Button variant="outline" className="w-full border-blue-600 text-blue-600 font-bold py-5">
+                                    Landlord Login
+                                </Button>
+                            </Link>
+                            <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5">
+                                    Start 14-Day Free Trial
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             )}
         </nav>

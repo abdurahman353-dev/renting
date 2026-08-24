@@ -7,7 +7,7 @@ import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
 import { useAuth } from "@/contexts/AuthContext"
 import api from "@/lib/api"
 import { formatDate } from "@/lib/utils"
-import apiClient, { communicationAPI, publicAPI } from "@/data/apis"
+import apiClient, { communicationAPI, publicAPI, orgSettingsAPI } from "@/data/apis"
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -25,24 +25,39 @@ interface Notification {
 }
 
 export function TopNav({ onSidebarToggle }: TopNavProps) {
-    const { logout, user } = useAuth();
+    const { logout, user, isSuperAdmin } = useAuth();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isNotifOpen, setIsNotifOpen] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [companyName, setCompanyName] = useState('RentSys')
+    const [brandLoading, setBrandLoading] = useState(true)
 
     useEffect(() => {
         const fetchSettings = async () => {
+            setBrandLoading(true);
             try {
-                const data = await publicAPI.getSettings();
-                if (data && data.company_name) setCompanyName(data.company_name);
+                if (isSuperAdmin && isSuperAdmin()) {
+                    setCompanyName("SaaS Super Admin");
+                    return;
+                }
+                let name = "";
+                try {
+                    const orgData = await orgSettingsAPI.getSettings();
+                    name = orgData?.company_name || "";
+                } catch {
+                    const data = await publicAPI.getSettings();
+                    name = data?.company_name || "";
+                }
+                setCompanyName(name || "RentSys");
             } catch (err) {
                 console.error('Failed to load top-nav settings:', err);
+            } finally {
+                setBrandLoading(false);
             }
         };
         fetchSettings();
-    }, []);
+    }, [isSuperAdmin]);
 
     const dropdownRef = useRef<HTMLDivElement>(null)
     const notifRef = useRef<HTMLDivElement>(null)
@@ -120,25 +135,31 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
         return { phone, subject, from, content };
     };
 
+    const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "S";
+    const displayTitle = companyName || "SaaS Super Admin";
+
     return (
-        <div className="h-16 border-b border-border bg-card flex items-center justify-between px-6 z-40 relative">
+        <div className="h-16 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 z-40 relative">
             {/* Left */}
             <div className="flex items-center gap-3">
                 <button onClick={onSidebarToggle} className="p-1.5 hover:bg-muted rounded-lg transition-colors" aria-label="Toggle navigation">
                     <Menu className="w-5 h-5" />
                 </button>
 
-                {/* Company Name / Logo on Mobile directing to Landing Page */}
-                <Link href="/" className="flex items-center gap-2 md:hidden hover:opacity-85 transition-opacity" title="Go to Landing Page">
-                    <div className="relative bg-black rounded-md w-7 h-7 flex items-center justify-center border border-slate-800 shrink-0 shadow-xs">
-                        <span className="text-xs font-bold text-white">{companyName.charAt(0).toUpperCase()}</span>
+                {/* Company Name / Logo directing to Landing Page (Image 1 style on all devices) */}
+                <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity" title="Go to Landing Page">
+                    <div className="relative w-8 h-8 flex-shrink-0">
+                        <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
+                        <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800 shadow-sm">
+                            <span className="text-base font-bold text-white">{brandLetter}</span>
+                        </div>
                     </div>
-                    <span className="text-sm font-bold text-foreground truncate max-w-[130px]">
-                        {companyName}
+                    <span className="text-base sm:text-lg font-bold text-indigo-500 dark:text-indigo-400 whitespace-nowrap">
+                        {displayTitle}
                     </span>
                 </Link>
 
-                <div className="hidden md:flex">
+                <div className="hidden lg:flex ml-2 pl-3 border-l border-border">
                     <DynamicBreadcrumb />
                 </div>
             </div>
