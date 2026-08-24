@@ -81,9 +81,9 @@ export default function ForgotPasswordPage() {
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center space-y-2">
                         <div className="lg:hidden flex justify-center mb-4">
-                            <div className="p-3 bg-blue-600 rounded-xl inline-flex text-white">
+                            <Link href="/" className="p-3 bg-blue-600 rounded-xl inline-flex text-white hover:bg-blue-700 transition-colors shadow-md cursor-pointer" title="Go to Landing Page">
                                 <Building2 className="h-8 w-8" />
-                            </div>
+                            </Link>
                         </div>
                         <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                             Forgot password?
