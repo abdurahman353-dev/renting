@@ -132,6 +132,9 @@ export default function AllPropertiesPage() {
 
     const handleSelectAgency = (agency: Agency) => {
         setSelectedAgency(agency);
+        setAllProperties([]);
+        setFilteredProperties([]);
+        setLoading(true);
         setViewMode('properties');
         fetchProperties(agency.id);
     };
@@ -393,6 +396,35 @@ export default function AllPropertiesPage() {
                                     Search
                                 </Button>
                             </div>
+
+                            {/* Agency Banner - shown when viewing a specific agency */}
+                            {selectedAgency && (
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-2xl px-5 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/60 rounded-xl">
+                                            <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-indigo-500 dark:text-indigo-400 font-semibold uppercase tracking-wider">Viewing Portfolio</p>
+                                            <p className="text-base font-black text-indigo-900 dark:text-indigo-100">{selectedAgency.name}</p>
+                                            {selectedAgency.phone && <p className="text-xs text-indigo-600 dark:text-indigo-400">{selectedAgency.phone}</p>}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setViewMode('agencies');
+                                            setSelectedAgency(null);
+                                            fetchProperties();
+                                        }}
+                                        className="text-xs font-bold border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/40 rounded-xl shrink-0"
+                                    >
+                                        ← Back to All Agencies
+                                    </Button>
+                                </div>
+                            )}
+
 
                             {loading ? (
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
