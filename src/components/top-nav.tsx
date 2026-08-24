@@ -146,17 +146,27 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                     <Menu className="w-5 h-5" />
                 </button>
 
-                {/* Company Name / Logo directing to Landing Page (Image 1 style on all devices) */}
+                {/* Company Name / Logo directing to Landing Page (Image 1 style on all devices with visible skeleton loading) */}
                 <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity" title="Go to Landing Page">
                     <div className="relative w-8 h-8 flex-shrink-0">
-                        <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
-                        <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800 shadow-sm">
-                            <span className="text-base font-bold text-white">{brandLetter}</span>
-                        </div>
+                        {brandLoading ? (
+                            <div className="w-8 h-8 rounded-lg bg-slate-700 animate-pulse" />
+                        ) : (
+                            <>
+                                <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
+                                <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800 shadow-sm">
+                                    <span className="text-base font-bold text-white">{brandLetter}</span>
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <span className="text-base sm:text-lg font-bold text-indigo-500 dark:text-indigo-400 whitespace-nowrap">
-                        {displayTitle}
-                    </span>
+                    {brandLoading ? (
+                        <div className="h-5 w-28 sm:w-36 rounded-md bg-slate-700 animate-pulse" />
+                    ) : (
+                        <span className="text-base sm:text-lg font-bold text-indigo-500 dark:text-indigo-400 whitespace-nowrap">
+                            {displayTitle}
+                        </span>
+                    )}
                 </Link>
 
                 <div className="hidden lg:flex ml-2 pl-3 border-l border-border">

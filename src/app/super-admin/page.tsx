@@ -1621,7 +1621,7 @@ export default function SuperAdminDashboard() {
                 setDetailsModalOpen(open);
                 if (!open) setViewOrg(null);
             }}>
-                <DialogContent className="sm:max-w-[900px] rounded-2xl p-6 overflow-y-auto max-h-[90vh]">
+                <DialogContent className="w-[95vw] sm:max-w-[900px] rounded-2xl p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
                     {!viewOrg ? (
                         <div className="flex flex-col items-center justify-center py-16 gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
@@ -1655,13 +1655,13 @@ export default function SuperAdminDashboard() {
                     </DialogHeader>
 
                     {viewOrg && (
-                        <div className="space-y-5 py-2">
+                        <div className="space-y-5 py-2 w-full max-w-full overflow-hidden">
                             {/* Super Admin / Owner Account Info */}
                             <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 space-y-3">
                                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <Users className="w-3.5 h-3.5 text-indigo-500" /> Account Owner (Super Admin)
                                 </h4>
-                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                     <div>
                                         <p className="text-xs text-muted-foreground">Owner Name</p>
                                         <p className="font-bold text-foreground">{viewOrg.super_admin_user?.name || viewOrg.name}</p>
@@ -1750,7 +1750,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Summary Stats */}
                                 {orgPayments.length > 0 && (
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 rounded-lg p-2 text-center">
                                             <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide">Total Top-Ups</p>
                                             <p className="text-sm font-black text-emerald-700">
