@@ -1813,8 +1813,8 @@ export default function SuperAdminDashboard() {
                                                     return (
                                                         <TableRow key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                                             <TableCell className="py-2.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
-                                                                <div>{new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                                                                <div className="text-[10px] opacity-70">{new Date(p.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                                <div>{new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Nairobi' })}</div>
+                                                                <div className="text-[10px] opacity-70">{new Date(p.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' })}</div>
                                                             </TableCell>
                                                             <TableCell className="py-2.5">
                                                                 <Badge className={`text-[10px] font-bold gap-1 border ${meta.cls}`}>
