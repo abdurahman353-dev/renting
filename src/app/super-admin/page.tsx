@@ -991,7 +991,7 @@ export default function SuperAdminDashboard() {
                                         <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
                                         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
                                             Trial expires on{' '}
-                                            <span className="font-black">
+                                            <span className="font-black text-red-600 dark:text-red-400">
                                                 {new Date(Date.now() + extendDays * 86400000).toLocaleDateString('en-KE', {
                                                     weekday: 'short',
                                                     day: 'numeric',
