@@ -976,7 +976,7 @@ export default function SuperAdminDashboard() {
 
                         {/* Trial Extension (shown when Set to Trial is selected) */}
                         {editStatus === 'trial' && (
-                            <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900">
+                            <div className="space-y-3 p-4 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900">
                                 <Label className="font-bold text-sm text-amber-700 dark:text-amber-400">Extend Trial Days</Label>
                                 <Input
                                     type="number"
@@ -986,8 +986,27 @@ export default function SuperAdminDashboard() {
                                     max={180}
                                     className="h-10 rounded-lg font-bold"
                                 />
+                                {extendDays > 0 && (
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                            Trial expires on{' '}
+                                            <span className="font-black">
+                                                {new Date(Date.now() + extendDays * 86400000).toLocaleDateString('en-KE', {
+                                                    weekday: 'short',
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                })}
+                                            </span>
+                                            {' '}·{' '}
+                                            <span className="font-black">{extendDays} day{extendDays !== 1 ? 's' : ''}</span> from today
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
+
                     </div>
 
                     <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
