@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LandingNavbar } from '@/components/landing-navbar';
 import { LandingFooter } from '@/components/landing-footer';
 import { Button } from '@/components/ui/button';
@@ -76,9 +76,6 @@ export default function AllPropertiesPage() {
     useEffect(() => {
         fetchAgencies();
         fetchSearchOptions();
-        // NOTE: fetchProperties() is NOT called on mount to avoid
-        // race conditions with agency-specific property fetches.
-        // All properties are loaded lazily when the tab is clicked.
     }, []);
 
     const fetchAgencies = async () => {
@@ -104,7 +101,11 @@ export default function AllPropertiesPage() {
         }
     };
 
+    // Request-ID counter: any response older than the latest is discarded.
+    const fetchRequestId = useRef(0);
+
     const fetchProperties = async (agencyId?: number) => {
+        const myRequestId = ++fetchRequestId.current;
         setLoading(true);
         try {
             let response;
@@ -114,6 +115,9 @@ export default function AllPropertiesPage() {
             } else {
                 response = await publicAPI.getProperties();
             }
+
+            // Discard stale response if a newer fetch was already started
+            if (myRequestId !== fetchRequestId.current) return;
 
             let propertiesData: Property[] = [];
             if (Array.isArray(response)) {
@@ -126,11 +130,12 @@ export default function AllPropertiesPage() {
             setFilteredProperties(propertiesData);
             if (!agencyId) setAllPropertiesLoaded(true);
         } catch (error) {
+            if (myRequestId !== fetchRequestId.current) return;
             console.error("Failed to fetch properties:", error);
             setAllProperties([]);
             setFilteredProperties([]);
         } finally {
-            setLoading(false);
+            if (myRequestId === fetchRequestId.current) setLoading(false);
         }
     };
 
@@ -144,6 +149,7 @@ export default function AllPropertiesPage() {
     };
 
     const handleSearch = async () => {
+        const myRequestId = ++fetchRequestId.current;
         setLoading(true);
         try {
             const filters: any = {};
@@ -154,6 +160,8 @@ export default function AllPropertiesPage() {
 
             const response = await publicAPI.getProperties(filters);
 
+            if (myRequestId !== fetchRequestId.current) return;
+
             let propertiesData: Property[] = [];
             if (Array.isArray(response)) {
                 propertiesData = response;
@@ -163,9 +171,10 @@ export default function AllPropertiesPage() {
 
             setFilteredProperties(propertiesData);
         } catch (error) {
+            if (myRequestId !== fetchRequestId.current) return;
             console.error("Search failed", error);
         } finally {
-            setLoading(false);
+            if (myRequestId === fetchRequestId.current) setLoading(false);
         }
     };
 
