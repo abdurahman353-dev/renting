@@ -85,7 +85,8 @@ interface Payment {
 
 export default function FinancePage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
+    const [invoicesLoading, setInvoicesLoading] = useState(true);
+    const [paymentsLoading, setPaymentsLoading] = useState(true);
 
     const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
     const [allPayments, setAllPayments] = useState<Payment[]>([]);
@@ -141,7 +142,7 @@ export default function FinancePage() {
     }, []);
 
     const fetchInvoices = async (page = 1) => {
-        setLoading(true);
+        setInvoicesLoading(true);
         try {
             const params = {
                 page,
@@ -168,12 +169,12 @@ export default function FinancePage() {
             console.error("Failed to fetch invoices:", error);
             toast.error("Failed to load invoices");
         } finally {
-            setLoading(false);
+            setInvoicesLoading(false);
         }
     };
 
     const fetchPayments = async (page = 1) => {
-        setLoading(true);
+        setPaymentsLoading(true);
         try {
             const params = {
                 page,
@@ -199,7 +200,7 @@ export default function FinancePage() {
             console.error("Failed to fetch payments:", error);
             toast.error("Failed to load payments");
         } finally {
-            setLoading(false);
+            setPaymentsLoading(false);
         }
     };
 
@@ -550,18 +551,23 @@ export default function FinancePage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {loading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={9} className="text-center py-10">
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                                        <span className="text-muted-foreground text-xs font-medium">Loading invoices...</span>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
+                                        {invoicesLoading ? (
+                                            [...Array(5)].map((_, i) => (
+                                                <TableRow key={`inv-skel-${i}`} className="border-b border-border/50">
+                                                    <TableCell><div className="h-5 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-32 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-16 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-16 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell className="text-right"><div className="h-5 w-14 bg-muted animate-pulse rounded ml-auto" /></TableCell>
+                                                </TableRow>
+                                            ))
                                         ) : (!allInvoices || allInvoices.length === 0) ? (
                                             <TableRow>
-                                                <TableCell colSpan={9} className="text-center py-10 text-muted-foreground text-sm">
+                                                <TableCell colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
                                                     No invoices found matching your filters.
                                                 </TableCell>
                                             </TableRow>
@@ -662,15 +668,19 @@ export default function FinancePage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {loading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={8} className="text-center py-10">
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                                        <span className="text-muted-foreground text-xs font-medium">Loading payments...</span>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
+                                        {paymentsLoading ? (
+                                            [...Array(5)].map((_, i) => (
+                                                <TableRow key={`pay-skel-${i}`} className="border-b border-border/50">
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-32 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-16 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell><div className="h-5 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                                                    <TableCell className="text-right"><div className="h-5 w-20 bg-muted animate-pulse rounded ml-auto" /></TableCell>
+                                                </TableRow>
+                                            ))
                                         ) : (!allPayments || allPayments.length === 0) ? (
                                             <TableRow>
                                                 <TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">
