@@ -664,7 +664,7 @@ export default function SuperAdminDashboard() {
                                         )}
 
                                         {(org.plan_expires_at || org.trial_ends_at) && (
-                                            <span className="text-[11px] text-muted-foreground font-medium">
+                                            <span className="text-[11px] text-red-600 dark:text-red-400 font-bold">
                                                 Expires {new Date(org.plan_expires_at || org.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                                             </span>
                                         )}
@@ -766,7 +766,7 @@ export default function SuperAdminDashboard() {
                                                         KES {Number(org.wallet_balance ?? 0).toLocaleString()}
                                                     </span>
                                                     {org.plan_expires_at && (
-                                                        <span className="text-xs text-muted-foreground">
+                                                        <span className="text-xs text-red-600 dark:text-red-400 font-bold">
                                                             Expires {new Date(org.plan_expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
                                                         </span>
                                                     )}
@@ -787,7 +787,7 @@ export default function SuperAdminDashboard() {
                                                 <div className="space-y-0.5">
                                                     <Badge className="bg-emerald-500 text-white border-0 font-bold text-xs">Active</Badge>
                                                     {org.plan_expires_at && (
-                                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">
+                                                        <p className="text-[11px] text-red-600 dark:text-red-400 font-bold whitespace-nowrap">
                                                             Expires {new Date(org.plan_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                                         </p>
                                                     )}
@@ -796,7 +796,7 @@ export default function SuperAdminDashboard() {
                                                 <div className="space-y-0.5">
                                                     <Badge className="bg-amber-500 text-white border-0 font-bold text-xs">Trial</Badge>
                                                     {org.trial_ends_at && (
-                                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold whitespace-nowrap">
+                                                        <p className="text-[11px] text-red-600 dark:text-red-400 font-bold whitespace-nowrap">
                                                             Expires {new Date(org.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                                         </p>
                                                     )}
