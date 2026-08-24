@@ -60,8 +60,9 @@ export default function AllPropertiesPage() {
 
     const [allProperties, setAllProperties] = useState<Property[]>([]);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [agenciesLoading, setAgenciesLoading] = useState(true);
+    const [allPropertiesLoaded, setAllPropertiesLoaded] = useState(false);
 
     // Filter states
     const [searchLocation, setSearchLocation] = useState('');
@@ -74,8 +75,10 @@ export default function AllPropertiesPage() {
 
     useEffect(() => {
         fetchAgencies();
-        fetchProperties();
         fetchSearchOptions();
+        // NOTE: fetchProperties() is NOT called on mount to avoid
+        // race conditions with agency-specific property fetches.
+        // All properties are loaded lazily when the tab is clicked.
     }, []);
 
     const fetchAgencies = async () => {
@@ -121,6 +124,7 @@ export default function AllPropertiesPage() {
 
             setAllProperties(propertiesData);
             setFilteredProperties(propertiesData);
+            if (!agencyId) setAllPropertiesLoaded(true);
         } catch (error) {
             console.error("Failed to fetch properties:", error);
             setAllProperties([]);
@@ -213,7 +217,13 @@ export default function AllPropertiesPage() {
                             </button>
 
                             <button
-                                onClick={() => setViewMode('properties')}
+                                onClick={() => {
+                                    setSelectedAgency(null);
+                                    setViewMode('properties');
+                                    if (!allPropertiesLoaded) {
+                                        fetchProperties();
+                                    }
+                                }}
                                 className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
                                     viewMode === 'properties'
                                         ? 'bg-indigo-600 text-white shadow-md'
