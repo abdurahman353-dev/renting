@@ -108,6 +108,7 @@ export default function SuperAdminDashboard() {
     const [loadingPayments, setLoadingPayments] = useState(false);
     const [selectedOrgPayment, setSelectedOrgPayment] = useState<any>(null);
     const [refreshingLedger, setRefreshingLedger] = useState(false);
+    const [suspendingOrgId, setSuspendingOrgId] = useState<number | null>(null);
 
     // Dynamic Plans state
     const [plans, setPlans] = useState<any[]>([]);
@@ -372,6 +373,7 @@ export default function SuperAdminDashboard() {
     };
 
     const toggleOrgStatus = async (org: any) => {
+        setSuspendingOrgId(org.id);
         const newStatus = org.status === 'suspended' ? 'active' : 'suspended';
         try {
             await saasAPI.updateOrganizationStatus(org.id, { status: newStatus });
@@ -379,9 +381,11 @@ export default function SuperAdminDashboard() {
             if (viewOrg?.id === org.id) {
                 setViewOrg({ ...viewOrg, status: newStatus });
             }
-            fetchOverview();
+            await fetchOverview();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to update organization status.');
+        } finally {
+            setSuspendingOrgId(null);
         }
     };
 
@@ -618,11 +622,14 @@ export default function SuperAdminDashboard() {
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
                                                     onClick={() => toggleOrgStatus(org)}
+                                                    disabled={suspendingOrgId === org.id}
                                                     className={`font-semibold text-xs gap-2 py-2 cursor-pointer ${
                                                         org.status === 'suspended' ? 'text-emerald-600' : 'text-red-600'
                                                     }`}
                                                 >
-                                                    {org.status === 'suspended' ? (
+                                                    {suspendingOrgId === org.id ? (
+                                                        <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> Updating Status…</>
+                                                    ) : org.status === 'suspended' ? (
                                                         <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Activate Account</>
                                                     ) : (
                                                         <><Ban className="w-4 h-4 text-red-500" /> Suspend Account</>
@@ -825,11 +832,14 @@ export default function SuperAdminDashboard() {
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         onClick={() => toggleOrgStatus(org)}
+                                                        disabled={suspendingOrgId === org.id}
                                                         className={`font-semibold text-xs gap-2 py-2 cursor-pointer ${
                                                             org.status === 'suspended' ? 'text-emerald-600' : 'text-red-600'
                                                         }`}
                                                     >
-                                                        {org.status === 'suspended' ? (
+                                                        {suspendingOrgId === org.id ? (
+                                                            <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> Updating Status…</>
+                                                        ) : org.status === 'suspended' ? (
                                                             <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Activate Account</>
                                                         ) : (
                                                             <><Ban className="w-4 h-4 text-red-500" /> Suspend Account</>
@@ -1891,13 +1901,28 @@ export default function SuperAdminDashboard() {
                                 <Button
                                     size="sm"
                                     variant="outline"
+                                    disabled={suspendingOrgId === viewOrg.id}
                                     className={`font-bold rounded-xl gap-1.5 text-xs border-slate-200 ${
                                         viewOrg.status === 'suspended' ? 'text-emerald-600 hover:bg-emerald-50 border-emerald-300' : 'text-red-600 hover:bg-red-50 border-red-300'
                                     }`}
                                     onClick={() => toggleOrgStatus(viewOrg)}
                                 >
-                                    {viewOrg.status === 'suspended' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
-                                    {viewOrg.status === 'suspended' ? 'Activate Account' : 'Suspend Account'}
+                                    {suspendingOrgId === viewOrg.id ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            <span>{viewOrg.status === 'suspended' ? 'Activating…' : 'Suspending…'}</span>
+                                        </>
+                                    ) : viewOrg.status === 'suspended' ? (
+                                        <>
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            <span>Activate Account</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Ban className="w-3.5 h-3.5" />
+                                            <span>Suspend Account</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </div>
