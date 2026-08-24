@@ -1015,7 +1015,7 @@ export default function SuperAdminDashboard() {
                         </Button>
                         <Button
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
-                            disabled={updating || !editStatus || editStatus === selectedOrg?.status}
+                            disabled={updating || !editStatus || (editStatus === selectedOrg?.status && (selectedOrg?.status !== 'trial' || !extendDays))}
                             onClick={handleSaveOrgSettings}
                         >
                             {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
