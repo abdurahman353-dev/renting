@@ -120,11 +120,11 @@ export default function CashierPage() {
     const [submitting, setSubmitting] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
 
-    // Invoices state
     const [targetInvoice, setTargetInvoice] = useState<Invoice | null>(null);
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
     const [selectedInvoices, setSelectedInvoices] = useState<number[]>([]);
     const [loadingInvoice, setLoadingInvoice] = useState(false);
+    const [loadingInvoices, setLoadingInvoices] = useState(false);
     const [isMpesaModalOpen, setIsMpesaModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -208,6 +208,7 @@ export default function CashierPage() {
     }, [selectedTenant]);
 
     const fetchPendingInvoices = async (tenantId: number) => {
+        setLoadingInvoices(true);
         try {
             const res = await financeAPI.getInvoices({ tenant_id: tenantId });
             const invoices = Array.isArray(res) ? res : (res.data || []);
@@ -217,6 +218,8 @@ export default function CashierPage() {
             setPendingInvoices(pending);
         } catch (error) {
             console.error("Failed to fetch invoices", error);
+        } finally {
+            setLoadingInvoices(false);
         }
     };
 
@@ -568,10 +571,14 @@ export default function CashierPage() {
                                             <Receipt className="w-4 h-4" />
                                         </div>
                                         Pending Invoices
-                                        <span className="text-xs font-semibold text-muted-foreground">({pendingInvoices.length})</span>
+                                        {loadingInvoices ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground ml-1 inline" />
+                                        ) : (
+                                            <span className="text-xs font-semibold text-muted-foreground">({pendingInvoices.length})</span>
+                                        )}
                                     </CardTitle>
                                 </div>
-                                {pendingInvoices.length > 0 && (
+                                {!loadingInvoices && pendingInvoices.length > 0 && (
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -583,7 +590,19 @@ export default function CashierPage() {
                                 )}
                             </CardHeader>
                             <CardContent className="p-6 space-y-3">
-                                {pendingInvoices.length === 0 ? (
+                                {loadingInvoices ? (
+                                    <div className="space-y-2 py-1">
+                                        {[...Array(2)].map((_, i) => (
+                                            <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-border/60 bg-muted/20 animate-pulse">
+                                                <div className="space-y-1.5">
+                                                    <div className="h-4 w-36 bg-muted rounded" />
+                                                    <div className="h-3 w-48 bg-muted rounded" />
+                                                </div>
+                                                <div className="h-4 w-16 bg-muted rounded" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : pendingInvoices.length === 0 ? (
                                     <div className="text-center py-8 border border-dashed border-border rounded-xl">
                                         <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                                         <p className="text-sm font-semibold text-foreground">No Pending Invoices</p>
