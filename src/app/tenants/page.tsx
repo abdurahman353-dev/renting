@@ -623,6 +623,8 @@ function TenantsContent() {
             return;
         }
 
+        setSubmitting(true);
+
         try {
             // ... (rest of logic same)
             const payload = {
@@ -686,35 +688,35 @@ function TenantsContent() {
     const filterPropertyName = filterPropertyObj?.name || filterProperty;
 
     return (
-        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
+        <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 bg-muted/40 min-h-screen max-w-full overflow-x-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Tenants</h2>
-                    <p className="text-muted-foreground">Manage tenant profiles and lease agreements.</p>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Tenants</h2>
+                    <p className="text-sm text-muted-foreground">Manage tenant profiles and lease agreements.</p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
                         variant="ghost"
                         onClick={() => router.push('/tenants/previous')}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm"
                     >
-                        <Users className="mr-2 h-4 w-4" /> Previous Tenants
+                        <Users className="mr-1.5 h-4 w-4" /> Previous Tenants
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => router.push('/tenants/agreements')}
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
                     >
-                        <FileText className="mr-2 h-4 w-4" /> Agreements
+                        <FileText className="mr-1.5 h-4 w-4" /> Agreements
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => setConfirmRemindersOpen(true)}
                         disabled={sendingReminders}
-                        className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                        className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm"
                     >
-                        {sendingReminders ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                        {sendingReminders ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Phone className="mr-1.5 h-4 w-4" />}
                         Send Reminders
                     </Button>
 
@@ -723,14 +725,14 @@ function TenantsContent() {
                         if (!val) resetForm();
                     }}>
                         <DialogTrigger asChild>
-                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+                            <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm shadow-xs" onClick={() => {
                                 resetForm();
                                 setOpen(true);
                             }}>
-                                <Plus className="mr-2 h-4 w-4" /> Register Tenant
+                                <Plus className="mr-1.5 h-4 w-4" /> Register Tenant
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
+                        <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle>{isEditing ? "Edit Tenant" : "Register New Tenant"}</DialogTitle>
                                 <DialogDescription>
@@ -986,11 +988,17 @@ function TenantsContent() {
                                     </div>
                                 </div>
                             </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                                <Button onClick={handleRegisterTenant} disabled={submitting}>
-                                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    {isEditing ? "Update" : "Register"}
+                            <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                                <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>Cancel</Button>
+                                <Button onClick={handleRegisterTenant} disabled={submitting} className="bg-indigo-600 hover:bg-indigo-700 min-w-[120px]">
+                                    {submitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        <span>{isEditing ? "Update Tenant" : "Register Tenant"}</span>
+                                    )}
                                 </Button>
                             </DialogFooter>
 
@@ -1177,8 +1185,8 @@ function TenantsContent() {
                 </div>
             )}
 
-            <div className="rounded-md border border-border bg-card shadow-sm">
-                <div className="max-h-[600px] overflow-y-auto relative">
+            <div className="rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <div className="max-h-[600px] overflow-y-auto overflow-x-auto relative">
                     <Table>
                         <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                             <TableRow>

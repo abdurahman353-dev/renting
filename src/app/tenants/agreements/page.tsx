@@ -113,8 +113,8 @@ function AgreementsContent() {
                     </div>
                 </div>
 
-                <div className="rounded-md border border-border bg-card shadow-sm">
-                    <div className="max-h-[600px] overflow-y-auto relative">
+                <div className="rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                    <div className="max-h-[600px] overflow-y-auto overflow-x-auto relative">
                         <Table>
                             <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                                 <TableRow>
