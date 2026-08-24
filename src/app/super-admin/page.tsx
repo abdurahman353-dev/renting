@@ -441,7 +441,7 @@ export default function SuperAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                            KES {(stats.total_collected_kes || 0).toLocaleString()}
+                            KES {Math.max(0, stats.total_collected_kes || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
                             Active MRR: <span className="font-bold text-emerald-600 dark:text-emerald-400">KES {(stats.mrr_kes || 0).toLocaleString()}</span> · ARR: KES {(stats.arr_kes || 0).toLocaleString()} / yr
