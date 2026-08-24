@@ -130,7 +130,7 @@ export default function ActivityLogsPage() {
 
 
     return (
-        <div className="p-8 space-y-8 bg-muted/40 min-h-screen">
+        <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 bg-muted/40 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-foreground">System Activity Logs</h2>
@@ -150,37 +150,37 @@ export default function ActivityLogsPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center gap-4">
-                <div className="relative flex-1 w-full max-w-sm">
+            <div className="flex flex-col gap-3">
+                <div className="relative w-full">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search logs..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-background border-input"
+                        className="pl-9 bg-background border-input w-full"
                     />
                 </div>
 
-                <div className="flex items-center gap-2 w-full lg:w-auto">
-                    <div className="flex items-center gap-2 bg-background border border-input rounded-lg px-3 py-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div className="flex flex-wrap items-center gap-2 w-full">
+                    <div className="flex flex-wrap items-center gap-2 bg-background border border-input rounded-lg px-3 py-1 min-w-0">
+                        <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                         <Input
                             type="date"
-                            className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px]"
+                            className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px] min-w-[100px]"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                         />
-                        <span className="text-muted-foreground">to</span>
+                        <span className="text-muted-foreground text-sm">to</span>
                         <Input
                             type="date"
-                            className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px]"
+                            className="border-0 bg-transparent h-8 focus-visible:ring-0 p-0 text-sm w-[130px] min-w-[100px]"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                         />
                     </div>
 
                     <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                        <SelectTrigger className="bg-background border-input w-[140px]">
+                        <SelectTrigger className="bg-background border-input w-full sm:w-[140px]">
                             <SelectValue placeholder="Severity" />
                         </SelectTrigger>
                         <SelectContent>
@@ -192,7 +192,7 @@ export default function ActivityLogsPage() {
                     </Select>
 
                     <Select value={adminFilter} onValueChange={setAdminFilter}>
-                        <SelectTrigger className="bg-background border-input w-[160px]">
+                        <SelectTrigger className="bg-background border-input w-full sm:w-[160px]">
                             <SelectValue placeholder="Admin" />
                         </SelectTrigger>
                         <SelectContent>
@@ -204,7 +204,7 @@ export default function ActivityLogsPage() {
                     </Select>
 
                     <Select value={actionFilter} onValueChange={setActionFilter}>
-                        <SelectTrigger className="bg-background border-input w-[160px]">
+                        <SelectTrigger className="bg-background border-input w-full sm:w-[160px]">
                             <SelectValue placeholder="Action" />
                         </SelectTrigger>
                         <SelectContent>
@@ -222,7 +222,7 @@ export default function ActivityLogsPage() {
                     <CardTitle className="text-lg">Audit Trail</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="max-h-[600px] overflow-y-auto relative">
+                    <div className="max-h-[600px] overflow-y-auto overflow-x-auto relative">
                         <Table>
                             <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                                 <TableRow className="bg-muted/50 hover:bg-muted/50">

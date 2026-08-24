@@ -105,6 +105,7 @@ export default function SaasReportsPage() {
     const [auditMaxAmount, setAuditMaxAmount] = useState<string>('');
     const [auditTab, setAuditTab] = useState<'ledger' | 'agencies'>('ledger');
     const [selectedAuditTx, setSelectedAuditTx] = useState<any>(null);
+    const [showAuditFiltersMobile, setShowAuditFiltersMobile] = useState(false);
 
     const executeAuditQuery = async (params: any) => {
         setAuditLoading(true);
@@ -886,6 +887,15 @@ export default function SaasReportsPage() {
                             <div className="flex flex-wrap items-center gap-2 shrink-0">
                                 <Button
                                     size="sm"
+                                    variant={showAuditFiltersMobile ? "secondary" : "outline"}
+                                    onClick={() => setShowAuditFiltersMobile(!showAuditFiltersMobile)}
+                                    className="h-9 px-3 rounded-xl font-bold gap-1.5 text-xs shadow-xs md:hidden"
+                                >
+                                    <Filter className="w-3.5 h-3.5" />
+                                    <span>{showAuditFiltersMobile ? "Close Filters" : "Filters"}</span>
+                                </Button>
+                                <Button
+                                    size="sm"
                                     variant="outline"
                                     onClick={() => executeAuditQuery({
                                         start_date: auditStartDate,
@@ -911,8 +921,8 @@ export default function SaasReportsPage() {
                             </div>
                         </div>
 
-                        {/* Automatic Real-Time Filter Suite (No Apply button needed) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-3 mt-3 border-t border-border bg-muted/30 p-3 rounded-xl">
+                        {/* Automatic Real-Time Filter Suite (Collapsible on mobile, always visible on md+) */}
+                        <div className={`${showAuditFiltersMobile ? "grid" : "hidden md:grid"} grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-3 mt-3 border-t border-border bg-muted/30 p-3 rounded-xl`}>
                             {/* From Date */}
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold uppercase text-muted-foreground">From Date</label>

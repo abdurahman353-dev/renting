@@ -240,35 +240,35 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
       {/* Sidebar */}
       <div
         className={cn(
-          "space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed inset-y-0 left-0 z-[40] md:z-1 transition-all duration-300 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          isExpanded ? "w-64" : "w-20"
+          "space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed inset-y-0 left-0 z-[50] md:z-1 transition-all duration-300 ease-in-out md:translate-x-0",
+          isOpen ? "translate-x-0 w-72 md:w-64" : "-translate-x-full md:translate-x-0",
+          isExpanded ? "md:w-64" : "md:w-20"
         )}
       >
         <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar overflow-x-hidden">
           <Link href="/" className={cn(
-            "flex items-center mb-14 transition-all duration-300",
-            isExpanded ? "pl-3" : "justify-center"
-          )}>
+            "flex items-center mb-8 px-2 transition-all duration-300 hover:opacity-90",
+            (isExpanded || isOpen) ? "justify-start" : "md:justify-center"
+          )} title="Go to Landing Page">
             <div className="relative w-8 h-8 flex-shrink-0">
               {brandLoading ? (
                 /* Skeleton avatar */
                 <div className="w-8 h-8 rounded-lg bg-slate-700 animate-pulse" />
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-sm animate-pulse"></div>
+                  <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
                   <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
-                    <span className="text-xl font-bold">{brandLetter}</span>
+                    <span className="text-xl font-bold text-white">{brandLetter}</span>
                   </div>
                 </>
               )}
             </div>
-            {isExpanded && (
+            {(isExpanded || isOpen) && (
               brandLoading ? (
                 /* Skeleton text bar */
-                <div className="ml-4 h-5 w-32 rounded-md bg-slate-700 animate-pulse" />
+                <div className="ml-3 h-5 w-32 rounded-md bg-slate-700 animate-pulse" />
               ) : (
-                <h1 className="text-2xl font-bold text-indigo-400 ml-4 whitespace-nowrap overflow-hidden transition-all duration-300">
+                <h1 className="text-xl font-bold text-indigo-400 ml-3 whitespace-nowrap overflow-hidden transition-all duration-300">
                   {displayTitle}
                 </h1>
               )

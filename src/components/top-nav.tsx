@@ -123,10 +123,20 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
     return (
         <div className="h-16 border-b border-border bg-card flex items-center justify-between px-6 z-40 relative">
             {/* Left */}
-            <div className="flex items-center gap-4">
-                <button onClick={onSidebarToggle} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+            <div className="flex items-center gap-3">
+                <button onClick={onSidebarToggle} className="p-1.5 hover:bg-muted rounded-lg transition-colors" aria-label="Toggle navigation">
                     <Menu className="w-5 h-5" />
                 </button>
+
+                {/* Company Name / Logo on Mobile directing to Landing Page */}
+                <Link href="/" className="flex items-center gap-2 md:hidden hover:opacity-85 transition-opacity" title="Go to Landing Page">
+                    <div className="relative bg-black rounded-md w-7 h-7 flex items-center justify-center border border-slate-800 shrink-0 shadow-xs">
+                        <span className="text-xs font-bold text-white">{companyName.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-sm font-bold text-foreground truncate max-w-[130px]">
+                        {companyName}
+                    </span>
+                </Link>
 
                 <div className="hidden md:flex">
                     <DynamicBreadcrumb />
