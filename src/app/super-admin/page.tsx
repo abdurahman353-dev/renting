@@ -899,7 +899,7 @@ export default function SuperAdminDashboard() {
                                 value={editStatus}
                                 onChange={(e) => setEditStatus(e.target.value)}
                             >
-                                <option value="active">Active (Fully Paid / Operational)</option>
+                                <option value="active">Active</option>
                                 <option value="trial">Free Trial Mode</option>
                                 <option value="suspended">Suspended (Blocked Access)</option>
                             </select>
