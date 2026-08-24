@@ -886,26 +886,95 @@ export default function SuperAdminDashboard() {
                             Manage {selectedOrg?.name}
                         </DialogTitle>
                         <DialogDescription>
-                            Change the account status or extend the trial period for this agency.
+                            Select an action to change the account status for this agency.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-5 py-4">
-                        {/* Status Select */}
-                        <div className="space-y-2">
-                            <Label className="font-bold text-sm">Account Status</Label>
-                            <select
-                                className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm font-semibold"
-                                value={editStatus}
-                                onChange={(e) => setEditStatus(e.target.value)}
-                            >
-                                <option value="active">Active</option>
-                                <option value="trial">Free Trial Mode</option>
-                                <option value="suspended">Suspended (Blocked Access)</option>
-                            </select>
+                        {/* Current Status Badge */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Status:</span>
+                            {selectedOrg?.status === 'active' && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">Active</span>
+                            )}
+                            {selectedOrg?.status === 'trial' && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">Free Trial</span>
+                            )}
+                            {selectedOrg?.status === 'suspended' && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800">Suspended</span>
+                            )}
                         </div>
 
-                        {/* Trial Extension (Shown only if status is trial) */}
+                        {/* Smart Action Buttons */}
+                        <div className="space-y-2">
+                            <Label className="font-bold text-sm">Change Status To</Label>
+                            <div className="flex flex-col gap-2">
+                                {/* Activate button — hidden if already active */}
+                                {selectedOrg?.status !== 'active' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditStatus('active')}
+                                        className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                                            editStatus === 'active'
+                                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                                                : 'border-border bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20'
+                                        }`}
+                                    >
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${editStatus === 'active' ? 'border-emerald-500 bg-emerald-500' : 'border-muted-foreground'}`}>
+                                            {editStatus === 'active' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-bold">Activate Account</p>
+                                            <p className="text-xs text-muted-foreground font-normal">Grant full platform access immediately</p>
+                                        </div>
+                                    </button>
+                                )}
+
+                                {/* Set to Trial button — hidden if already trial */}
+                                {selectedOrg?.status !== 'trial' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditStatus('trial')}
+                                        className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                                            editStatus === 'trial'
+                                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 shadow-sm'
+                                                : 'border-border bg-background text-foreground hover:border-amber-300 hover:bg-amber-50/60 dark:hover:bg-amber-950/20'
+                                        }`}
+                                    >
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${editStatus === 'trial' ? 'border-amber-500 bg-amber-500' : 'border-muted-foreground'}`}>
+                                            {editStatus === 'trial' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-bold">Set to Free Trial</p>
+                                            <p className="text-xs text-muted-foreground font-normal">Extend access with a limited trial period</p>
+                                        </div>
+                                    </button>
+                                )}
+
+                                {/* Suspend button — hidden if already suspended */}
+                                {selectedOrg?.status !== 'suspended' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditStatus('suspended')}
+                                        className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                                            editStatus === 'suspended'
+                                                ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 shadow-sm'
+                                                : 'border-border bg-background text-foreground hover:border-red-300 hover:bg-red-50/60 dark:hover:bg-red-950/20'
+                                        }`}
+                                    >
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${editStatus === 'suspended' ? 'border-red-500 bg-red-500' : 'border-muted-foreground'}`}>
+                                            {editStatus === 'suspended' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-bold">Suspend Account</p>
+                                            <p className="text-xs text-muted-foreground font-normal">Block all login access immediately</p>
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Trial Extension (shown when Set to Trial is selected) */}
                         {editStatus === 'trial' && (
                             <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900">
                                 <Label className="font-bold text-sm text-amber-700 dark:text-amber-400">Extend Trial Days</Label>
@@ -927,15 +996,16 @@ export default function SuperAdminDashboard() {
                         </Button>
                         <Button
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md"
-                            disabled={updating}
+                            disabled={updating || !editStatus || editStatus === selectedOrg?.status}
                             onClick={handleSaveOrgSettings}
                         >
                             {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Save Agency Settings
+                            Apply Changes
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
 
             {/* Register New Landlord Agency Modal */}
             <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
