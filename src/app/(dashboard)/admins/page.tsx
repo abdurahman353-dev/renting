@@ -146,12 +146,13 @@ export default function AdminManagementPage() {
 
     // Confirmation dialog state
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
     const [confirmConfig, setConfirmConfig] = useState<{
         title: string;
         description: string;
         confirmText: string;
         confirmVariant: "default" | "destructive";
-        onConfirm: () => void;
+        onConfirm: () => Promise<void> | void;
     }>({
         title: '',
         description: '',
@@ -1000,17 +1001,22 @@ export default function AdminManagementPage() {
             </Dialog>
 
             {/* Confirmation Dialog */}
-            <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-                <DialogContent className="sm:max-w-[420px] rounded-2xl">
+            <Dialog open={isConfirmDialogOpen} onOpenChange={(open) => {
+                if (!isConfirming) {
+                    setIsConfirmDialogOpen(open);
+                }
+            }}>
+                <DialogContent className="w-[95vw] sm:max-w-[420px] rounded-2xl p-6">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold">{confirmConfig.title}</DialogTitle>
-                        <DialogDescription className="pt-2 text-sm leading-relaxed">
+                        <DialogDescription className="pt-2 text-sm leading-relaxed text-muted-foreground">
                             {confirmConfig.description}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
                         <Button
                             variant="outline"
+                            disabled={isConfirming}
                             onClick={() => setIsConfirmDialogOpen(false)}
                             className="w-full sm:w-auto rounded-xl font-bold"
                         >
@@ -1018,10 +1024,25 @@ export default function AdminManagementPage() {
                         </Button>
                         <Button
                             variant={confirmConfig.confirmVariant}
-                            onClick={confirmConfig.onConfirm}
-                            className="w-full sm:w-auto rounded-xl font-bold"
+                            disabled={isConfirming}
+                            onClick={async () => {
+                                setIsConfirming(true);
+                                try {
+                                    await confirmConfig.onConfirm();
+                                } finally {
+                                    setIsConfirming(false);
+                                }
+                            }}
+                            className="w-full sm:w-auto rounded-xl font-bold min-w-[140px]"
                         >
-                            {confirmConfig.confirmText}
+                            {isConfirming ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Processing…</span>
+                                </>
+                            ) : (
+                                confirmConfig.confirmText
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
