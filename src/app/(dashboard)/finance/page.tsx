@@ -102,7 +102,7 @@ export default function FinancePage() {
     const [paymentTotal, setPaymentTotal] = useState(0);
 
     const [perPage] = useState(15);
-    const debouncedSearch = useDebounce(searchQuery, 500);
+    const debouncedSearch = useDebounce(searchQuery, 200);
 
     const [properties, setProperties] = useState<any[]>([]);
     const [units, setUnits] = useState<any[]>([]);
