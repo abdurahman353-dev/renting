@@ -236,6 +236,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     const now = new Date();
                     const diffMs = expDate.getTime() - now.getTime();
                     const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+                    // Immediate forced logout if trial/subscription has expired & wallet balance is insufficient
+                    if (diffMs <= 0 && !isFunded) {
+                        Cookies.remove('admin_token');
+                        sessionStorage.removeItem('admin_user');
+                        if (typeof window !== 'undefined') {
+                            window.location.href = `/login?error=${isTrial ? 'trial_expired' : 'subscription_expired'}`;
+                        }
+                        return;
+                    }
+
                     if (days >= 0 && days <= 3) {
                         setExpiryAlert({
                             type: isTrial ? 'trial' : 'subscription',
@@ -259,16 +270,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const data       = err?.response?.data;
             const errorCode  = data?.error_code;
             if (['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
-                setBlocked({
-                    error_code:        errorCode,
-                    message:           data.message,
-                    plan:              data.plan       ?? 'starter',
-                    plan_price:        data.plan_price ?? 0,
-                    wallet_balance:    data.wallet_balance ?? 0,
-                    organization_name: data.organization_name,
-                    user_name:         data.user_name,
-                    user_email:        data.user_email,
-                });
+                // Immediate forced logout if account is blocked due to expiration
+                Cookies.remove('admin_token');
+                sessionStorage.removeItem('admin_user');
+                if (typeof window !== 'undefined') {
+                    window.location.href = `/login?error=${errorCode.toLowerCase()}&msg=${encodeURIComponent(data.message || 'Account expired')}`;
+                }
             } else {
                 setBlocked(null);
             }
@@ -327,16 +334,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const data = e.detail;
             const errorCode = data?.error_code;
             if (['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
-                setBlocked({
-                    error_code:        errorCode,
-                    message:           data.message,
-                    plan:              data.plan       ?? 'starter',
-                    plan_price:        data.plan_price ?? 0,
-                    wallet_balance:    data.wallet_balance ?? 0,
-                    organization_name: data.organization_name,
-                    user_name:         data.user_name,
-                    user_email:        data.user_email,
-                });
+                // Immediate forced logout when trial/subscription expires with insufficient wallet balance
+                Cookies.remove('admin_token');
+                sessionStorage.removeItem('admin_user');
+                if (typeof window !== 'undefined') {
+                    window.location.href = `/login?error=${errorCode.toLowerCase()}&msg=${encodeURIComponent(data?.message || 'Account expired')}`;
+                }
             }
         };
         window.addEventListener('org_blocked', handleOrgBlocked);

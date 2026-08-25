@@ -43,8 +43,12 @@ apiClient.interceptors.response.use(
                 window.location.href = '/login?error=session_expired';
             }
         } else if (error.response?.status === 403 && ['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
-            if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('org_blocked', { detail: error.response.data }));
+            // Immediate forced logout when trial/subscription expires with insufficient wallet balance
+            Cookies.remove('admin_token');
+            sessionStorage.removeItem('admin_user');
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                const msg = error.response.data?.message || 'Your account has expired. Please log in to top up.';
+                window.location.href = `/login?error=${errorCode.toLowerCase()}&msg=${encodeURIComponent(msg)}`;
             }
         }
 

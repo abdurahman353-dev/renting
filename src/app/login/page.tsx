@@ -58,6 +58,22 @@ export default function LoginPage() {
             }
         };
         fetchSettings();
+
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const errParam = params.get('error');
+            const msgParam = params.get('msg');
+            if (errParam && ['trial_expired', 'subscription_expired', 'account_suspended'].includes(errParam)) {
+                const title = errParam === 'trial_expired' 
+                    ? 'Your 14-day free trial has expired.' 
+                    : errParam === 'subscription_expired' 
+                    ? 'Your subscription has expired.' 
+                    : 'Your account has been suspended.';
+                setError(msgParam || `${title} Your wallet balance was insufficient for auto-renewal. Log in to manage billing.`);
+            } else if (errParam === 'session_expired') {
+                setError('Your session has expired. Please log in again.');
+            }
+        }
     }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
