@@ -270,62 +270,76 @@ export default function TenantReportPage() {
                                 <th className="px-6 py-3">Tenant Info</th>
                                 <th className="px-6 py-3">Status</th>
                                 <th className="px-6 py-3 text-center">Unit</th>
-                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial dues=(Agreement fee+Opening balance)</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
                                 <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
-                                <th className="px-6 py-3 text-right text-emerald-600 font-semibold">Amount Paid</th>
-                                <th className="px-6 py-3 text-right font-bold">Total Balance</th>
+                                <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
+                                <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
+                                <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr key="loading-row">
-                                    <td colSpan={12} className="px-6 py-8 text-center text-slate-500">Loading...</td>
+                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500">Loading...</td>
                                 </tr>
                             ) : (!data || data.length === 0) ? (
                                 <tr key="empty-row">
-                                    <td colSpan={12} className="px-6 py-8 text-center text-slate-500 font-medium">
+                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500 font-medium">
                                         No tenant transactions recorded for this period.
                                     </td>
                                 </tr>
                             ) : (
-                                (data || []).map((row: any) => (
-                                    <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-foreground text-[10px] uppercase truncate max-w-[120px]">{row.property_name}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-semibold text-foreground">{row.tenant_name}</div>
-                                            <div className="text-[10px] text-muted-foreground">{row.phone}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.status?.toLowerCase() === 'active'
-                                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                                                : (row.status?.toLowerCase() === 'inactive'
-                                                    ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
-                                                    : 'bg-slate-500/10 text-slate-600 border border-slate-500/20')
-                                                }`}>
-                                                {row.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="text-foreground font-bold">{row.unit_number}</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-rose-500">
-                                            {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                            {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-orange-600">
-                                            {Number(row.arrears) !== 0 ? Number(row.arrears).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
-                                            {Number(row.amount_paid) > 0 ? Number(row.amount_paid).toLocaleString() : '—'}
-                                        </td>
-                                        <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                            {Number(row.balance).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                ))
+                                (data || []).map((row: any) => {
+                                    const repairExpenses = Number(row.repair_expenses || 0);
+                                    const amountPaid = Number(row.amount_paid || 0);
+                                    const netCollected = row.net_collected !== undefined ? Number(row.net_collected) : (amountPaid - repairExpenses);
+
+                                    return (
+                                        <tr key={row.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                            <td className="px-6 py-4 font-medium text-foreground text-[10px] uppercase truncate max-w-[120px]">{row.property_name}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-semibold text-foreground">{row.tenant_name}</div>
+                                                <div className="text-[10px] text-muted-foreground">{row.phone}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.status?.toLowerCase() === 'active'
+                                                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                                    : (row.status?.toLowerCase() === 'inactive'
+                                                        ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                                                        : 'bg-slate-500/10 text-slate-600 border border-slate-500/20')
+                                                    }`}>
+                                                    {row.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-foreground font-bold">{row.unit_number}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-rose-500">
+                                                {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-slate-900">
+                                                {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-orange-600">
+                                                {Number(row.arrears) !== 0 ? Number(row.arrears).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-bold text-emerald-600">
+                                                {amountPaid > 0 ? amountPaid.toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-semibold text-amber-600">
+                                                {repairExpenses > 0 ? `KES ${repairExpenses.toLocaleString()}` : '—'}
+                                            </td>
+                                            <td className={`px-6 py-4 text-right font-black ${netCollected >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+                                                KES {netCollected.toLocaleString()}
+                                            </td>
+                                            <td className={`px-6 py-4 text-right font-bold ${row.balance < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                                {Number(row.balance).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

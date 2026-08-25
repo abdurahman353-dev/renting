@@ -252,8 +252,9 @@ export default function PropertyReportPage() {
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
                             <tr>
                                 <th className="px-6 py-3">Property (Units T/O/V)</th>
-                                <th className="px-6 py-3 text-right text-amber-600">Initial Dues</th>
-                                <th className="px-6 py-3 text-right text-slate-900">(Rent+Deposits)</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
+                                <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
                                 <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
                                 <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
@@ -262,9 +263,9 @@ export default function PropertyReportPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
+                                <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
                             ) : (!data.properties || data.properties.length === 0) ? (
-                                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
+                                <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
                             ) : (
                                 (data.properties || []).map((row: any) => {
                                     const repairExpenses = Number(row.repair_expenses || 0);
@@ -279,11 +280,14 @@ export default function PropertyReportPage() {
                                                     {row.total_units} units ({row.occupied_units} Occ / {row.vacant_units} Vac)
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right font-medium text-amber-600">
+                                            <td className="px-6 py-4 text-right font-medium text-rose-500">
                                                 {Number(row.initial_dues) !== 0 ? Number(row.initial_dues).toLocaleString() : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-right font-medium text-slate-900">
                                                 {Number(row.rent) !== 0 ? Number(row.rent).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-medium text-orange-600">
+                                                {Number(row.arrears) !== 0 ? Number(row.arrears).toLocaleString() : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-right font-bold text-emerald-600">
                                                 {amountPaid !== 0 ? amountPaid.toLocaleString() : '—'}
