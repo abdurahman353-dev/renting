@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { Loader2, Lock, Phone, MessageCircle, CreditCard, RefreshCw } from "lucide-react";
@@ -21,6 +22,12 @@ type BlockedState = {
     organization_name?: string;
     user_name?: string;
     user_email?: string;
+} | null;
+
+type ExpiryAlertState = {
+    type: 'trial' | 'subscription';
+    daysLeft: number;
+    formattedDate: string;
 } | null;
 
 function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () => void }) {
@@ -192,11 +199,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [blocked, setBlocked] = useState<BlockedState>(null);
     const [checkingBlock, setCheckingBlock] = useState(false);
     const [initialChecked, setInitialChecked] = useState(false);
+    const [expiryAlert, setExpiryAlert] = useState<ExpiryAlertState>(null);
 
     // Verify whether organization is active by pinging a protected endpoint
     const checkOrgStatus = useCallback(async (isInitial = false) => {
         if (!isAuthenticated || hasRole('super_admin')) {
             setBlocked(null);
+            setExpiryAlert(null);
             setInitialChecked(true);
             return;
         }
@@ -204,9 +213,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             setCheckingBlock(true);
         }
         try {
-            await apiClient.get('/billing/status');
+            const res = await apiClient.get('/billing/status');
             setBlocked(null);
+            const bData = res.data;
+            if (bData) {
+                const isTrial = bData.status === 'trial';
+                const expiryStr = isTrial ? bData.trial_ends_at : bData.plan_expires_at;
+                if (expiryStr) {
+                    const expDate = new Date(expiryStr);
+                    const now = new Date();
+                    const diffMs = expDate.getTime() - now.getTime();
+                    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                    if (days >= 0 && days <= 3) {
+                        setExpiryAlert({
+                            type: isTrial ? 'trial' : 'subscription',
+                            daysLeft: Math.max(0, days),
+                            formattedDate: expDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }),
+                        });
+                    } else {
+                        setExpiryAlert(null);
+                    }
+                } else {
+                    setExpiryAlert(null);
+                }
+            }
         } catch (err: any) {
+            setExpiryAlert(null);
             const data       = err?.response?.data;
             const errorCode  = data?.error_code;
             if (['TRIAL_EXPIRED', 'SUBSCRIPTION_EXPIRED', 'ACCOUNT_SUSPENDED'].includes(errorCode)) {
@@ -341,5 +373,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }
 
-    return <LayoutWrapper>{children}</LayoutWrapper>;
+    return (
+        <LayoutWrapper>
+            {expiryAlert && (
+                <div
+                    className={`w-full border-b transition-all ${
+                        expiryAlert.daysLeft <= 1
+                            ? 'bg-gradient-to-r from-red-600/10 via-amber-500/10 to-red-600/10 border-red-300 dark:border-red-800 text-red-950 dark:text-red-200'
+                            : 'bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200'
+                    }`}
+                >
+                    <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            <span className="relative flex h-3 w-3 shrink-0">
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${expiryAlert.daysLeft <= 1 ? 'bg-red-400' : 'bg-amber-400'}`}></span>
+                                <span className={`relative inline-flex rounded-full h-3 w-3 ${expiryAlert.daysLeft <= 1 ? 'bg-red-500' : 'bg-amber-500'}`}></span>
+                            </span>
+                            <div className="text-xs sm:text-sm">
+                                <span className={`font-extrabold uppercase tracking-wider text-[10px] sm:text-xs mr-2 px-2 py-0.5 rounded-md border ${
+                                    expiryAlert.daysLeft <= 1 
+                                        ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800' 
+                                        : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
+                                }`}>
+                                    {expiryAlert.daysLeft === 1 ? '🚨 1 day to go' : expiryAlert.daysLeft === 2 ? '⚠️ 2 days to go' : expiryAlert.daysLeft === 3 ? '⚠️ 3 days to go' : '🚨 Expires Today'}
+                                </span>
+                                <span className="font-semibold">
+                                    Your {expiryAlert.type === 'trial' ? 'Free Trial' : 'Subscription'} will end{' '}
+                                    <strong className="font-extrabold text-red-600 dark:text-red-400 underline decoration-red-400/40">
+                                        {expiryAlert.daysLeft === 0 ? 'Today' : expiryAlert.daysLeft === 1 ? 'Tomorrow' : `in ${expiryAlert.daysLeft} days`} ({expiryAlert.formattedDate})
+                                    </strong>
+                                    . Pay via M-Pesa to maintain uninterrupted access.
+                                </span>
+                            </div>
+                        </div>
+                        <Link
+                            href="/billing"
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-extrabold text-xs shadow-md transition-all active:scale-95 shrink-0 ${
+                                expiryAlert.daysLeft <= 1
+                                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-500/20'
+                                    : 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/20'
+                            }`}
+                        >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            Pay / View Billing →
+                        </Link>
+                    </div>
+                </div>
+            )}
+            {children}
+        </LayoutWrapper>
+    );
 }

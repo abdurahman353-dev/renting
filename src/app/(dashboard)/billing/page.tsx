@@ -276,12 +276,25 @@ export default function BillingPage() {
 
             {/* Trial & Expiry Alerts */}
             {isTrial && daysLeft <= 5 && (
-                <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-4 text-amber-900 dark:text-amber-200">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className={`flex items-start gap-3 border rounded-xl p-4 text-sm ${
+                    daysLeft <= 1
+                        ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
+                        : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200'
+                }`}>
+                    <AlertTriangle className={`h-5 w-5 shrink-0 mt-0.5 ${daysLeft <= 1 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
                     <div className="text-sm">
-                        <p className="font-semibold">Free Trial Expiring Soon</p>
-                        <p className="mt-0.5 text-amber-800 dark:text-amber-300">
-                            Your trial will end in <strong>{daysLeft} day{daysLeft !== 1 ? 's' : ''}</strong> ({trialExpiry?.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}). Pay via M-Pesa to keep uninterrupted access.
+                        <div className="flex items-center gap-2">
+                            <p className="font-bold">Free Trial Expiring Soon</p>
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-black uppercase ${
+                                daysLeft <= 1
+                                    ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            }`}>
+                                {daysLeft === 1 ? '🚨 1 day to go' : daysLeft === 2 ? '⚠️ 2 days to go' : daysLeft === 3 ? '⚠️ 3 days to go' : `${daysLeft} days left`}
+                            </span>
+                        </div>
+                        <p className="mt-1">
+                            Your trial will end <strong>{daysLeft === 0 ? 'today' : daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`}</strong> ({trialExpiry?.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}). Pay via M-Pesa to keep uninterrupted access.
                         </p>
                     </div>
                 </div>
