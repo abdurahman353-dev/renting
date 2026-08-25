@@ -525,19 +525,27 @@ export default function TenantDetailsPage() {
 
 function ReverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess }: any) {
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+    const [reversalMode, setReversalMode] = useState<'payment_only' | 'full_invoice'>('payment_only');
     const [loading, setLoading] = useState(false);
+
+    const targetInvObj = invoices?.find((i: any) => i.id === selectedInvoice);
+    const isPaidOrPartial = targetInvObj && (targetInvObj.status === 'PAID' || Number(targetInvObj.paid_amount || 0) > 0);
 
     const handleReverse = async () => {
         if (!selectedInvoice) return;
 
         setLoading(true);
         try {
-            await api.post(`/finance/invoices/${selectedInvoice}/reverse`);
-            toast.success("Invoice reversed successfully");
+            const endpoint = (isPaidOrPartial && reversalMode === 'payment_only')
+                ? `/finance/invoices/${selectedInvoice}/reverse-payment-only`
+                : `/finance/invoices/${selectedInvoice}/reverse`;
+
+            const res = await api.post(endpoint);
+            toast.success(res.data?.message || "Invoice reversal processed successfully");
             onSuccess();
         } catch (error: any) {
             console.error("Failed to reverse invoice:", error);
-            toast.error(error.response?.data?.message || "Failed to reverse invoice");
+            toast.error(error.response?.data?.message || "Failed to process reversal");
         } finally {
             setLoading(false);
             setSelectedInvoice(null);
@@ -553,9 +561,9 @@ function ReverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess
                             <RotateCcw className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-lg font-bold text-foreground">Reverse Invoice</DialogTitle>
+                            <DialogTitle className="text-lg font-bold text-foreground">Reverse Invoice / Payment</DialogTitle>
                             <DialogDescription className="text-xs text-muted-foreground">
-                                Select an active invoice to void and remove from balance.
+                                Select an active invoice to void or revert its payments.
                             </DialogDescription>
                         </div>
                     </div>
@@ -567,7 +575,7 @@ function ReverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess
                             <p className="text-sm text-muted-foreground">No active invoices available to reverse.</p>
                         </div>
                     ) : (
-                        <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                             {invoices.map((inv: any) => (
                                 <div
                                     key={inv.id}
@@ -605,10 +613,46 @@ function ReverseInvoiceModal({ open, onOpenChange, tenantId, invoices, onSuccess
                         </div>
                     )}
 
-                    {selectedInvoice && (
-                        <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
-                            <span>This action will void the invoice, reverse any linked payments, and adjust the tenant's current balance accordingly.</span>
+                    {selectedInvoice && isPaidOrPartial && (
+                        <div className="space-y-2 pt-2 border-t">
+                            <label className="text-xs font-bold text-foreground">Select Reversal Type:</label>
+                            <div className="grid grid-cols-1 gap-2">
+                                <label className={`flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer text-xs transition-all ${
+                                    reversalMode === 'payment_only'
+                                        ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-500 ring-1 ring-amber-500'
+                                        : 'border-border hover:bg-muted/50'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="reversal_mode"
+                                        checked={reversalMode === 'payment_only'}
+                                        onChange={() => setReversalMode('payment_only')}
+                                        className="mt-0.5"
+                                    />
+                                    <div>
+                                        <span className="font-bold text-amber-900 dark:text-amber-300 block">1. Reverse Payment Only (Revert to Pending)</span>
+                                        <span className="text-[11px] text-muted-foreground">Money bounced or not received. Voids the payment credit, leaving the invoice pending so tenant still owes.</span>
+                                    </div>
+                                </label>
+
+                                <label className={`flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer text-xs transition-all ${
+                                    reversalMode === 'full_invoice'
+                                        ? 'bg-red-50/70 dark:bg-red-950/30 border-red-500 ring-1 ring-red-500'
+                                        : 'border-border hover:bg-muted/50'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="reversal_mode"
+                                        checked={reversalMode === 'full_invoice'}
+                                        onChange={() => setReversalMode('full_invoice')}
+                                        className="mt-0.5"
+                                    />
+                                    <div>
+                                        <span className="font-bold text-red-900 dark:text-red-300 block">2. Reverse Full Invoice (Void Charge & Payments)</span>
+                                        <span className="text-[11px] text-muted-foreground">Invoice was a mistake. Completely erases both the billed invoice charge and payments from tenant.</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     )}
                 </div>
