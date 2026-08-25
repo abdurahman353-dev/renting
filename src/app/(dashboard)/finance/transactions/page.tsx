@@ -173,34 +173,34 @@ export default function MpesaTransactionsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="border-border shadow-sm bg-card">
                     <CardHeader className="pb-2">
-                        <CardDescription>Total Transactions</CardDescription>
-                        <CardTitle className="text-3xl">{stats.total}</CardTitle>
+                        <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Transactions</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">{stats.total}</CardTitle>
                     </CardHeader>
                 </Card>
 
-                <Card>
+                <Card className="border-border shadow-sm bg-card border-l-4 border-l-amber-500">
                     <CardHeader className="pb-2">
-                        <CardDescription>Unreconciled</CardDescription>
-                        <CardTitle className="text-3xl text-yellow-600">{stats.unreconciled}</CardTitle>
+                        <CardDescription className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Unreconciled</CardDescription>
+                        <CardTitle className="text-3xl font-black text-amber-600 dark:text-amber-400">{stats.unreconciled}</CardTitle>
                     </CardHeader>
                 </Card>
 
-                <Card>
+                <Card className="border-border shadow-sm bg-card border-l-4 border-l-emerald-500">
                     <CardHeader className="pb-2">
-                        <CardDescription>Reconciled</CardDescription>
-                        <CardTitle className="text-3xl text-green-600">{stats.reconciled}</CardTitle>
+                        <CardDescription className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Reconciled</CardDescription>
+                        <CardTitle className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{stats.reconciled}</CardTitle>
                     </CardHeader>
                 </Card>
 
-                {/*<Card>
+                <Card className="border-border shadow-sm bg-card border-l-4 border-l-blue-500">
                     <CardHeader className="pb-2">
-                        <CardDescription>Total Amount</CardDescription>
-                        <CardTitle className="text-3xl">KES {stats.totalAmount.toLocaleString()}</CardTitle>
+                        <CardDescription className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Volume</CardDescription>
+                        <CardTitle className="text-3xl font-black text-blue-600 dark:text-blue-400">KES {stats.totalAmount.toLocaleString()}</CardTitle>
                     </CardHeader>
-                </Card>*/}
+                </Card>
             </div>
 
             {/* Filters */}
