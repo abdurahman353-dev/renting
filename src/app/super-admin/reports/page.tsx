@@ -510,10 +510,10 @@ export default function SaasReportsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                            KES {(summary.total_lifetime_revenue || 0).toLocaleString()}
+                            KES {Math.max(0, summary.total_lifetime_revenue || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1">
-                            <span>Avg. KES {(summary.avg_revenue_per_agency || 0).toLocaleString()} per agency</span>
+                            <span>Avg. KES {Math.max(0, summary.avg_revenue_per_agency || 0).toLocaleString()} per agency</span>
                         </p>
                     </CardContent>
                 </Card>
@@ -530,7 +530,7 @@ export default function SaasReportsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-black text-foreground">
-                            KES {(summary.this_month_revenue || 0).toLocaleString()}
+                            KES {Math.max(0, summary.this_month_revenue || 0).toLocaleString()}
                         </div>
                         <div className="flex items-center gap-1 mt-2 text-xs font-bold">
                             {summary.mom_growth_percent >= 0 ? (
@@ -577,7 +577,7 @@ export default function SaasReportsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">
-                            KES {(summary.last_month_revenue || 0).toLocaleString()}
+                            KES {Math.max(0, summary.last_month_revenue || 0).toLocaleString()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
                             Previous 30-day billing period baseline
@@ -652,7 +652,7 @@ export default function SaasReportsPage() {
                                                     KES {m.plan_deductions.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
-                                                    KES {m.net_revenue.toLocaleString()}
+                                                    KES {Math.max(0, m.net_revenue || 0).toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="w-40">
                                                     <div className="w-full bg-muted rounded-full h-2 overflow-hidden">

@@ -28,6 +28,11 @@ type ExpiryAlertState = {
     type: 'trial' | 'subscription';
     daysLeft: number;
     formattedDate: string;
+    walletBalance: number;
+    monthlyPrice: number;
+    isFunded: boolean;
+    shortage: number;
+    planName: string;
 } | null;
 
 function PaymentWall({ blocked, onRetry }: { blocked: BlockedState; onRetry: () => void }) {
@@ -219,6 +224,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             if (bData) {
                 const isTrial = bData.status === 'trial';
                 const expiryStr = isTrial ? bData.trial_ends_at : bData.plan_expires_at;
+                const walletBal = Number(bData.wallet_balance || 0);
+                const planPrice = Number(bData.monthly_price || 0);
+                const isFunded = planPrice > 0 ? walletBal >= planPrice : walletBal > 0;
+                const shortage = Math.max(0, planPrice - walletBal);
+                const rawPlan = bData.subscription_plan || 'starter';
+                const planName = bData.plan_name || (rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1));
+
                 if (expiryStr) {
                     const expDate = new Date(expiryStr);
                     const now = new Date();
@@ -229,6 +241,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             type: isTrial ? 'trial' : 'subscription',
                             daysLeft: Math.max(0, days),
                             formattedDate: expDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }),
+                            walletBalance: walletBal,
+                            monthlyPrice: planPrice,
+                            isFunded: isFunded,
+                            shortage: shortage,
+                            planName: planName,
                         });
                     } else {
                         setExpiryAlert(null);
@@ -378,7 +395,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {expiryAlert && (
                 <div
                     className={`w-full border-b transition-all ${
-                        expiryAlert.daysLeft <= 1
+                        expiryAlert.isFunded
+                            ? 'bg-emerald-500/10 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
+                            : expiryAlert.daysLeft <= 1
                             ? 'bg-gradient-to-r from-red-600/10 via-amber-500/10 to-red-600/10 border-red-300 dark:border-red-800 text-red-950 dark:text-red-200'
                             : 'bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200'
                     }`}
@@ -386,36 +405,70 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
                             <span className="relative flex h-3 w-3 shrink-0">
-                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${expiryAlert.daysLeft <= 1 ? 'bg-red-400' : 'bg-amber-400'}`}></span>
-                                <span className={`relative inline-flex rounded-full h-3 w-3 ${expiryAlert.daysLeft <= 1 ? 'bg-red-500' : 'bg-amber-500'}`}></span>
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                                    expiryAlert.isFunded ? 'bg-emerald-400' : expiryAlert.daysLeft <= 1 ? 'bg-red-400' : 'bg-amber-400'
+                                }`}></span>
+                                <span className={`relative inline-flex rounded-full h-3 w-3 ${
+                                    expiryAlert.isFunded ? 'bg-emerald-500' : expiryAlert.daysLeft <= 1 ? 'bg-red-500' : 'bg-amber-500'
+                                }`}></span>
                             </span>
                             <div className="text-xs sm:text-sm">
                                 <span className={`font-extrabold uppercase tracking-wider text-[10px] sm:text-xs mr-2 px-2 py-0.5 rounded-md border ${
-                                    expiryAlert.daysLeft <= 1 
+                                    expiryAlert.isFunded
+                                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                                        : expiryAlert.daysLeft <= 1 
                                         ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800' 
                                         : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
                                 }`}>
-                                    {expiryAlert.daysLeft === 1 ? '🚨 1 day to go' : expiryAlert.daysLeft === 2 ? '⚠️ 2 days to go' : expiryAlert.daysLeft === 3 ? '⚠️ 3 days to go' : '🚨 Expires Today'}
+                                    {expiryAlert.isFunded
+                                        ? '✅ AUTO-RENEWAL READY'
+                                        : expiryAlert.daysLeft === 1 
+                                        ? '🚨 1 day to go' 
+                                        : expiryAlert.daysLeft === 2 
+                                        ? '⚠️ 2 days to go' 
+                                        : expiryAlert.daysLeft === 3 
+                                        ? '⚠️ 3 days to go' 
+                                        : '🚨 Expires Today'}
                                 </span>
-                                <span className="font-semibold">
-                                    Your {expiryAlert.type === 'trial' ? 'Free Trial' : 'Subscription'} will end{' '}
-                                    <strong className="font-extrabold text-red-600 dark:text-red-400 underline decoration-red-400/40">
-                                        {expiryAlert.daysLeft === 0 ? 'Today' : expiryAlert.daysLeft === 1 ? 'Tomorrow' : `in ${expiryAlert.daysLeft} days`} ({expiryAlert.formattedDate})
-                                    </strong>
-                                    . Pay via M-Pesa to maintain uninterrupted access.
-                                </span>
+                                {expiryAlert.isFunded ? (
+                                    <span className="font-semibold">
+                                        Your {expiryAlert.type === 'trial' ? 'Free Trial' : 'Subscription'} will end{' '}
+                                        <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">
+                                            {expiryAlert.daysLeft === 0 ? 'Today' : expiryAlert.daysLeft === 1 ? 'Tomorrow' : `in ${expiryAlert.daysLeft} days`} ({expiryAlert.formattedDate})
+                                        </strong>
+                                        . Your wallet balance (<strong className="font-bold text-emerald-700 dark:text-emerald-300">KES {expiryAlert.walletBalance.toLocaleString()}</strong>) will automatically renew your {expiryAlert.planName} plan. No action required!
+                                    </span>
+                                ) : expiryAlert.walletBalance > 0 ? (
+                                    <span className="font-semibold">
+                                        Your {expiryAlert.type === 'trial' ? 'Free Trial' : 'Subscription'} will end{' '}
+                                        <strong className="font-extrabold text-red-600 dark:text-red-400 underline decoration-red-400/40">
+                                            {expiryAlert.daysLeft === 0 ? 'Today' : expiryAlert.daysLeft === 1 ? 'Tomorrow' : `in ${expiryAlert.daysLeft} days`} ({expiryAlert.formattedDate})
+                                        </strong>
+                                        . Wallet balance (KES {expiryAlert.walletBalance.toLocaleString()}) is <strong className="font-bold text-rose-600 dark:text-rose-400">KES {expiryAlert.shortage.toLocaleString()} short</strong> for auto-renewal. Top up via M-Pesa to maintain access.
+                                    </span>
+                                ) : (
+                                    <span className="font-semibold">
+                                        Your {expiryAlert.type === 'trial' ? 'Free Trial' : 'Subscription'} will end{' '}
+                                        <strong className="font-extrabold text-red-600 dark:text-red-400 underline decoration-red-400/40">
+                                            {expiryAlert.daysLeft === 0 ? 'Today' : expiryAlert.daysLeft === 1 ? 'Tomorrow' : `in ${expiryAlert.daysLeft} days`} ({expiryAlert.formattedDate})
+                                        </strong>
+                                        . Pay via M-Pesa to maintain uninterrupted access.
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <Link
                             href="/billing"
                             className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-extrabold text-xs shadow-md transition-all active:scale-95 shrink-0 ${
-                                expiryAlert.daysLeft <= 1
+                                expiryAlert.isFunded
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
+                                    : expiryAlert.daysLeft <= 1
                                     ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-500/20'
                                     : 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/20'
                             }`}
                         >
                             <CreditCard className="w-3.5 h-3.5" />
-                            Pay / View Billing →
+                            {expiryAlert.isFunded ? 'View Billing →' : 'Pay / View Billing →'}
                         </Link>
                     </div>
                 </div>

@@ -793,14 +793,22 @@ export default function SuperAdminDashboard() {
                                                     )}
                                                 </div>
                                             ) : org.status === 'trial' ? (
-                                                <div className="space-y-0.5">
-                                                    <Badge className="bg-amber-500 text-white border-0 font-bold text-xs">Trial</Badge>
-                                                    {org.trial_ends_at && (
-                                                        <p className="text-[11px] text-red-600 dark:text-red-400 font-bold whitespace-nowrap">
-                                                            Expires {new Date(org.trial_ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                                                        </p>
-                                                    )}
-                                                </div>
+                                                (() => {
+                                                    const trialEnds = org.trial_ends_at ? new Date(org.trial_ends_at) : null;
+                                                    const isExpired = trialEnds ? trialEnds.getTime() < Date.now() : false;
+                                                    return (
+                                                        <div className="space-y-0.5">
+                                                            <Badge className={`${isExpired ? 'bg-red-500' : 'bg-amber-500'} text-white border-0 font-bold text-xs`}>
+                                                                {isExpired ? 'Trial Expired' : 'Trial'}
+                                                            </Badge>
+                                                            {trialEnds && (
+                                                                <p className={`text-[11px] font-bold whitespace-nowrap ${isExpired ? 'text-red-600 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                                                                    {isExpired ? 'Expired' : 'Expires'} {trialEnds.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()
                                             ) : (
                                                 <Badge className="bg-red-500 text-white border-0 font-bold text-xs">Suspended</Badge>
                                             )}
