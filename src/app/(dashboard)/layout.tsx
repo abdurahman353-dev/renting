@@ -27,6 +27,7 @@ type BlockedState = {
 type ExpiryAlertState = {
     type: 'trial' | 'subscription';
     daysLeft: number;
+    isToday?: boolean;
     formattedDate: string;
     walletBalance: number;
     monthlyPrice: number;
@@ -235,7 +236,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     const expDate = new Date(expiryStr);
                     const now = new Date();
                     const diffMs = expDate.getTime() - now.getTime();
-                    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                    const isToday = expDate.toDateString() === now.toDateString();
+                    const days = isToday ? 0 : Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
                     // Immediate forced logout if trial/subscription has expired & wallet balance is insufficient
                     if (diffMs <= 0 && !isFunded) {
@@ -251,6 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         setExpiryAlert({
                             type: isTrial ? 'trial' : 'subscription',
                             daysLeft: Math.max(0, days),
+                            isToday: isToday,
                             formattedDate: expDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }),
                             walletBalance: walletBal,
                             monthlyPrice: planPrice,
