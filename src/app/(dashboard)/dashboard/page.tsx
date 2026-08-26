@@ -20,6 +20,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardStats {
   revenue: number;
+  grossRevenue?: number;
+  repairExpenses?: number;
+  netRevenue?: number;
   revenueGrowth: number;
   activeTenants: number;
   tenantsGrowth: number;
@@ -158,6 +161,11 @@ export default function DashboardPage() {
             <div className="text-3xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
               KES {(stats?.revenue ?? 0).toLocaleString()}
             </div>
+            {(stats?.repairExpenses ?? 0) > 0 && (
+              <div className="text-[11px] font-semibold text-muted-foreground mt-0.5">
+                Net: <span className={(stats?.netRevenue ?? 0) < 0 ? 'text-red-500 font-bold' : 'text-emerald-600 font-bold'}>KES {(stats?.netRevenue ?? 0).toLocaleString()}</span> <span className="text-[10px] text-muted-foreground font-normal">(-KES {stats?.repairExpenses ?? 0} repairs)</span>
+              </div>
+            )}
             <div className="flex items-center mt-3">
               <div className={`flex items-center gap-1 text-[10px] font-black ${stats.revenueGrowth >= 0 ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400' : 'text-red-500 bg-red-50 dark:bg-red-950/30 dark:text-red-400'} px-2 py-1 rounded-full border border-emerald-100/50 dark:border-emerald-900/50`}>
                 <TrendingUp className="h-3 w-3" />
