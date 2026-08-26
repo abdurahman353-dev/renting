@@ -77,6 +77,7 @@ interface Payment {
     method: string;
     reference: string;
     date: string;
+    status?: string;
     tenant_name?: string;
     unit_number?: string;
     property_name?: string;
@@ -687,15 +688,26 @@ export default function FinancePage() {
                                                     No payments found matching your filters.
                                                 </TableCell>
                                             </TableRow>
-                                        ) : (allPayments || []).map((pay) => (
-                                            <TableRow key={pay.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                                        ) : (allPayments || []).map((pay) => {
+                                            const isReversed = pay.status === 'REVERSED';
+                                            return (
+                                            <TableRow key={pay.id} className={`border-b border-border transition-colors ${isReversed ? 'bg-red-50/40 dark:bg-red-950/10' : 'hover:bg-muted/40'}`}>
                                                 <TableCell>
-                                                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
-                                                        PAY-{pay.id}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                                                            PAY-{pay.id}
+                                                        </span>
+                                                        {isReversed && (
+                                                            <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800">
+                                                                REVERSED
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="font-bold text-sm text-foreground">
-                                                    {pay.tenant_name || pay.tenant}
+                                                    <span className={isReversed ? 'line-through opacity-70' : ''}>
+                                                        {pay.tenant_name || pay.tenant}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell className="text-sm text-muted-foreground">
                                                     {pay.property_name || '-'}
@@ -710,24 +722,32 @@ export default function FinancePage() {
                                                     {renderMethodBadge(pay.method)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded border border-border/40">
+                                                    <span className={`font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded border border-border/40 ${isReversed ? 'line-through opacity-60' : ''}`}>
                                                         {pay.reference || 'N/A'}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
                                                     <div className="flex items-center gap-1.5">
                                                         <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                                                        <span>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</span>
+                                                        <span className={isReversed ? 'line-through opacity-60' : ''}>{pay.created_at ? formatDate(pay.created_at) : formatDate(pay.date)}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/60 inline-flex items-center gap-1">
-                                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">+KES</span>
-                                                        <span>{Number(pay.amount).toLocaleString()}</span>
-                                                    </span>
+                                                    {isReversed ? (
+                                                        <span className="font-extrabold text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-md border border-red-200 dark:border-red-800/60 inline-flex items-center gap-1 line-through opacity-70">
+                                                            <span className="text-[10px] font-bold text-red-500 dark:text-red-400">-KES</span>
+                                                            <span>{Number(pay.amount).toLocaleString()}</span>
+                                                        </span>
+                                                    ) : (
+                                                        <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/60 inline-flex items-center gap-1">
+                                                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">+KES</span>
+                                                            <span>{Number(pay.amount).toLocaleString()}</span>
+                                                        </span>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>

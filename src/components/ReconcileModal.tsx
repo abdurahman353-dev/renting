@@ -177,29 +177,35 @@ export default function ReconcileModal({
                             <PopoverContent className="w-[400px] p-0" align="start">
                                 <Command>
                                     <CommandInput placeholder="Search tenant..." />
-                                    <CommandEmpty>No tenant found.</CommandEmpty>
+                                    {!loadingTenants && <CommandEmpty>No tenant found.</CommandEmpty>}
                                     <CommandGroup className="max-h-[300px] overflow-auto">
-                                        {tenants.map((tenant) => (
-                                            <CommandItem
-                                                key={tenant.id}
-                                                value={tenant.name}
-                                                onSelect={() => {
-                                                    setSelectedTenant(tenant);
-                                                    setOpen(false);
-                                                }}
-                                            >
-                                                <Check
-                                                    className={cn(
-                                                        "mr-2 h-4 w-4",
-                                                        selectedTenant?.id === tenant.id ? "opacity-100" : "opacity-0"
-                                                    )}
-                                                />
-                                                <div className="flex flex-col">
-                                                    <span>{tenant.name}</span>
-                                                    <span className="text-xs text-muted-foreground">{tenant.unit?.unit_number || 'No Unit'}</span>
-                                                </div>
-                                            </CommandItem>
-                                        ))}
+                                        {loadingTenants ? (
+                                            <div className="p-4 text-center text-xs text-muted-foreground">
+                                                Loading tenants...
+                                            </div>
+                                        ) : (
+                                            tenants.map((tenant) => (
+                                                <CommandItem
+                                                    key={tenant.id}
+                                                    value={tenant.name}
+                                                    onSelect={() => {
+                                                        setSelectedTenant(tenant);
+                                                        setOpen(false);
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            selectedTenant?.id === tenant.id ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <span>{tenant.name}</span>
+                                                        <span className="text-xs text-muted-foreground">{tenant.unit?.unit_number || 'No Unit'}</span>
+                                                    </div>
+                                                </CommandItem>
+                                            ))
+                                        )}
                                     </CommandGroup>
                                 </Command>
                             </PopoverContent>

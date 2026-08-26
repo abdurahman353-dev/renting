@@ -511,7 +511,7 @@ export default function CashierPage() {
                                     <PopoverContent className="w-[420px] p-0 bg-popover border-border shadow-xl rounded-xl" align="start">
                                         <Command className="bg-transparent">
                                             <CommandInput placeholder="Type tenant name, unit or phone..." className="text-sm" />
-                                            <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">No tenant found.</CommandEmpty>
+                                            {!loadingTenants && <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">No tenant found.</CommandEmpty>}
                                             <CommandGroup className="max-h-[300px] overflow-auto p-1.5">
                                                 {loadingTenants ? (
                                                     <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
@@ -921,29 +921,43 @@ export default function CashierPage() {
                                         </div>
                                     ) : (
                                         <div className="divide-y divide-border/60">
-                                            {paymentHistory.slice(0, 5).map((payment: any) => (
-                                                <div key={payment.id} className="p-3.5 hover:bg-muted/30 transition-colors flex justify-between items-center">
+                                            {paymentHistory.slice(0, 5).map((payment: any) => {
+                                                const isReversed = payment.status === 'REVERSED';
+                                                return (
+                                                <div key={payment.id} className={`p-3.5 transition-colors flex justify-between items-center ${isReversed ? 'bg-red-50/40 dark:bg-red-950/10' : 'hover:bg-muted/30'}`}>
                                                     <div className="space-y-1">
-                                                        <div className="flex items-center gap-1.5">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
                                                             {renderMethodBadge(payment.method)}
+                                                            {isReversed && (
+                                                                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800">
+                                                                    REVERSED
+                                                                </span>
+                                                            )}
                                                             {payment.reference && (
-                                                                <span className="font-mono text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
+                                                                <span className={`font-mono text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/40 ${isReversed ? 'line-through opacity-60' : ''}`}>
                                                                     {payment.reference}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                                                             <Calendar className="w-3 h-3" />
-                                                            <span>{format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}</span>
+                                                            <span className={isReversed ? 'line-through opacity-60' : ''}>{format(new Date(payment.date || payment.created_at), "MMM dd, yyyy")}</span>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 inline-block">
-                                                            +KES {Number(payment.amount).toLocaleString()}
-                                                        </span>
+                                                        {isReversed ? (
+                                                            <span className="font-extrabold text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded border border-red-200 dark:border-red-800/60 inline-block line-through opacity-70">
+                                                                -KES {Number(payment.amount).toLocaleString()}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 inline-block">
+                                                                +KES {Number(payment.amount).toLocaleString()}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </CardContent>

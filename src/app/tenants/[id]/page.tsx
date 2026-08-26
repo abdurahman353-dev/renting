@@ -451,32 +451,54 @@ export default function TenantDetailsPage() {
                                                     const method = String(payment.method || '').toLowerCase();
                                                     const isMpesa = method.includes('mpesa') || method.includes('m-pesa');
                                                     const isCredit = method.includes('credit') || method.includes('auto');
+                                                    const isReversed = payment.status === 'REVERSED';
 
                                                     return (
-                                                        <TableRow key={payment.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                                                        <TableRow key={payment.id} className={`border-b border-border transition-colors ${isReversed ? 'bg-red-50/40 dark:bg-red-950/10' : 'hover:bg-muted/40'}`}>
                                                             <TableCell className="text-foreground font-medium text-sm">
                                                                 <div className="flex items-center gap-2">
                                                                     <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                                                                    {new Date(payment.date || payment.created_at).toLocaleDateString()}
+                                                                    <span className={isReversed ? 'line-through opacity-60' : ''}>
+                                                                        {new Date(payment.date || payment.created_at).toLocaleDateString()}
+                                                                    </span>
                                                                 </div>
                                                             </TableCell>
-                                                            <TableCell className="font-mono text-xs text-muted-foreground">{payment.reference || 'N/A'}</TableCell>
-                                                            <TableCell>
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className={`font-semibold text-xs border ${
-                                                                        isMpesa
-                                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                                                            : isCredit
-                                                                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300'
-                                                                            : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300'
-                                                                    }`}
-                                                                >
-                                                                    {payment.method}
-                                                                </Badge>
+                                                            <TableCell className="font-mono text-xs text-muted-foreground">
+                                                                <span className={isReversed ? 'line-through opacity-60' : ''}>
+                                                                    {payment.reference || 'N/A'}
+                                                                </span>
                                                             </TableCell>
-                                                            <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                                                                KES {Number(payment.amount).toLocaleString()}
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className={`font-semibold text-xs border ${
+                                                                            isMpesa
+                                                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                                                                : isCredit
+                                                                                ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300'
+                                                                                : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300'
+                                                                        }`}
+                                                                    >
+                                                                        {payment.method}
+                                                                    </Badge>
+                                                                    {isReversed && (
+                                                                        <Badge className="bg-red-100 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800 text-[10px] font-bold uppercase">
+                                                                            REVERSED
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right text-sm">
+                                                                {isReversed ? (
+                                                                    <span className="font-extrabold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded border border-red-200 dark:border-red-800/60 inline-block line-through opacity-70">
+                                                                        -KES {Number(payment.amount).toLocaleString()}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                                                        KES {Number(payment.amount).toLocaleString()}
+                                                                    </span>
+                                                                )}
                                                             </TableCell>
                                                         </TableRow>
                                                     );
