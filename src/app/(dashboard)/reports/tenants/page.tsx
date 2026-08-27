@@ -161,7 +161,11 @@ export default function TenantReportPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Collected</p>
-                                <p className="text-2xl font-black text-foreground">{totalPaid.toLocaleString()}</p>
+                                {loading ? (
+                                    <div className="h-7 w-24 bg-muted animate-pulse rounded my-1" />
+                                ) : (
+                                    <p className="text-2xl font-black text-foreground">{totalPaid.toLocaleString()}</p>
+                                )}
                             </div>
                         </div>
                         <div className="h-1 w-full bg-emerald-500/10">
@@ -178,7 +182,11 @@ export default function TenantReportPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Outstanding</p>
-                                <p className="text-2xl font-black text-rose-600">{Math.abs(totalBalance).toLocaleString()}</p>
+                                {loading ? (
+                                    <div className="h-7 w-24 bg-muted animate-pulse rounded my-1" />
+                                ) : (
+                                    <p className="text-2xl font-black text-rose-600">{Math.abs(totalBalance).toLocaleString()}</p>
+                                )}
                             </div>
                         </div>
                         <div className="h-1 w-full bg-rose-500/10">
@@ -195,7 +203,11 @@ export default function TenantReportPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Page Debtors</p>
-                                <p className="text-2xl font-black text-foreground">{debtors}</p>
+                                {loading ? (
+                                    <div className="h-7 w-12 bg-muted animate-pulse rounded my-1" />
+                                ) : (
+                                    <p className="text-2xl font-black text-foreground">{debtors}</p>
+                                )}
                             </div>
                         </div>
                         <div className="h-1 w-full bg-indigo-500/10">
@@ -284,9 +296,24 @@ export default function TenantReportPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr key="loading-row">
-                                    <td colSpan={11} className="px-6 py-8 text-center text-slate-500">Loading...</td>
-                                </tr>
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={`skel-tenant-${i}`} className="border-b border-border/50 animate-pulse">
+                                        <td className="px-6 py-4"><div className="h-3.5 w-20 bg-muted rounded" /></td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 w-28 bg-muted rounded mb-1.5" />
+                                            <div className="h-3 w-16 bg-muted/60 rounded" />
+                                        </td>
+                                        <td className="px-6 py-4"><div className="h-4 w-14 bg-muted rounded-full" /></td>
+                                        <td className="px-6 py-4 text-center"><div className="h-4 w-8 bg-muted rounded mx-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                    </tr>
+                                ))
                             ) : (!data || data.length === 0) ? (
                                 <tr key="empty-row">
                                     <td colSpan={11} className="px-6 py-8 text-center text-slate-500 font-medium">

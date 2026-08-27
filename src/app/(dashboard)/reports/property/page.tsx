@@ -128,9 +128,13 @@ export default function PropertyReportPage() {
         <Card className="border-border shadow-sm">
             <CardContent className="pt-6">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</p>
-                <h3 className={`text-2xl font-black ${colorClass}`}>
-                    KES {Number(value || 0).toLocaleString()}
-                </h3>
+                {loading ? (
+                    <div className="h-8 w-24 bg-muted animate-pulse rounded my-1" />
+                ) : (
+                    <h3 className={`text-2xl font-black ${colorClass}`}>
+                        KES {Number(value || 0).toLocaleString()}
+                    </h3>
+                )}
                 {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
             </CardContent>
         </Card>
@@ -263,7 +267,21 @@ export default function PropertyReportPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500">Loading...</td></tr>
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={`skel-prop-${i}`} className="border-b border-border/50 animate-pulse">
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 w-32 bg-muted rounded mb-1.5" />
+                                            <div className="h-3 w-20 bg-muted/60 rounded" />
+                                        </td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-16 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-16 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-16 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                    </tr>
+                                ))
                             ) : (!data.properties || data.properties.length === 0) ? (
                                 <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500">No records found.</td></tr>
                             ) : (

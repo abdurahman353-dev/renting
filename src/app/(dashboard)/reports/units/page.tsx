@@ -168,23 +168,35 @@ export default function UnitsReportPage() {
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-5">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Total Collected</p>
-                        <p className="text-xl font-black text-emerald-600">KES {stats.totalPaid.toLocaleString()}</p>
+                        {loading ? (
+                            <div className="h-7 w-24 bg-muted animate-pulse rounded my-1" />
+                        ) : (
+                            <p className="text-xl font-black text-emerald-600">KES {stats.totalPaid.toLocaleString()}</p>
+                        )}
                     </CardContent>
                 </Card>
 
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-5">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Repair Expenses</p>
-                        <p className="text-xl font-black text-amber-600">KES {stats.totalRepairs.toLocaleString()}</p>
+                        {loading ? (
+                            <div className="h-7 w-24 bg-muted animate-pulse rounded my-1" />
+                        ) : (
+                            <p className="text-xl font-black text-amber-600">KES {stats.totalRepairs.toLocaleString()}</p>
+                        )}
                     </CardContent>
                 </Card>
 
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-5">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Collected</p>
-                        <p className={`text-xl font-black ${stats.totalNet >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>
-                            KES {stats.totalNet.toLocaleString()}
-                        </p>
+                        {loading ? (
+                            <div className="h-7 w-24 bg-muted animate-pulse rounded my-1" />
+                        ) : (
+                            <p className={`text-xl font-black ${stats.totalNet >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+                                KES {stats.totalNet.toLocaleString()}
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -278,9 +290,25 @@ export default function UnitsReportPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                <tr key="loading-row">
-                                    <td colSpan={9} className="px-6 py-8 text-center text-slate-500">Loading...</td>
-                                </tr>
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={`skel-unit-${i}`} className="border-b border-border/50 animate-pulse">
+                                        <td className="px-6 py-4">
+                                            <div className="h-5 w-12 bg-muted rounded mb-1" />
+                                            <div className="h-3 w-20 bg-muted/60 rounded" />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 w-16 bg-muted rounded mb-1" />
+                                            <div className="h-3 w-24 bg-muted/60 rounded" />
+                                        </td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-14 bg-muted rounded ml-auto" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-12 bg-muted rounded ml-auto" /></td>
+                                    </tr>
+                                ))
                             ) : (!data || data.length === 0) ? (
                                 <tr key="empty-row">
                                     <td colSpan={9} className="px-6 py-8 text-center text-slate-500 font-medium">
