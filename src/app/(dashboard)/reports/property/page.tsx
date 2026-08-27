@@ -159,7 +159,7 @@ export default function PropertyReportPage() {
                     subtitle="Gross monthly collections"
                 />
                 <SummaryCard
-                    title="Repair Expenses"
+                    title="Landlord Repairs"
                     value={data.summary?.total_repairs}
                     colorClass="text-amber-600"
                     subtitle="Money spent on repairs"

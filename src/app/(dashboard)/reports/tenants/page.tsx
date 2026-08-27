@@ -79,10 +79,11 @@ export default function TenantReportPage() {
         }
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
-        const titleRow = [`${monthLabel} ${filters.year} Sales Report`];
-        const headers = ["Property Name", "Status", "Phone Number", "Unit", "Initial dues=(Agreement fee+Opening balance)", "(Rent+Deposits)", "Arrears", "Amount Paid", "Balance"];
+        const titleRow = [`${monthLabel} ${filters.year} Tenant Financial Report`];
+        const headers = ["Property Name", "Tenant", "Status", "Phone Number", "Unit", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Paid", "Landlord Repairs", "Net Collected", "Balance"];
         const rows = (data || []).map((row: any) => [
             `"${row.property_name}"`,
+            `"${row.tenant_name}"`,
             `"${row.status}"`,
             `"${row.phone}"`,
             `"${row.unit_number}"`,
@@ -90,6 +91,8 @@ export default function TenantReportPage() {
             row.rent,
             row.arrears,
             row.amount_paid,
+            row.repair_expenses || 0,
+            row.net_collected !== undefined ? row.net_collected : (Number(row.amount_paid || 0) - Number(row.repair_expenses || 0)),
             row.balance
         ]);
 
@@ -274,7 +277,7 @@ export default function TenantReportPage() {
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
                                 <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
-                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Landlord Repairs</th>
                                 <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
