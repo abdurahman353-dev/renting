@@ -80,7 +80,7 @@ export default function TenantReportPage() {
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Tenant Financial Report`];
-        const headers = ["Property Name", "Tenant", "Status", "Phone Number", "Unit", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Paid", "Landlord Repairs", "Net Collected", "Balance"];
+        const headers = ["Property Name", "Tenant", "Status", "Phone Number", "Unit", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Paid", "Repair Expenses", "Net Collected", "Balance"];
         const rows = (data || []).map((row: any) => [
             `"${row.property_name}"`,
             `"${row.tenant_name}"`,
@@ -277,7 +277,7 @@ export default function TenantReportPage() {
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
                                 <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
-                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Landlord Repairs</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
                                 <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>

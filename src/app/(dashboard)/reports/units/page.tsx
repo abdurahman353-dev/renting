@@ -63,7 +63,7 @@ export default function UnitsReportPage() {
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Unit Financial Report`];
-        const headers = ["Unit", "Property", "Tenant", "Status", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Collected", "Landlord Repairs", "Net Collected", "Balance"];
+        const headers = ["Unit", "Property", "Tenant", "Status", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Collected", "Repair Expenses", "Net Collected", "Balance"];
         const rows = (data || []).map((row: any) => {
             const repairExpenses = Number(row.repair_expenses || 0);
             const amountPaid = Number(row.amount_paid || 0);
@@ -174,7 +174,7 @@ export default function UnitsReportPage() {
 
                 <Card className="border-none shadow-sm bg-card overflow-hidden group">
                     <CardContent className="p-5">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Landlord Repairs</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Repair Expenses</p>
                         <p className="text-xl font-black text-amber-600">KES {stats.totalRepairs.toLocaleString()}</p>
                     </CardContent>
                 </Card>
@@ -271,7 +271,7 @@ export default function UnitsReportPage() {
                                 <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
                                 <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
-                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Landlord Repairs</th>
+                                <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
                                 <th className="px-6 py-3 text-right text-blue-600 font-extrabold">Net Collected</th>
                                 <th className="px-6 py-3 text-right font-bold">Balance</th>
                             </tr>
