@@ -64,11 +64,11 @@ export default function LoginPage() {
             const errParam = params.get('error');
             const msgParam = params.get('msg');
             if (errParam && ['trial_expired', 'subscription_expired', 'account_suspended'].includes(errParam)) {
-                const title = errParam === 'trial_expired' 
-                    ? 'Your 14-day free trial has expired.' 
-                    : errParam === 'subscription_expired' 
-                    ? 'Your subscription has expired.' 
-                    : 'Your account has been suspended.';
+                const title = errParam === 'trial_expired'
+                    ? 'Your 14-day free trial has expired.'
+                    : errParam === 'subscription_expired'
+                        ? 'Your subscription has expired.'
+                        : 'Your account has been suspended.';
                 setError(msgParam || `${title} Your wallet balance was insufficient for auto-renewal. Log in to manage billing.`);
             } else if (errParam === 'session_expired') {
                 setError('Your session has expired. Please log in again.');
@@ -400,9 +400,9 @@ export default function LoginPage() {
 
                                 <div className="text-center text-sm">
                                     <span className="text-gray-500 dark:text-gray-400">Don't have an account? </span>
-                                    <a href="#" className="font-medium text-blue-600 hover:underline dark:text-blue-400" onClick={(e) => { e.preventDefault(); alert('Please contact the system administrator to request access.'); }}>
-                                        Contact Admin
-                                    </a>
+                                    <Link href="/#plans" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+                                        Register
+                                    </Link>
                                 </div>
                             </form>
                         </>
