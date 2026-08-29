@@ -31,11 +31,9 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [companyName, setCompanyName] = useState('RentSys')
-    const [brandLoading, setBrandLoading] = useState(true)
 
     useEffect(() => {
         const fetchSettings = async () => {
-            setBrandLoading(true);
             try {
                 if (isSuperAdmin && isSuperAdmin()) {
                     setCompanyName("SaaS Super Admin");
@@ -52,8 +50,6 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                 setCompanyName(name || "RentSys");
             } catch (err) {
                 console.error('Failed to load top-nav settings:', err);
-            } finally {
-                setBrandLoading(false);
             }
         };
         fetchSettings();
@@ -135,9 +131,6 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
         return { phone, subject, from, content };
     };
 
-    const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "S";
-    const displayTitle = companyName || "SaaS Super Admin";
-
     return (
         <div className="h-16 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 z-40 relative">
             {/* Left */}
@@ -146,30 +139,7 @@ export function TopNav({ onSidebarToggle }: TopNavProps) {
                     <Menu className="w-5 h-5" />
                 </button>
 
-                {/* Company Name / Logo directing to Landing Page (Image 1 style on all devices with visible skeleton loading) */}
-                <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity" title="Go to Landing Page">
-                    <div className="relative w-8 h-8 flex-shrink-0">
-                        {brandLoading ? (
-                            <div className="w-8 h-8 rounded-lg bg-slate-700 animate-pulse" />
-                        ) : (
-                            <>
-                                <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
-                                <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800 shadow-sm">
-                                    <span className="text-base font-bold text-white">{brandLetter}</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    {brandLoading ? (
-                        <div className="h-5 w-28 sm:w-36 rounded-md bg-slate-700 animate-pulse" />
-                    ) : (
-                        <span className="text-base sm:text-lg font-bold text-indigo-500 dark:text-indigo-400 whitespace-nowrap">
-                            {displayTitle}
-                        </span>
-                    )}
-                </Link>
-
-                <div className="hidden lg:flex ml-2 pl-3 border-l border-border">
+                <div className="flex items-center">
                     <DynamicBreadcrumb />
                 </div>
             </div>
