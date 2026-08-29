@@ -63,7 +63,7 @@ export default function UnitsReportPage() {
 
         const monthLabel = months.find(m => m.value === filters.month)?.label || "";
         const titleRow = [`${monthLabel} ${filters.year} Unit Financial Report`];
-        const headers = ["Unit", "Property", "Tenant", "Status", "Initial Dues", "(Rent+Deposits)", "Arrears", "Amount Collected", "Repair Expenses", "Net Collected", "Balance"];
+        const headers = ["Unit", "Property", "Tenant", "Status", "Initial Dues=(Agreement fee+Opening balance)", "(Rent+Deposits+Tenants Repair costs)", "Arrears", "Amount Collected", "Repair Expenses", "Net Collected", "Balance"];
         const rows = (data || []).map((row: any) => {
             const repairExpenses = Number(row.repair_expenses || 0);
             const amountPaid = Number(row.amount_paid || 0);
@@ -310,8 +310,8 @@ export default function UnitsReportPage() {
                             <tr>
                                 <th className="px-6 py-3">Unit Info</th>
                                 <th className="px-6 py-3">Occupancy</th>
-                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues</th>
-                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits)</th>
+                                <th className="px-6 py-3 text-right text-rose-500 font-semibold">Initial Dues=(Agreement fee+Opening balance)</th>
+                                <th className="px-6 py-3 text-right text-slate-900 font-semibold">(Rent+Deposits+Tenants Repair costs)</th>
                                 <th className="px-6 py-3 text-right text-orange-600 font-semibold">Arrears</th>
                                 <th className="px-6 py-3 text-right text-emerald-600 font-bold">Amount Collected</th>
                                 <th className="px-6 py-3 text-right text-amber-600 font-bold">Repair Expenses</th>
