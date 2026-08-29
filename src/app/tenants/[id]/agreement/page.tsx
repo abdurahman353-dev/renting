@@ -17,12 +17,21 @@ export default function TenantAgreementPage() {
     const [downloading, setDownloading] = useState(false);
     const documentRef = useRef<HTMLDivElement>(null);
     const [companyName, setCompanyName] = useState('RentSys');
+    const [companyAddress, setCompanyAddress] = useState('');
 
     useEffect(() => {
         const fetchSettings = async () => {
             try {
                 const data = await publicAPI.getSettings();
-                if (data && data.company_name) setCompanyName(data.company_name);
+                if (data?.company_name) setCompanyName(data.company_name);
+                if (data?.company_address) setCompanyAddress(data.company_address);
+                if (data?.company_city || data?.company_county) {
+                    const city = data.company_city || '';
+                    const county = data.company_county || '';
+                    if (!data.company_address) {
+                        setCompanyAddress([city, county, 'Kenya'].filter(Boolean).join(', '));
+                    }
+                }
             } catch (err) {
                 console.error('Failed to load agreement settings:', err);
             }
@@ -131,7 +140,7 @@ export default function TenantAgreementPage() {
                             <div>
                                 <h3 className="text-sm font-bold uppercase text-slate-500 mb-1">Landlord / Property Manager</h3>
                                 <p className="text-lg font-semibold">{propertyName}</p>
-                                <p>P.O. BOX 1234, Nairobi, Kenya</p>
+                                <p>{companyAddress || 'Kenya'}</p>
                             </div>
 
                             <div>
