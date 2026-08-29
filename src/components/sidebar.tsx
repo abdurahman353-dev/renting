@@ -17,7 +17,8 @@ import {
   Zap,
   Activity,
   ShieldCheck,
-  BarChart3
+  BarChart3,
+  X
 } from "lucide-react"
 import { Children, useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
@@ -184,14 +185,19 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
   const pathname = usePathname()
   const { isSuperAdmin, isOwner, user } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/reports"])
-  const [companyName, setCompanyName] = useState("")
-  const [brandLoading, setBrandLoading] = useState(true)
+  const [companyName, setCompanyName] = useState(user?.organization?.name || "Rayan Real Estate")
+  const [brandLoading, setBrandLoading] = useState(false)
+
+  useEffect(() => {
+    if (user?.organization?.name) {
+      setCompanyName(user.organization.name);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchSettings = async () => {
-      setBrandLoading(true);
       try {
-        if (isSuperAdmin()) {
+        if (isSuperAdmin && isSuperAdmin()) {
           setCompanyName("SaaS Super Admin");
           return;
         }
@@ -203,11 +209,11 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
           const data = await publicAPI.getSettings();
           name = data?.company_name || "";
         }
-        setCompanyName(name);
+        if (name) {
+          setCompanyName(name);
+        }
       } catch (err) {
         console.error("Failed to load sidebar settings:", err);
-      } finally {
-        setBrandLoading(false);
       }
     };
     fetchSettings();
@@ -232,8 +238,8 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
     )
   }
 
-  const brandLetter = companyName ? companyName.charAt(0).toUpperCase() : "";
-  const displayTitle = companyName || "";
+  const brandLetter = (companyName || user?.organization?.name || "R").charAt(0).toUpperCase();
+  const displayTitle = companyName || user?.organization?.name || "Rayan Real Estate";
 
   return (
     <>
@@ -246,34 +252,33 @@ export function Sidebar({ isOpen, isExpanded = true, setIsOpen, routes: propRout
         )}
       >
         <div className="px-3 py-2 flex-1 overflow-y-auto sidebar-scrollbar overflow-x-hidden">
-          <Link href="/" className={cn(
-            "flex items-center mb-8 px-2 transition-all duration-300 hover:opacity-90",
-            (isExpanded || isOpen) ? "justify-start" : "md:justify-center"
-          )} title="Go to Landing Page">
-            <div className="relative w-8 h-8 flex-shrink-0">
-              {brandLoading ? (
-                /* Skeleton avatar */
-                <div className="w-8 h-8 rounded-lg bg-slate-700 animate-pulse" />
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
-                  <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800">
-                    <span className="text-xl font-bold text-white">{brandLetter}</span>
-                  </div>
-                </>
-              )}
-            </div>
-            {(isExpanded || isOpen) && (
-              brandLoading ? (
-                /* Skeleton text bar */
-                <div className="ml-3 h-5 w-32 rounded-md bg-slate-700 animate-pulse" />
-              ) : (
+          <div className="flex items-center justify-between mb-8 px-2">
+            <Link href="/" className={cn(
+              "flex items-center transition-all duration-300 hover:opacity-90",
+              (isExpanded || isOpen) ? "justify-start" : "md:justify-center"
+            )} title="Go to Landing Page">
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <div className="absolute inset-0 bg-indigo-600 rounded-lg opacity-75 blur-xs animate-pulse"></div>
+                <div className="relative bg-black rounded-lg w-full h-full flex items-center justify-center border border-slate-800 shadow-sm">
+                  <span className="text-xl font-bold text-white">{brandLetter}</span>
+                </div>
+              </div>
+              {(isExpanded || isOpen) && (
                 <h1 className="text-xl font-bold text-indigo-400 ml-3 whitespace-nowrap overflow-hidden transition-all duration-300">
                   {displayTitle}
                 </h1>
-              )
+              )}
+            </Link>
+            {isOpen && (
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="md:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10"
+                aria-label="Close Sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
             )}
-          </Link>
+          </div>
           <div className="space-y-1">
             {routes.map((route) => {
               // Strip any hash anchor for active detection
