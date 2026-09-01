@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Save, Building2, Phone, Mail, MapPin, Clock, Timer, Loader2 } from 'lucide-react';
+import { Save, Building2, Phone, Mail, MapPin, Clock, Timer, Loader2, CreditCard } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +18,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState<{
-        company_name?: string;
+    company_name?: string;
         company_email?: string;
         company_phone?: string;
         company_whatsapp?: string;
@@ -26,6 +26,7 @@ export default function SettingsPage() {
         company_address?: string;
         company_response_time?: string;
         company_footer_tagline?: string;
+        company_paybill?: string;
     }>({});
 
     useEffect(() => {
@@ -219,6 +220,23 @@ export default function SettingsPage() {
                                     className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
                                     placeholder="e.g. Plaza Building, 3rd Floor, Mombasa, Kenya"
                                 />
+                            </div>
+
+                            {/* Paybill Number */}
+                            <div className="space-y-3">
+                                <Label htmlFor="company_paybill" className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <CreditCard className="w-4 h-4 text-muted-foreground" /> M-Pesa Paybill Number
+                                </Label>
+                                <Input
+                                    id="company_paybill"
+                                    value={settings.company_paybill || ''}
+                                    onChange={(e) => handleChange('company_paybill', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                    className="h-12 rounded-2xl border-input focus:ring-2 focus:ring-primary px-4 transition-all"
+                                    placeholder="e.g. 4131909"
+                                />
+                                <p className="text-[11px] text-muted-foreground font-medium">
+                                    This Paybill number appears on all SMS receipts sent to your tenants. Each organization has its own Paybill.
+                                </p>
                             </div>
 
                             {/* Footer Tagline */}
