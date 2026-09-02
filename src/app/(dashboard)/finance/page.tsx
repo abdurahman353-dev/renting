@@ -224,18 +224,19 @@ export default function FinancePage() {
 
     const handleGenerateMonthlyInvoices = async () => {
         const date = new Date();
-        const year = date.getFullYear();
+        const year = filters.year && filters.year !== 'all' ? parseInt(filters.year) : date.getFullYear();
+        const month = filters.month && filters.month !== 'all' ? parseInt(filters.month) : (date.getMonth() + 1);
 
         try {
             const res = await financeAPI.generateMonthlyInvoices({
-                month: date.getMonth() + 1,
+                month: month,
                 year: year
             });
             const message = res.message || "Invoices generated successfully";
             if (res.count > 0) {
                 toast.success(message);
             } else {
-                toast.error(message);
+                toast.info(message);
             }
             fetchInvoices(1);
             fetchPayments(1);
