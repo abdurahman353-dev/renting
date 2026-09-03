@@ -159,12 +159,14 @@ export default function FinancePage() {
             const response = await financeAPI.getInvoices(params);
 
             if (response && Array.isArray(response.data)) {
-                setAllInvoices(response.data);
+                const validInvoices = response.data.filter((inv: Invoice) => inv.tenant_name && inv.tenant_name !== 'Unknown');
+                setAllInvoices(validInvoices);
                 setInvoicePage(response.current_page || 1);
                 setInvoiceLastPage(response.last_page || 1);
                 setInvoiceTotal(response.total || 0);
             } else {
-                setAllInvoices(Array.isArray(response) ? response : (response?.data ? (Array.isArray(response.data) ? response.data : []) : []));
+                const raw = Array.isArray(response) ? response : (response?.data ? (Array.isArray(response.data) ? response.data : []) : []);
+                setAllInvoices(raw.filter((inv: Invoice) => inv.tenant_name && inv.tenant_name !== 'Unknown'));
             }
         } catch (error) {
             console.error("Failed to fetch invoices:", error);
